@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-vi.mock("../../../config/index.js", () => ({
-  config: {
-    betterAuthUrl: "http://localhost:3000",
-    betterAuthSecret: "test-secret-that-is-at-least-32-chars",
-    databaseUrl: "postgresql://test",
-    port: 3000,
-    nodeEnv: "test",
-  },
+const mockConfig = vi.hoisted(() => ({
+  betterAuthUrl: "http://localhost:3000",
+  betterAuthSecret: "test-secret-that-is-at-least-32-chars",
+  databaseUrl: "postgresql://test",
+  port: 3000,
+  nodeEnv: "test",
 }));
+
+vi.mock("../../../config/index.js", () => ({ config: mockConfig }));
 
 const { action } = await import("./signin.js");
 
@@ -30,6 +30,7 @@ describe("signin action", () => {
   beforeEach(() => {
     fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
+    mockConfig.betterAuthUrl = "http://localhost:3000";
   });
 
   afterEach(() => {
@@ -51,6 +52,23 @@ describe("signin action", () => {
     const [signinUrl, signinOpts] = fetchMock.mock.calls[0] as [string, RequestInit & { headers: Record<string, string> }];
     expect(signinUrl).toContain("http://localhost:3000");
     expect(signinUrl).not.toContain("cloud-preview.example.com");
+    expect(signinOpts.headers["origin"]).toBe("http://localhost:3000");
+  });
+
+  it("strips trailing slash from betterAuthUrl when setting origin header", async () => {
+    mockConfig.betterAuthUrl = "http://localhost:3000/";
+    const request = makeSigninRequest("http://localhost:3000");
+
+    fetchMock.mockResolvedValueOnce(
+      new Response("{}", {
+        status: 200,
+        headers: { "set-cookie": "session=abc" },
+      })
+    );
+
+    await action({ request, context: {} as never, params: {} });
+
+    const [, signinOpts] = fetchMock.mock.calls[0] as [string, RequestInit & { headers: Record<string, string> }];
     expect(signinOpts.headers["origin"]).toBe("http://localhost:3000");
   });
 

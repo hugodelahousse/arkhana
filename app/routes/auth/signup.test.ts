@@ -1,16 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-vi.mock("../../../config/index.js", () => ({
-  config: {
-    betterAuthUrl: "http://localhost:3000",
-    betterAuthSecret: "test-secret-that-is-at-least-32-chars",
-    databaseUrl: "postgresql://test",
-    port: 3000,
-    nodeEnv: "test",
-  },
+const mockConfig = vi.hoisted(() => ({
+  betterAuthUrl: "http://localhost:3000",
+  betterAuthSecret: "test-secret-that-is-at-least-32-chars",
+  databaseUrl: "postgresql://test",
+  port: 3000,
+  nodeEnv: "test",
 }));
 
-// Import action after mocking config
+vi.mock("../../../config/index.js", () => ({ config: mockConfig }));
+
 const { action } = await import("./signup.js");
 
 function makeSignupRequest(origin: string) {
@@ -32,6 +31,7 @@ describe("signup action", () => {
   beforeEach(() => {
     fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
+    mockConfig.betterAuthUrl = "http://localhost:3000";
   });
 
   afterEach(() => {
@@ -56,6 +56,25 @@ describe("signup action", () => {
     const [signupUrl, signupOpts] = fetchMock.mock.calls[0] as [string, RequestInit & { headers: Record<string, string> }];
     expect(signupUrl).toContain("http://localhost:3000");
     expect(signupUrl).not.toContain("cloud-preview.example.com");
+    expect(signupOpts.headers["origin"]).toBe("http://localhost:3000");
+  });
+
+  it("strips trailing slash from betterAuthUrl when setting origin header", async () => {
+    mockConfig.betterAuthUrl = "http://localhost:3000/";
+    const request = makeSignupRequest("http://localhost:3000");
+
+    fetchMock
+      .mockResolvedValueOnce(new Response("{}", { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response("{}", {
+          status: 200,
+          headers: { "set-cookie": "session=abc" },
+        })
+      );
+
+    await action({ request, context: {} as never, params: {} });
+
+    const [, signupOpts] = fetchMock.mock.calls[0] as [string, RequestInit & { headers: Record<string, string> }];
     expect(signupOpts.headers["origin"]).toBe("http://localhost:3000");
   });
 

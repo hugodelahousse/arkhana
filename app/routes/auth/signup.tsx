@@ -28,7 +28,7 @@ export async function action({ request }: Route.ActionArgs) {
     new URL("/api/auth/sign-up/email", config.betterAuthUrl).toString(),
     {
       method: "POST",
-      headers: { "content-type": "application/json", "origin": config.betterAuthUrl },
+      headers: { "content-type": "application/json", "origin": new URL(config.betterAuthUrl).origin },
       body: JSON.stringify({ name, email, password }),
     }
   );
@@ -43,7 +43,7 @@ export async function action({ request }: Route.ActionArgs) {
     new URL("/api/auth/sign-in/email", config.betterAuthUrl).toString(),
     {
       method: "POST",
-      headers: { "content-type": "application/json", "origin": config.betterAuthUrl },
+      headers: { "content-type": "application/json", "origin": new URL(config.betterAuthUrl).origin },
       body: JSON.stringify({ email, password }),
     }
   );
