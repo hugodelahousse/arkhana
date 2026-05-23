@@ -103,7 +103,7 @@ jobs:
       - name: Create and link postgres
         run: |
           ssh dokku@${{ secrets.DOKKU_HOST }} postgres:exists ${{ env.APP_NAME }}-db 2>/dev/null || ssh dokku@${{ secrets.DOKKU_HOST }} postgres:create ${{ env.APP_NAME }}-db
-          ssh dokku@${{ secrets.DOKKU_HOST }} postgres:link ${{ env.APP_NAME }}-db ${{ env.APP_NAME }} || true
+          ssh dokku@${{ secrets.DOKKU_HOST }} postgres:linked ${{ env.APP_NAME }}-db ${{ env.APP_NAME }} 2>/dev/null || ssh dokku@${{ secrets.DOKKU_HOST }} postgres:link ${{ env.APP_NAME }}-db ${{ env.APP_NAME }}
 
       - name: Set config
         run: |
@@ -112,10 +112,13 @@ jobs:
             BETTER_AUTH_SECRET="${{ secrets.BETTER_AUTH_SECRET }}" \
             BETTER_AUTH_URL="https://${{ env.DOMAIN }}"
 
-      - name: Setup domain
+      - name: Setup domain and SSL
         run: |
-          ssh dokku@${{ secrets.DOKKU_HOST }} domains:set ${{ env.APP_NAME }} ${{ env.DOMAIN }} || true
-          ssh dokku@${{ secrets.DOKKU_HOST }} ports:add ${{ env.APP_NAME }} http:80:3000 || true
+          if ! ssh dokku@${{ secrets.DOKKU_HOST }} domains:report ${{ env.APP_NAME }} --domains-app-vhosts | grep -q ${{ env.DOMAIN }}; then
+            ssh dokku@${{ secrets.DOKKU_HOST }} domains:set ${{ env.APP_NAME }} ${{ env.DOMAIN }}
+            ssh dokku@${{ secrets.DOKKU_HOST }} ports:add ${{ env.APP_NAME }} http:80:3000
+            ssh dokku@${{ secrets.DOKKU_HOST }} letsencrypt:enable ${{ env.APP_NAME }}
+          fi
 
       - name: Enable SSL
         continue-on-error: true
