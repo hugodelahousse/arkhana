@@ -19,8 +19,6 @@ jobs:
 
   deploy-production:
     needs: [test]
-    # Disabled — using Render for deploys. Re-enable when back on VPS (remove this if condition).
-    if: false
     uses: ./.github/workflows/deploy-dokku.yml
     with:
       app_name: arkhana
