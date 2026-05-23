@@ -1,6 +1,7 @@
 import { redirect, Form, Link, useActionData } from "react-router";
 import { z } from "zod";
 import type { Route } from "./+types/signin";
+import { config } from "../../../config/index.js";
 
 const signInSchema = z.object({
   email: z.string().email(),
@@ -22,12 +23,12 @@ export async function action({ request }: Route.ActionArgs) {
   const { email, password } = parsed.data;
 
   const res = await fetch(
-    new URL("/api/auth/sign-in/email", request.url).toString(),
+    new URL("/api/auth/sign-in/email", config.betterAuthUrl).toString(),
     {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "origin": new URL(request.url).origin,
+        "origin": new URL(config.betterAuthUrl).origin,
         cookie: request.headers.get("cookie") ?? "",
       },
       body: JSON.stringify({ email, password }),

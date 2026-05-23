@@ -14,7 +14,11 @@ permissions:
   deployments: write
 
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+
   deploy-preview:
+    needs: [test]
     # Disabled — using Render for previews. Re-enable when back on VPS (remove this if condition).
     if: false
     uses: ./.github/workflows/deploy-dokku.yml
