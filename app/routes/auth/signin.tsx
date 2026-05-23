@@ -27,6 +27,7 @@ export async function action({ request }: Route.ActionArgs) {
       method: "POST",
       headers: {
         "content-type": "application/json",
+        "origin": new URL(request.url).origin,
         cookie: request.headers.get("cookie") ?? "",
       },
       body: JSON.stringify({ email, password }),
