@@ -10,6 +10,7 @@ services:
     plan: free
     region: oregon
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    preDeployCommand: pnpm db:push && pnpm db:seed
     startCommand: pnpm start
     envVars:
       - key: DATABASE_URL
