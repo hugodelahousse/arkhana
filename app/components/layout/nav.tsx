@@ -4,7 +4,7 @@ export function Nav({ userName }: { userName: string }) {
   return (
     <nav
       className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b"
-      style={{ borderColor: "var(--color-border-default)", opacity: 0.8 }}
+      style={{ viewTransitionName: "site-nav", borderColor: "var(--color-border-default)", opacity: 0.8 } as React.CSSProperties}
     >
       <Link
         to="/"
