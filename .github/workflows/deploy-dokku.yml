@@ -97,26 +97,44 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.DOKKU_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Setup app
+      - name: Create app if needed
+        run: ssh dokku@${{ secrets.DOKKU_HOST }} apps:exists ${{ env.APP_NAME }} 2>/dev/null || ssh dokku@${{ secrets.DOKKU_HOST }} apps:create ${{ env.APP_NAME }}
+
+      - name: Create and link postgres
         run: |
-          ssh dokku@${{ secrets.DOKKU_HOST }} -- deploy-preview-ci:setup \
-            ${{ env.APP_NAME }} \
-            ${{ env.DOMAIN }}
+          ssh dokku@${{ secrets.DOKKU_HOST }} postgres:exists ${{ env.APP_NAME }}-db 2>/dev/null || ssh dokku@${{ secrets.DOKKU_HOST }} postgres:create ${{ env.APP_NAME }}-db
+          ssh dokku@${{ secrets.DOKKU_HOST }} postgres:linked ${{ env.APP_NAME }}-db ${{ env.APP_NAME }} 2>/dev/null || ssh dokku@${{ secrets.DOKKU_HOST }} postgres:link ${{ env.APP_NAME }}-db ${{ env.APP_NAME }}
 
       - name: Set config
         run: |
-          ssh dokku@${{ secrets.DOKKU_HOST }} -- config:set --no-restart ${{ env.APP_NAME }} \
+          ssh dokku@${{ secrets.DOKKU_HOST }} config:set --no-restart ${{ env.APP_NAME }} \
             NODE_ENV=production \
-            BETTER_AUTH_SECRET='${{ secrets.BETTER_AUTH_SECRET }}' \
-            BETTER_AUTH_URL='https://${{ env.DOMAIN }}'
+            BETTER_AUTH_SECRET="${{ secrets.BETTER_AUTH_SECRET }}" \
+            BETTER_AUTH_URL="https://${{ env.DOMAIN }}"
+
+      - name: Setup domain and SSL
+        run: |
+          if ! ssh dokku@${{ secrets.DOKKU_HOST }} domains:report ${{ env.APP_NAME }} --domains-app-vhosts | grep -q ${{ env.DOMAIN }}; then
+            ssh dokku@${{ secrets.DOKKU_HOST }} domains:set ${{ env.APP_NAME }} ${{ env.DOMAIN }}
+            ssh dokku@${{ secrets.DOKKU_HOST }} ports:add ${{ env.APP_NAME }} http:80:3000
+            ssh dokku@${{ secrets.DOKKU_HOST }} letsencrypt:enable ${{ env.APP_NAME }}
+          fi
+
+      - name: Enable SSL
+        continue-on-error: true
+        run: ssh dokku@${{ secrets.DOKKU_HOST }} letsencrypt:enable ${{ env.APP_NAME }}
 
   deploy:
     runs-on: ubuntu-latest
     needs: [create-deployment, build, setup]
     if: always() && needs.build.result == 'success' && needs.setup.result == 'success'
     permissions:
+      contents: read
       deployments: write
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -124,15 +142,48 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.DOKKU_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy
+      - name: Deploy to Dokku
+        run: ssh dokku@${{ secrets.DOKKU_HOST }} git:from-image ${{ env.APP_NAME }} ${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Expose database port
+        run: ssh dokku@${{ secrets.DOKKU_HOST }} postgres:expose ${{ env.APP_NAME }}-db || true
+
+      - name: Run database migrations and seed
         run: |
-          DB_ACTION=$([[ "${{ inputs.use_migrate_deploy }}" == "true" ]] && echo "migrate" || echo "push")
-          SEED=$([[ "${{ inputs.run_seed }}" == "true" ]] && echo "seed" || echo "")
-          ssh dokku@${{ secrets.DOKKU_HOST }} -- deploy-preview-ci:deploy \
-            ${{ env.APP_NAME }} \
-            ${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            $DB_ACTION \
-            $SEED
+          set -e
+
+          DSN=$(ssh dokku@${{ secrets.DOKKU_HOST }} postgres:info ${{ env.APP_NAME }}-db --dsn)
+          DB_PASS=$(echo "$DSN" | sed -n 's|postgres://[^:]*:\([^@]*\)@.*|\1|p' | tr -d '[:space:]')
+          DB_NAME=$(echo "$DSN" | sed -n 's|postgres://[^/]*/\(.*\)|\1|p' | tr -d '[:space:]')
+          EXPOSED_PORT=$(ssh dokku@${{ secrets.DOKKU_HOST }} postgres:info ${{ env.APP_NAME }}-db --exposed-ports | sed 's/.*->//' | tr -d '[:space:]')
+
+          export DATABASE_URL="postgres://postgres:${DB_PASS}@${{ secrets.DOKKU_HOST }}:${EXPOSED_PORT}/${DB_NAME}"
+
+          if [ "${{ inputs.use_migrate_deploy }}" = "true" ]; then
+            pnpm db:migrate
+          else
+            pnpm db:push --force
+          fi
+
+          if [ "${{ inputs.run_seed }}" = "true" ]; then
+            pnpm db:seed
+          fi
+
+      - name: Unexpose database port
+        if: always()
+        run: ssh dokku@${{ secrets.DOKKU_HOST }} postgres:unexpose ${{ env.APP_NAME }}-db || true
 
       - name: Update deployment status (success)
         if: success() && needs.create-deployment.outputs.deployment_id != ''
