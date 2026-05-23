@@ -3,12 +3,12 @@ import { motion, useSpring, useMotionValue, useMotionValueEvent } from "motion/r
 import type { MotionStyle } from "motion/react";
 import { cardImageUrl } from "../lib/cardImages";
 import { RARITY_LABELS } from "../lib/cards";
-import type { CardDefinition } from "../lib/cards";
+import type { CardDefinition, Rarity } from "../lib/cards";
 import "./TarotCard.css";
 
 export interface TarotCardProps {
   card: CardDefinition;
-  rarityScore: 1 | 2 | 3 | 4 | 5;
+  rarityScore: Rarity;
   isReversed: boolean;
   isRadiant: boolean;
   revealed: boolean;

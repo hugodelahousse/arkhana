@@ -1,4 +1,6 @@
-const RARITY_TABLE = [
+import type { Rarity } from "./cards.js";
+
+const RARITY_TABLE: Array<{ score: Rarity; weight: number }> = [
   { score: 1, weight: 0.5 },
   { score: 2, weight: 0.25 },
   { score: 3, weight: 0.15 },
@@ -6,7 +8,7 @@ const RARITY_TABLE = [
   { score: 5, weight: 0.02 },
 ];
 
-const CUMULATIVE = RARITY_TABLE.reduce<Array<{ score: number; threshold: number }>>(
+const CUMULATIVE = RARITY_TABLE.reduce<Array<{ score: Rarity; threshold: number }>>(
   (acc, { score, weight }) => [
     ...acc,
     { score, threshold: (acc.at(-1)?.threshold ?? 0) + weight },
@@ -14,7 +16,7 @@ const CUMULATIVE = RARITY_TABLE.reduce<Array<{ score: number; threshold: number 
   []
 );
 
-export function rollRarity(): number {
+export function rollRarity(): Rarity {
   const r = Math.random();
   return CUMULATIVE.find(({ threshold }) => r < threshold)?.score ?? 1;
 }

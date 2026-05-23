@@ -8,6 +8,7 @@ import {
   CARD_BY_SLUG,
   RARITY_LABELS,
   getCardDescription,
+  type Rarity,
 } from "../lib/cards";
 
 export async function loader({ context, params }: Route.LoaderArgs) {
@@ -34,20 +35,14 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
     : mostRecent;
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
+    <div className="min-h-screen bg-base">
       <Nav userName={user.name} />
       <main className="max-w-2xl mx-auto px-6 py-12 space-y-10">
         <div className="space-y-2 text-center">
-          <p
-            className="text-xs tracking-widest uppercase opacity-50"
-            style={{ color: "var(--color-text-primary)" }}
-          >
+          <p className="text-xs tracking-widest uppercase opacity-50">
             {card.arcana === "major" ? "Major Arcana" : `${card.suit} · Minor Arcana`}
           </p>
-          <h1
-            className="text-4xl font-light"
-            style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-serif)" }}
-          >
+          <h1 className="text-4xl font-light text-muted">
             {card.name}
           </h1>
         </div>
@@ -56,7 +51,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
           <TarotCard
             key={activePull}
             card={card}
-            rarityScore={(displayPull.rarityScore as 1 | 2 | 3 | 4 | 5)}
+            rarityScore={(displayPull.rarityScore as Rarity)}
             isReversed={displayPull.isReversed}
             isRadiant={displayPull.isRadiant}
             revealed={true}
@@ -65,10 +60,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
         </div>
 
         <section className="space-y-6">
-          <h2
-            className="text-xs tracking-widest uppercase opacity-50"
-            style={{ color: "var(--color-text-primary)" }}
-          >
+          <h2 className="text-xs tracking-widest uppercase opacity-50">
             Your pulls
           </h2>
           <div className="space-y-4">
@@ -86,37 +78,21 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                   key={pull.id}
                   type="button"
                   onClick={() => setActivePull(pull.id)}
-                  className="w-full text-left p-6 border space-y-3 transition-opacity"
-                  style={{
-                    borderColor: `var(--color-rarity-${rarityLabel})`,
-                    background: "var(--color-bg-surface)",
-                    opacity: isActive ? 1 : 0.5,
-                  }}
+                  className={`w-full text-left p-6 border space-y-3 transition-opacity bg-surface border-rarity-${rarityLabel} ${isActive ? "opacity-100" : "opacity-50"}`}
                 >
                   <div className="flex items-center justify-between">
                     <span
-                      className="text-xs tracking-widest uppercase"
-                      style={{ color: `var(--color-rarity-${rarityLabel})` }}
+                      className={`text-xs tracking-widest uppercase text-rarity-${rarityLabel}`}
                     >
                       {RARITY_LABELS[pull.rarityScore]}
                       {pull.isRadiant && " ✦"}
                       {pull.isReversed && " · Reversed"}
                     </span>
-                    <span
-                      className="text-xs opacity-40"
-                      style={{ color: "var(--color-text-primary)" }}
-                    >
+                    <span className="text-xs opacity-40">
                       {pull.pullDate}
                     </span>
                   </div>
-                  <p
-                    className="text-sm leading-relaxed"
-                    style={{
-                      color: "var(--color-text-primary)",
-                      fontFamily: "var(--font-serif)",
-                      opacity: 0.85,
-                    }}
-                  >
+                  <p className="text-sm leading-relaxed opacity-85">
                     {description}
                   </p>
                 </button>
