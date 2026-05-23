@@ -22,5 +22,8 @@ RUN corepack enable
 COPY ./package.json pnpm-lock.yaml /app/
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
 COPY --from=build-env /app/build /app/build
+COPY ./server /app/server
+COPY ./db /app/db
+COPY ./config /app/config
 WORKDIR /app
 CMD ["pnpm", "run", "start"]
