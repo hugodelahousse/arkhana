@@ -1,6 +1,6 @@
 FROM node:20-alpine AS development-dependencies-env
 RUN corepack enable
-COPY . /app
+COPY ./package.json pnpm-lock.yaml /app/
 WORKDIR /app
 RUN pnpm install --frozen-lockfile
 
