@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Usage: dokku arkhana-ci:deploy <app> <image:tag> <db_action:push|migrate> [seed]
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+
+APP="$1"
+IMAGE="$2"
+DB_ACTION="${3:-push}"  # push or migrate
+SEED="${4:-}"
+
+if [[ -z "$APP" || -z "$IMAGE" ]]; then
+  echo "Usage: dokku arkhana-ci:deploy <app> <image:tag> <db_action:push|migrate> [seed]"
+  exit 1
+fi
+
+# Deploy image (this starts the new containers)
+dokku git:from-image "$APP" "$IMAGE"
+
+# Run DB work inside the app container — DATABASE_URL is injected by the postgres plugin,
+# no need to expose the DB port externally
+if [[ "$DB_ACTION" == "migrate" ]]; then
+  dokku run "$APP" pnpm db:migrate
+else
+  dokku run "$APP" pnpm db:push --force
+fi
+
+if [[ "$SEED" == "seed" ]]; then
+  dokku run "$APP" pnpm db:seed
+fi
