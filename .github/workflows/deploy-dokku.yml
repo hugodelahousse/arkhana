@@ -103,7 +103,7 @@ jobs:
       - name: Create and link postgres
         run: |
           ssh dokku@${{ secrets.DOKKU_HOST }} postgres:exists ${{ env.APP_NAME }}-db 2>/dev/null || ssh dokku@${{ secrets.DOKKU_HOST }} postgres:create ${{ env.APP_NAME }}-db
-          ssh dokku@${{ secrets.DOKKU_HOST }} postgres:linked ${{ env.APP_NAME }}-db ${{ env.APP_NAME }} 2>/dev/null || ssh dokku@${{ secrets.DOKKU_HOST }} postgres:link ${{ env.APP_NAME }}-db ${{ env.APP_NAME }}
+          ssh dokku@${{ secrets.DOKKU_HOST }} postgres:link ${{ env.APP_NAME }}-db ${{ env.APP_NAME }} || true
 
       - name: Set config
         run: |
@@ -114,10 +114,8 @@ jobs:
 
       - name: Setup domain
         run: |
-          if ! ssh dokku@${{ secrets.DOKKU_HOST }} domains:report ${{ env.APP_NAME }} --domains-app-vhosts | grep -q ${{ env.DOMAIN }}; then
-            ssh dokku@${{ secrets.DOKKU_HOST }} domains:set ${{ env.APP_NAME }} ${{ env.DOMAIN }}
-            ssh dokku@${{ secrets.DOKKU_HOST }} ports:add ${{ env.APP_NAME }} http:80:3000
-          fi
+          ssh dokku@${{ secrets.DOKKU_HOST }} domains:set ${{ env.APP_NAME }} ${{ env.DOMAIN }} || true
+          ssh dokku@${{ secrets.DOKKU_HOST }} ports:add ${{ env.APP_NAME }} http:80:3000 || true
 
       - name: Enable SSL
         continue-on-error: true
