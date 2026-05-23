@@ -1,6 +1,6 @@
 FROM node:20-alpine AS development-dependencies-env
 RUN corepack enable
-COPY . /app
+COPY ./package.json pnpm-lock.yaml /app/
 WORKDIR /app
 RUN pnpm install --frozen-lockfile
 
@@ -22,8 +22,9 @@ RUN corepack enable
 COPY ./package.json pnpm-lock.yaml /app/
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
 COPY --from=build-env /app/build /app/build
-COPY ./server /app/server
+COPY ./server.js /app/server.js
 COPY ./db /app/db
 COPY ./config /app/config
 WORKDIR /app
+EXPOSE 3000
 CMD ["pnpm", "run", "start"]

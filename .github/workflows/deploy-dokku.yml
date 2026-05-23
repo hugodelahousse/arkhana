@@ -120,10 +120,6 @@ jobs:
             ssh dokku@${{ secrets.DOKKU_HOST }} letsencrypt:enable ${{ env.APP_NAME }}
           fi
 
-      - name: Enable SSL
-        continue-on-error: true
-        run: ssh dokku@${{ secrets.DOKKU_HOST }} letsencrypt:enable ${{ env.APP_NAME }}
-
   deploy:
     runs-on: ubuntu-latest
     needs: [create-deployment, build, setup]
