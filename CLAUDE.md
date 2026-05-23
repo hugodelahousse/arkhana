@@ -42,10 +42,18 @@ Daily tarot card pull app. Dark fantasy aesthetic. One card per user per UTC day
 | `/pull` | required | Draw card action + reveal |
 | `/collection` | required | 78-card grid |
 | `/card/:id` | required | Card detail + user pull history |
+| `/card-lab` | public | Dev tool: test card animations + art |
+
+## Frontend
+- Run `/dark-fantasy-ui` when building or reviewing any visual component — encodes the app's taste constraints
+- `TarotCard` in `app/components/TarotCard.tsx` — single source of truth for card display with flip, tilt, and foil
+- `cardImageUrl(id)` from `app/lib/cardImages.ts` → jsDelivr CDN serving Rider-Waite-Smith art (metabismuth/tarot-json, MIT)
+- `/card-lab` — public dev page to test any card + rarity + radiant/reversed without daily pull limit
+- Animation library: `motion` (motion/react) — `useSpring` for tilt physics, `AnimatePresence` for content reveals
 
 ## Future features (see GitHub Issues)
 - Daily pack system (1 Major + 4 Minor per pull)
 - Streak tracking + streak achievements
 - Suit/full-deck completion achievements
-- Radiant card special CSS animations (flagged in DB, no special UI yet)
+- Radiant card conic-gradient border shimmer implemented in `TarotCard`; foil + reveal glow live
 - Production deployment (Neon + Railway/Fly.io)

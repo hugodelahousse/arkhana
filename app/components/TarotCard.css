@@ -1,0 +1,225 @@
+/* ─── Scene (perspective context) ─── */
+.card-scene {
+  display: inline-block;
+  cursor: pointer;
+  perspective: 1200px;
+}
+
+.card-scene.size-sm { width: 140px; }
+.card-scene.size-md { width: 240px; }
+.card-scene.size-lg { width: 320px; }
+
+/* ─── Tilt wrapper (motion-driven) ─── */
+.card-tilt {
+  transform-style: preserve-3d;
+}
+
+/* ─── Flipper ─── */
+.card-flipper {
+  position: relative;
+  aspect-ratio: 350 / 600;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 8px;
+  width: 100%;
+}
+
+.card-flipper.is-revealed {
+  transform: rotateY(180deg);
+}
+
+/* ─── Faces ─── */
+.card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.card-back {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-back-art {
+  position: absolute;
+  inset: 10px;
+  border: 1px solid var(--color-border-default);
+  opacity: 0.4;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0px,
+      transparent 10px,
+      rgba(201, 147, 58, 0.08) 10px,
+      rgba(201, 147, 58, 0.08) 11px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent 0px,
+      transparent 10px,
+      rgba(201, 147, 58, 0.08) 10px,
+      rgba(201, 147, 58, 0.08) 11px
+    );
+}
+
+.card-back-sigil {
+  position: relative;
+  z-index: 1;
+  font-size: 2.5rem;
+  color: var(--color-border-default);
+  opacity: 0.5;
+  user-select: none;
+}
+
+.card-scene.size-sm .card-back-sigil { font-size: 1.5rem; }
+.card-scene.size-lg .card-back-sigil { font-size: 3rem; }
+
+.card-front {
+  transform: rotateY(180deg);
+}
+
+.card-front img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.card-front.is-reversed img {
+  transform: rotate(180deg);
+}
+
+/* ─── Foil overlay ─── */
+.card-foil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  mix-blend-mode: color-dodge;
+  background:
+    conic-gradient(
+      from calc(var(--ratio-x, 0.5) * 360deg)
+      at calc(var(--ratio-x, 0.5) * 100%) calc(var(--ratio-y, 0.5) * 100%),
+      var(--foil-color-a, transparent),
+      var(--foil-color-b, transparent),
+      var(--foil-color-a, transparent)
+    ),
+    linear-gradient(
+      135deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.12) 50%,
+      transparent 70%
+    );
+  background-size: 200% 200%;
+  background-position:
+    calc(var(--ratio-x, 0.5) * 100%)
+    calc(var(--ratio-y, 0.5) * 100%);
+}
+
+/* Per-rarity foil colors and hover activation */
+.foil-rarity-1 { display: none; }
+
+.foil-rarity-2 {
+  --foil-color-a: rgba(96, 165, 250, 0.45);
+  --foil-color-b: rgba(147, 197, 253, 0.2);
+}
+.foil-rarity-2.is-hovered { opacity: 0.3; }
+
+.foil-rarity-3 {
+  --foil-color-a: rgba(168, 85, 247, 0.55);
+  --foil-color-b: rgba(192, 132, 252, 0.25);
+}
+.foil-rarity-3.is-hovered { opacity: 0.4; }
+
+.foil-rarity-4 {
+  --foil-color-a: rgba(249, 115, 22, 0.55);
+  --foil-color-b: rgba(251, 191, 36, 0.35);
+}
+.foil-rarity-4.is-hovered { opacity: 0.5; }
+
+.foil-rarity-5 {
+  --foil-color-a: rgba(234, 179, 8, 0.65);
+  --foil-color-b: rgba(253, 224, 71, 0.4);
+  animation: foil-idle-pulse 2s ease-in-out infinite;
+  opacity: 0.15;
+}
+.foil-rarity-5.is-hovered { opacity: 0.7; animation: none; }
+
+@keyframes foil-idle-pulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.3; }
+}
+
+/* ─── Radiant border ─── */
+.card-radiant-border {
+  position: absolute;
+  inset: -3px;
+  border-radius: 10px;
+  background: conic-gradient(
+    from 0deg,
+    #eab308,
+    #f97316,
+    #a855f7,
+    #60a5fa,
+    #eab308
+  );
+  background-size: 200% 200%;
+  animation: radiant-shimmer 3s linear infinite;
+  z-index: -1;
+  opacity: 0.8;
+}
+
+/* ─── Reveal glow burst ─── */
+@keyframes reveal-glow {
+  0%   { box-shadow: 0 0 0px transparent; }
+  40%  { box-shadow: 0 0 50px var(--rarity-color, rgba(255,255,255,0.3)), 0 0 100px rgba(255,255,255,0.1); }
+  100% { box-shadow: 0 0 18px var(--rarity-color, rgba(255,255,255,0.1)); }
+}
+
+.card-flipper.is-revealed .card-front {
+  animation: reveal-glow 1.2s ease-out 0.35s both;
+}
+
+/* ─── Reveal hint ─── */
+.card-reveal-hint {
+  position: absolute;
+  bottom: -2rem;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  opacity: 0.35;
+  pointer-events: none;
+  animation: hint-pulse 2s ease-in-out infinite;
+}
+
+@keyframes hint-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.6; }
+}
+
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  .card-flipper,
+  .card-foil,
+  .card-radiant-border,
+  .card-reveal-hint {
+    transition: none !important;
+    animation: none !important;
+  }
+  .card-flipper.is-revealed {
+    transform: rotateY(180deg) !important;
+  }
+  .foil-rarity-5 { opacity: 0.25; }
+}
