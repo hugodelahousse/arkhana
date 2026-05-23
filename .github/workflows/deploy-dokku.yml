@@ -99,7 +99,7 @@ jobs:
 
       - name: Setup app
         run: |
-          ssh dokku@${{ secrets.DOKKU_HOST }} -- arkhana-ci:setup \
+          ssh dokku@${{ secrets.DOKKU_HOST }} -- deploy-preview-ci:setup \
             ${{ env.APP_NAME }} \
             ${{ env.DOMAIN }}
 
@@ -128,7 +128,7 @@ jobs:
         run: |
           DB_ACTION=$([[ "${{ inputs.use_migrate_deploy }}" == "true" ]] && echo "migrate" || echo "push")
           SEED=$([[ "${{ inputs.run_seed }}" == "true" ]] && echo "seed" || echo "")
-          ssh dokku@${{ secrets.DOKKU_HOST }} -- arkhana-ci:deploy \
+          ssh dokku@${{ secrets.DOKKU_HOST }} -- deploy-preview-ci:deploy \
             ${{ env.APP_NAME }} \
             ${{ env.IMAGE_NAME }}:${{ github.sha }} \
             $DB_ACTION \
