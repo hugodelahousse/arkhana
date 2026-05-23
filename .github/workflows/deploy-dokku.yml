@@ -44,6 +44,7 @@ jobs:
       - name: Create GitHub deployment
         uses: chrnorm/deployment-action@v2
         id: deployment
+        continue-on-error: true
         with:
           token: ${{ github.token }}
           environment: ${{ inputs.environment }}
@@ -111,17 +112,21 @@ jobs:
             BETTER_AUTH_SECRET="${{ secrets.BETTER_AUTH_SECRET }}" \
             BETTER_AUTH_URL="https://${{ env.DOMAIN }}"
 
-      - name: Setup domain and SSL
+      - name: Setup domain
         run: |
           if ! ssh dokku@${{ secrets.DOKKU_HOST }} domains:report ${{ env.APP_NAME }} --domains-app-vhosts | grep -q ${{ env.DOMAIN }}; then
             ssh dokku@${{ secrets.DOKKU_HOST }} domains:set ${{ env.APP_NAME }} ${{ env.DOMAIN }}
             ssh dokku@${{ secrets.DOKKU_HOST }} ports:add ${{ env.APP_NAME }} http:80:3000
-            ssh dokku@${{ secrets.DOKKU_HOST }} letsencrypt:enable ${{ env.APP_NAME }}
           fi
+
+      - name: Enable SSL
+        continue-on-error: true
+        run: ssh dokku@${{ secrets.DOKKU_HOST }} letsencrypt:enable ${{ env.APP_NAME }}
 
   deploy:
     runs-on: ubuntu-latest
     needs: [create-deployment, build, setup]
+    if: always() && needs.build.result == 'success' && needs.setup.result == 'success'
     permissions:
       contents: read
       deployments: write
@@ -180,7 +185,7 @@ jobs:
         run: ssh dokku@${{ secrets.DOKKU_HOST }} postgres:unexpose ${{ env.APP_NAME }}-db || true
 
       - name: Update deployment status (success)
-        if: success()
+        if: success() && needs.create-deployment.outputs.deployment_id != ''
         uses: chrnorm/deployment-status@v2
         with:
           token: ${{ github.token }}
@@ -189,7 +194,7 @@ jobs:
           deployment-id: ${{ needs.create-deployment.outputs.deployment_id }}
 
       - name: Update deployment status (failure)
-        if: failure()
+        if: failure() && needs.create-deployment.outputs.deployment_id != ''
         uses: chrnorm/deployment-status@v2
         with:
           token: ${{ github.token }}
