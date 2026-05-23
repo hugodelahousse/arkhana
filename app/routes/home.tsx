@@ -1,4 +1,4 @@
-import { redirect, useSubmit, useNavigation } from "react-router";
+import { redirect, useFetcher } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import type { Route } from "./+types/home";
 import { Link } from "react-router";
@@ -80,10 +80,9 @@ export function meta() {
 }
 
 export default function Home({ loaderData, actionData }: Route.ComponentProps) {
-  const submit = useSubmit();
-  const navigation = useNavigation();
-  const isPulling = navigation.state === "submitting" && navigation.formData?.get("_action") === "pull";
-  const result = actionData && "card" in actionData ? actionData : null;
+  const fetcher = useFetcher();
+  const isPulling = fetcher.state === "submitting";
+  const result = fetcher.data && "card" in fetcher.data ? fetcher.data : null;
   const rarityLabel = result ? RARITY_LABELS[result.rarityScore]?.toLowerCase() : null;
   const [revealed, revealNow] = useAutoReveal(!!result, 600);
 
@@ -197,7 +196,7 @@ export default function Home({ loaderData, actionData }: Route.ComponentProps) {
                   isReversed={false}
                   isRadiant={false}
                   revealed={false}
-                  onReveal={() => submit({ _action: "pull" }, { method: "post" })}
+                  onReveal={() => fetcher.submit({ _action: "pull" }, { method: "post" })}
                   size="lg"
                   showHint={!isPulling}
                 />
