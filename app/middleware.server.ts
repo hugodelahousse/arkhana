@@ -1,4 +1,3 @@
-import type { Route } from "./+types/root.js";
 import { auth } from "../server/auth.js";
 import { toWebRequest } from "@react-router/express";
 import type { Request as ExpressRequest } from "express";

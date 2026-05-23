@@ -1,5 +1,11 @@
 import { redirect, Form, Link, useActionData } from "react-router";
+import { z } from "zod";
 import type { Route } from "./+types/signin";
+
+const signInSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (context.user) return redirect("/dashboard");
@@ -8,8 +14,12 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 export async function action({ request }: Route.ActionArgs) {
   const form = await request.formData();
-  const email = String(form.get("email") ?? "");
-  const password = String(form.get("password") ?? "");
+  const parsed = signInSchema.safeParse({
+    email: form.get("email"),
+    password: form.get("password"),
+  });
+  if (!parsed.success) return { error: "Please enter a valid email and password." };
+  const { email, password } = parsed.data;
 
   const res = await fetch(
     new URL("/api/auth/sign-in/email", request.url).toString(),

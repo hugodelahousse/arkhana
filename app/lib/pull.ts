@@ -1,7 +1,6 @@
 import { eq, and } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { userCards } from "../../db/schema/user-cards.js";
-import { cards } from "../../db/schema/cards.js";
 import { CARD_BY_ID, type CardDefinition } from "./cards.js";
 import { rollRarity, rollRadiant, rollReversed } from "./rarity.js";
 import { todayUTC } from "./utils.js";

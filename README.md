@@ -1,87 +1,94 @@
-# Welcome to React Router!
+# Arkhana
 
-A modern, production-ready template for building full-stack React applications using React Router.
+Daily tarot card pull app. Dark fantasy aesthetic. One card per user per UTC day.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## Stack
 
-## Features
+- [React Router v7](https://reactrouter.com/) (SSR, framework mode) + Vite
+- Express server (`server/index.ts`)
+- [Drizzle ORM](https://orm.drizzle.team/) + Postgres
+- [better-auth](https://www.better-auth.com/) — email/password authentication
+- Tailwind CSS v4 + design tokens
+- [`@charcoalhq/lockbox`](https://github.com/charcoalhq/lockbox) — encrypted config
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+## Prerequisites
 
-## Getting Started
+- Node.js 20+
+- pnpm
+- Postgres 16 (local: `pg_ctlcluster 16 main start`)
 
-### Installation
+## Getting started
 
-Install the dependencies:
-
-```bash
-npm install
-```
-
-### Development
-
-Start the development server with HMR:
+### 1. Install dependencies
 
 ```bash
-npm run dev
+pnpm install
 ```
 
-Your application will be available at `http://localhost:5173`.
+### 2. Export the lockbox private key
 
-## Building for Production
-
-Create a production build:
+The private key is stored at `.lockbox/private-key` after `lockbox init`. Export it for every command that touches config or the DB:
 
 ```bash
-npm run build
+export LOCKBOX_PRIVATE_KEY=$(cat .lockbox/private-key)
 ```
 
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
+### 3. Set up the database
 
 ```bash
-docker build -t my-app .
+# Push schema
+pnpm db:push
 
-# Run the container
-docker run -p 3000:3000 my-app
+# Seed 78 cards
+pnpm db:seed
 ```
 
-The containerized application can be deployed to any platform that supports Docker, including:
+### 4. Start the dev server
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
+Requires a production build first (Express serves the built React Router app):
 
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
+```bash
+pnpm build && pnpm dev
 ```
 
-## Styling
+The app will be available at `http://localhost:3000`.
 
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+## Scripts
 
----
+| Command | Description |
+|---|---|
+| `pnpm dev` | Start Express + React Router (requires prior build) |
+| `pnpm build` | Production build |
+| `pnpm db:push` | Sync Drizzle schema to DB |
+| `pnpm db:seed` | Seed 78 tarot cards |
+| `pnpm db:studio` | Open Drizzle Studio |
+| `pnpm lint` | Run ESLint |
+| `pnpm typecheck` | Run TypeScript type-check |
 
-Built with ❤️ using React Router.
+## Environment / config
+
+Config is managed by lockbox. Edit values with:
+
+```bash
+npx lockbox set <key> <value>              # default (all envs)
+npx lockbox set <key> <value> --env <env> # specific env
+npx lockbox set-secret <key> <value> --env <env> # encrypted
+```
+
+Then regenerate: `npx lockbox generate`
+
+Default values (local development):
+
+| Key | Default |
+|---|---|
+| `databaseUrl` | `postgresql://arkhana:arkhana@localhost:5432/arkhana` |
+| `betterAuthUrl` | `http://localhost:3000` |
+| `port` | `3000` |
+| `betterAuthSecret` | *(encrypted, see `.lockbox/private-key`)* |
+
+## Docker
+
+```bash
+docker build -t arkhana .
+docker run -p 3000:3000 -e LOCKBOX_PRIVATE_KEY=<key> arkhana
+```

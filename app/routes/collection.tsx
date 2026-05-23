@@ -2,7 +2,7 @@ import { redirect } from "react-router";
 import type { Route } from "./+types/collection";
 import { Nav } from "../components/layout/nav";
 import { getPulledCardIds } from "../lib/pull";
-import { CARDS, RARITY_LABELS } from "../lib/cards";
+import { CARDS, MAJOR_ARCANA, MINOR_BY_SUIT } from "../lib/cards";
 import { Link } from "react-router";
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -15,17 +15,9 @@ export function meta() {
   return [{ title: "Collection — Arkhana" }];
 }
 
-const SUITS = ["wands", "cups", "swords", "pentacles"] as const;
-
 export default function Collection({ loaderData }: Route.ComponentProps) {
   const { user, pulledIds } = loaderData;
   const pulled = new Set(pulledIds);
-
-  const majorArcana = CARDS.filter((c) => c.arcana === "major");
-  const minorBySuit = SUITS.map((suit) => ({
-    suit,
-    cards: CARDS.filter((c) => c.suit === suit),
-  }));
 
   return (
     <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
@@ -49,14 +41,14 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
             Major Arcana
           </h2>
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-            {majorArcana.map((card) => (
+            {MAJOR_ARCANA.map((card) => (
               <CardTile key={card.id} card={card} discovered={pulled.has(card.id)} />
             ))}
           </div>
         </section>
 
         {/* Minor Arcana by suit */}
-        {minorBySuit.map(({ suit, cards }) => (
+        {MINOR_BY_SUIT.map(({ suit, cards }) => (
           <section key={suit} className="space-y-4">
             <h2 className="text-xs tracking-widest uppercase opacity-50 capitalize" style={{ color: "var(--color-text-primary)" }}>
               {suit}

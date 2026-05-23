@@ -1,4 +1,4 @@
-import { redirect, useLoaderData, Form, useActionData } from "react-router";
+import { redirect, Form } from "react-router";
 import type { Route } from "./+types/pull";
 import { Nav } from "../components/layout/nav";
 import { dailyPull } from "../lib/pull";

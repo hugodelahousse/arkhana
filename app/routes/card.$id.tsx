@@ -1,19 +1,22 @@
 import { redirect, data } from "react-router";
+import { z } from "zod";
 import type { Route } from "./+types/card.$id";
 import { Nav } from "../components/layout/nav";
 import { getUserCardHistory } from "../lib/pull";
 import { CARD_BY_ID, RARITY_LABELS, getCardDescription } from "../lib/cards";
 
+const paramsSchema = z.object({
+  id: z.coerce.number().int().min(0).max(77),
+});
+
 export async function loader({ context, params }: Route.LoaderArgs) {
   if (!context.user) return redirect("/auth/signin");
-  const cardId = Number(params.id);
-  if (isNaN(cardId) || cardId < 0 || cardId > 77) {
-    throw data("Card not found", { status: 404 });
-  }
-  const card = CARD_BY_ID[cardId];
+  const parsed = paramsSchema.safeParse(params);
+  if (!parsed.success) throw data("Card not found", { status: 404 });
+  const card = CARD_BY_ID[parsed.data.id];
   if (!card) throw data("Card not found", { status: 404 });
 
-  const history = await getUserCardHistory(context.user.id, cardId);
+  const history = await getUserCardHistory(context.user.id, parsed.data.id);
   return { user: context.user, card, history };
 }
 

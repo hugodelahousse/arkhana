@@ -1656,3 +1656,13 @@ export const RARITY_LABELS: Record<number, string> = {
   4: "Arcane",
   5: "Primordial",
 };
+
+export const SUITS = ["wands", "cups", "swords", "pentacles"] as const;
+export type Suit = (typeof SUITS)[number];
+
+export const MAJOR_ARCANA = CARDS.filter((c) => c.arcana === "major");
+
+export const MINOR_BY_SUIT = SUITS.map((suit) => ({
+  suit,
+  cards: CARDS.filter((c) => c.suit === suit),
+}));
