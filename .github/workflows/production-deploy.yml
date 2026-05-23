@@ -1,0 +1,27 @@
+name: Production Deploy
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+  deployments: write
+
+jobs:
+  deploy-production:
+    uses: ./.github/workflows/deploy-dokku.yml
+    with:
+      app_name: arkhana
+      domain: arkhana.delaho-h.com
+      image_name: ghcr.io/${{ github.repository }}/production
+      environment: production
+      tag_latest: true
+      run_seed: true
+      use_migrate_deploy: true
+    secrets: inherit

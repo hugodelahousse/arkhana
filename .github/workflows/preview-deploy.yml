@@ -1,0 +1,25 @@
+name: PR Preview Deploy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+  deployments: write
+
+jobs:
+  deploy-preview:
+    uses: ./.github/workflows/deploy-dokku.yml
+    with:
+      app_name: preview-pr-${{ github.event.pull_request.number }}
+      domain: pr-${{ github.event.pull_request.number }}.preview.arkhana.delaho-h.com
+      image_name: ghcr.io/${{ github.repository }}/preview
+      environment: pr-${{ github.event.pull_request.number }}
+      run_seed: true
+    secrets: inherit

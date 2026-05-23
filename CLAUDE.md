@@ -8,7 +8,7 @@ Daily tarot card pull app. Dark fantasy aesthetic. One card per user per UTC day
 - Drizzle ORM + Postgres (`db/schema/`)
 - better-auth (email/password, `/api/auth/*`)
 - Tailwind CSS v4 + design tokens (`app/styles/tokens.css`)
-- Config via Zod-validated env vars — never use `process.env` directly, import from `config/index.ts`
+- Config via Zod-validated env vars — never use `process.env` directly in app code, import from `config/index.ts`. Exception: `db/index.ts` reads `DATABASE_URL` directly so seed/migration scripts work without requiring all app env vars
 
 ## Commands
 - Dev: `pnpm dev` (starts Express + React Router via tsx, requires build first; use `pnpm build && pnpm dev` after changes to server/)

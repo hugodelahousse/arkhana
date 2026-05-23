@@ -1,0 +1,68 @@
+name: PR Preview Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+
+env:
+  APP_NAME: preview-pr-${{ github.event.pull_request.number }}
+
+jobs:
+  cleanup-preview:
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DOKKU_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.DOKKU_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Check if app exists
+        id: app-check
+        run: |
+          if ssh dokku@${{ secrets.DOKKU_HOST }} apps:exists $APP_NAME 2>/dev/null; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Unlink PostgreSQL database
+        if: steps.app-check.outputs.exists == 'true'
+        run: ssh dokku@${{ secrets.DOKKU_HOST }} postgres:unlink $APP_NAME-db $APP_NAME || true
+
+      - name: Destroy PostgreSQL database
+        if: steps.app-check.outputs.exists == 'true'
+        run: ssh dokku@${{ secrets.DOKKU_HOST }} postgres:destroy $APP_NAME-db --force || true
+
+      - name: Destroy Dokku app
+        if: steps.app-check.outputs.exists == 'true'
+        run: ssh dokku@${{ secrets.DOKKU_HOST }} apps:destroy $APP_NAME --force
+
+      - name: Cleanup unused Docker images
+        if: steps.app-check.outputs.exists == 'true'
+        run: ssh dokku@${{ secrets.DOKKU_HOST }} cleanup
+
+      - name: Deactivate deployments
+        if: steps.app-check.outputs.exists == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const environment = `pr-${{ github.event.pull_request.number }}`;
+            const deployments = await github.rest.repos.listDeployments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              environment: environment,
+            });
+            for (const deployment of deployments.data) {
+              await github.rest.repos.createDeploymentStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deployment.id,
+                state: 'inactive',
+                description: 'PR closed, environment destroyed',
+              });
+            }
