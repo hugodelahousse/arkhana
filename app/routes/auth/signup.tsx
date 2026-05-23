@@ -1,6 +1,7 @@
 import { redirect, Form, Link, useActionData } from "react-router";
 import { z } from "zod";
 import type { Route } from "./+types/signup";
+import { config } from "../../../config/index.js";
 
 const signUpSchema = z.object({
   name: z.string().min(1),
@@ -24,10 +25,10 @@ export async function action({ request }: Route.ActionArgs) {
   const { name, email, password } = parsed.data;
 
   const res = await fetch(
-    new URL("/api/auth/sign-up/email", request.url).toString(),
+    new URL("/api/auth/sign-up/email", config.betterAuthUrl).toString(),
     {
       method: "POST",
-      headers: { "content-type": "application/json", "origin": new URL(request.url).origin },
+      headers: { "content-type": "application/json", "origin": config.betterAuthUrl },
       body: JSON.stringify({ name, email, password }),
     }
   );
@@ -39,10 +40,10 @@ export async function action({ request }: Route.ActionArgs) {
 
   // Sign in automatically after sign-up
   const signinRes = await fetch(
-    new URL("/api/auth/sign-in/email", request.url).toString(),
+    new URL("/api/auth/sign-in/email", config.betterAuthUrl).toString(),
     {
       method: "POST",
-      headers: { "content-type": "application/json", "origin": new URL(request.url).origin },
+      headers: { "content-type": "application/json", "origin": config.betterAuthUrl },
       body: JSON.stringify({ email, password }),
     }
   );
