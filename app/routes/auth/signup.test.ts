@@ -99,7 +99,7 @@ describe("signup action", () => {
     expect(signinUrl).toBe("http://localhost:3000/api/auth/sign-in/email");
   });
 
-  it("redirects to /dashboard on successful sign-up and auto sign-in", async () => {
+  it("redirects to / on successful sign-up and auto sign-in", async () => {
     const request = makeSignupRequest("http://localhost:3000");
 
     fetchMock
@@ -114,7 +114,7 @@ describe("signup action", () => {
     const result = await action({ request, context: {} as never, params: {} });
 
     expect((result as Response).status).toBe(302);
-    expect((result as Response).headers.get("location")).toBe("/dashboard");
+    expect((result as Response).headers.get("location")).toBe("/");
     expect((result as Response).headers.get("set-cookie")).toBe("session=abc");
   });
 

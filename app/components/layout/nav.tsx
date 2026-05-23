@@ -7,7 +7,7 @@ export function Nav({ userName }: { userName: string }) {
       style={{ borderColor: "var(--color-border-default)", opacity: 0.8 }}
     >
       <Link
-        to="/dashboard"
+        to="/"
         className="text-xl tracking-widest"
         style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-serif)" }}
       >

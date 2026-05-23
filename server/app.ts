@@ -3,18 +3,16 @@ import express from "express";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./auth.js";
 
-const app = express();
+export const app = express();
 
-// better-auth must be mounted BEFORE express.json()
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
 app.use(express.json());
-app.use(express.static("build/client", { maxAge: "1h" }));
 
-app.all(
-  "*splat",
+app.use(
   createRequestHandler({
-    build: () => import("../build/server/index.js"),
+    // @ts-expect-error virtual module resolved by Vite/React Router
+    build: () => import("virtual:react-router/server-build"),
     async getLoadContext(req) {
       const session = await auth.api.getSession({
         headers: new Headers(req.headers as Record<string, string>),
@@ -31,10 +29,3 @@ app.all(
     },
   })
 );
-
-const { config } = await import("../config/index.js");
-const port = config.port;
-
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
