@@ -9,7 +9,7 @@ const signInSchema = z.object({
 });
 
 export async function loader({ context }: Route.LoaderArgs) {
-  if (context.user) return redirect("/dashboard");
+  if (context.user) return redirect("/");
   return {};
 }
 
@@ -41,7 +41,7 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   const setCookie = res.headers.get("set-cookie");
-  return redirect("/dashboard", {
+  return redirect("/", {
     headers: setCookie ? { "set-cookie": setCookie } : {},
   });
 }
