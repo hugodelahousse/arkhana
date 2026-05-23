@@ -52,7 +52,6 @@
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   border-radius: 8px;
-  overflow: hidden;
 }
 
 .card-back {
@@ -80,8 +79,6 @@
 }
 
 .card-back-sigil {
-  position: relative;
-  z-index: 1;
   font-size: 2.5rem;
   color: var(--color-border-default);
   opacity: 0.5;
@@ -91,7 +88,7 @@
 .card-scene[data-size="sm"] .card-back-sigil { font-size: 1.5rem; }
 .card-scene[data-size="lg"] .card-back-sigil { font-size: 3rem; }
 
-.card-front { transform: rotateY(180deg); }
+.card-front { transform: rotateY(180deg); overflow: hidden; }
 
 .card-front img {
   width: 100%;

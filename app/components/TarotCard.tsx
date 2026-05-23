@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { motion, useSpring, useMotionValue, useMotionValueEvent } from "motion/react";
 import type { MotionStyle } from "motion/react";
 import { cardImageUrl } from "../lib/cardImages";
@@ -22,6 +22,9 @@ function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
   const rotateY = useSpring(0, { stiffness: 300, damping: 30 });
   const ratioX = useMotionValue(0.5);
   const ratioY = useMotionValue(0.5);
+  // Stable ref to the orientation handler so onTap can register it after permission grant
+  const orientationHandlerRef = useRef<((e: DeviceOrientationEvent) => void) | null>(null);
+  const permissionAskedRef = useRef(false);
 
   // Drive foil CSS vars from motion values — no state, no render cycle
   useMotionValueEvent(ratioX, "change", (v) =>
@@ -44,33 +47,33 @@ function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
       ratioX.set((nx + 1) / 2);
       ratioY.set((ny + 1) / 2);
     }
+    orientationHandlerRef.current = onOrientation;
 
-    function register() {
-      window.addEventListener("deviceorientation", onOrientation);
-    }
-
-    // iOS 13+ requires a user-gesture permission request before DeviceOrientationEvent fires
     const DevOrientation = DeviceOrientationEvent as unknown as {
       requestPermission?: () => Promise<"granted" | "denied">;
     };
-    if (typeof DevOrientation.requestPermission === "function") {
-      const el = ref.current;
-      function onTouch() {
-        DevOrientation.requestPermission!().then((state) => {
-          if (state === "granted") register();
-        });
-        el?.removeEventListener("touchstart", onTouch);
-      }
-      el?.addEventListener("touchstart", onTouch, { once: true });
-      return () => {
-        el?.removeEventListener("touchstart", onTouch);
-        window.removeEventListener("deviceorientation", onOrientation);
-      };
+    // iOS 13+: do NOT register here — requestPermission must be called synchronously
+    // from a click handler (not touchstart, not async). onTap below handles it.
+    if (typeof DevOrientation.requestPermission !== "function") {
+      window.addEventListener("deviceorientation", onOrientation);
     }
-
-    register();
     return () => window.removeEventListener("deviceorientation", onOrientation);
   }, []); // stable motion values — intentionally empty deps
+
+  // Called from the card's onClick so iOS gets a synchronous click-handler invocation
+  const onTap = useCallback(() => {
+    if (permissionAskedRef.current) return;
+    const DevOrientation = DeviceOrientationEvent as unknown as {
+      requestPermission?: () => Promise<"granted" | "denied">;
+    };
+    if (typeof DevOrientation.requestPermission !== "function") return;
+    permissionAskedRef.current = true;
+    DevOrientation.requestPermission().then((state) => {
+      if (state === "granted" && orientationHandlerRef.current) {
+        window.addEventListener("deviceorientation", orientationHandlerRef.current);
+      }
+    });
+  }, []);
 
   function onMouseMove(e: React.MouseEvent) {
     if (!ref.current) return;
@@ -99,6 +102,7 @@ function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
     style: { rotateX, rotateY } as MotionStyle,
     onMouseMove,
     onMouseLeave,
+    onTap,
   };
 }
 
@@ -128,7 +132,7 @@ export function TarotCard({
       style={{ "--rarity-color": `var(--color-rarity-${rarityLabel})` } as React.CSSProperties}
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={tilt.onMouseLeave}
-      onClick={!revealed ? onReveal : undefined}
+      onClick={() => { tilt.onTap(); if (!revealed) onReveal?.(); }}
       role={!revealed ? "button" : undefined}
       aria-label={revealed ? card.name : "Unrevealed tarot card"}
     >
