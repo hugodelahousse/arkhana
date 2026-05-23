@@ -58,6 +58,10 @@ function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
     rotateY.set(nx * 15);
     ratioX.set((nx + 1) / 2);
     ratioY.set((ny + 1) / 2);
+    ref.current.style.setProperty(
+      "--pointer-from-center",
+      String(Math.min(1, Math.hypot(nx, ny) / Math.SQRT2))
+    );
   }
 
   function onMouseLeave() {
@@ -65,6 +69,7 @@ function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
     rotateY.set(0);
     ratioX.set(0.5);
     ratioY.set(0.5);
+    ref.current?.style.setProperty("--pointer-from-center", "0");
   }
 
   return {
@@ -118,7 +123,8 @@ export function TarotCard({
               loading="eager"
               draggable={false}
             />
-            <div className="card-foil" />
+            <div className="card-shine" />
+            <div className="card-glare" />
             {isRadiant && <div className="card-radiant-border" aria-hidden="true" />}
           </div>
         </div>

@@ -1,22 +1,37 @@
+/* ─── Registered property for animatable gradient angle ─── */
+@property --shine-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
 /* ─── Scene (perspective context) ─── */
 .card-scene {
   display: inline-block;
   perspective: 1200px;
   cursor: pointer;
+
+  /* Sunpillar palette — the classic holographic color spectrum */
+  --sp1: hsl(2,   100%, 73%);
+  --sp2: hsl(53,  100%, 69%);
+  --sp3: hsl(93,  100%, 69%);
+  --sp4: hsl(176, 100%, 76%);
+  --sp5: hsl(228, 100%, 74%);
+  --sp6: hsl(283, 100%, 73%);
+
+  /* Shared textures via CDN */
+  --glitter: url("https://cdn.jsdelivr.net/gh/simeydotme/pokemon-cards-css@main/public/img/glitter.png");
+  --grain:   url("https://cdn.jsdelivr.net/gh/simeydotme/pokemon-cards-css@main/public/img/grain.webp");
 }
 
-.card-scene[data-revealed] {
-  cursor: default;
-}
+.card-scene[data-revealed] { cursor: default; }
 
 .card-scene[data-size="sm"] { width: 140px; }
 .card-scene[data-size="md"] { width: 240px; }
 .card-scene[data-size="lg"] { width: 320px; }
 
 /* ─── Tilt wrapper (motion-driven) ─── */
-.card-tilt {
-  transform-style: preserve-3d;
-}
+.card-tilt { transform-style: preserve-3d; }
 
 /* ─── Flipper ─── */
 .card-flipper {
@@ -28,9 +43,7 @@
   width: 100%;
 }
 
-.card-scene[data-revealed] .card-flipper {
-  transform: rotateY(180deg);
-}
+.card-scene[data-revealed] .card-flipper { transform: rotateY(180deg); }
 
 /* ─── Faces ─── */
 .card-face {
@@ -57,18 +70,12 @@
   opacity: 0.4;
   background:
     repeating-linear-gradient(
-      45deg,
-      transparent 0px,
-      transparent 10px,
-      rgba(201, 147, 58, 0.08) 10px,
-      rgba(201, 147, 58, 0.08) 11px
+       45deg, transparent 0px, transparent 10px,
+      rgba(201,147,58,.08) 10px, rgba(201,147,58,.08) 11px
     ),
     repeating-linear-gradient(
-      -45deg,
-      transparent 0px,
-      transparent 10px,
-      rgba(201, 147, 58, 0.08) 10px,
-      rgba(201, 147, 58, 0.08) 11px
+      -45deg, transparent 0px, transparent 10px,
+      rgba(201,147,58,.08) 10px, rgba(201,147,58,.08) 11px
     );
 }
 
@@ -84,9 +91,7 @@
 .card-scene[data-size="sm"] .card-back-sigil { font-size: 1.5rem; }
 .card-scene[data-size="lg"] .card-back-sigil { font-size: 3rem; }
 
-.card-front {
-  transform: rotateY(180deg);
-}
+.card-front { transform: rotateY(180deg); }
 
 .card-front img {
   width: 100%;
@@ -95,81 +100,345 @@
   display: block;
 }
 
-.card-scene[data-reversed] .card-front img {
-  transform: rotate(180deg);
-}
+.card-scene[data-reversed] .card-front img { transform: rotate(180deg); }
 
-/* ─── Foil overlay ─── */
-.card-foil {
+
+/* ═══════════════════════════════════════════════════════════
+   EFFECT LAYERS
+   Two divs sit above the card image:
+   .card-shine  — holographic foil (mix-blend-mode: color-dodge)
+   .card-glare  — cursor-following specular highlight (mix-blend-mode: overlay)
+   ═══════════════════════════════════════════════════════════ */
+
+.card-shine,
+.card-shine::before,
+.card-shine::after,
+.card-glare,
+.card-glare::after {
   position: absolute;
   inset: 0;
-  pointer-events: none;
   border-radius: 8px;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.card-shine {
+  z-index: 2;
+  mix-blend-mode: color-dodge;
   opacity: 0;
   transition: opacity 0.3s ease;
-  mix-blend-mode: color-dodge;
-  background:
-    conic-gradient(
-      from calc(var(--ratio-x, 0.5) * 360deg)
-      at calc(var(--ratio-x, 0.5) * 100%) calc(var(--ratio-y, 0.5) * 100%),
-      var(--foil-color-a, transparent),
-      var(--foil-color-b, transparent),
-      var(--foil-color-a, transparent)
+  will-change: transform, opacity, background-image, background-size,
+               background-position, background-blend-mode, filter;
+}
+
+.card-shine::before,
+.card-shine::after { content: ""; }
+
+/* Glare: radial highlight that follows the cursor */
+.card-glare {
+  z-index: 3;
+  mix-blend-mode: overlay;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background-image: radial-gradient(
+    farthest-corner circle
+      at calc(var(--ratio-x, .5) * 100%) calc(var(--ratio-y, .5) * 100%),
+    hsla(0,0%,100%,.8)  10%,
+    hsla(0,0%,100%,.65) 20%,
+    hsla(0,0%,0%,.5)    90%
+  );
+  will-change: transform, opacity, background-image;
+}
+
+/* Mundane (1): no effect */
+.card-scene[data-rarity="1"] .card-shine,
+.card-scene[data-rarity="1"] .card-glare { display: none; }
+
+
+/* ═══════════════════════════════════════════════════════════
+   RARITY 2 — WANDERING
+   Classic holographic lines. Rainbow diagonal stripes +
+   scanline overlay. Faint at rest, vivid when tilted.
+   ═══════════════════════════════════════════════════════════ */
+
+.card-scene[data-rarity="2"] .card-shine {
+  background-image:
+    repeating-linear-gradient(
+      110deg,
+      var(--sp1)  1%, var(--sp2)  3%,
+      var(--sp3)  5%, var(--sp4)  7%,
+      var(--sp5)  9%, var(--sp6) 11%,
+      var(--sp1) 13%
     ),
-    linear-gradient(
-      135deg,
-      transparent 30%,
-      rgba(255, 255, 255, 0.12) 50%,
-      transparent 70%
+    repeating-linear-gradient(
+      90deg,
+      hsla(0,0%,50%,.05) 0px, hsla(0,0%,50%,.05) 1px,
+      transparent 1px, transparent 3px
     );
-  background-size: 200% 200%;
+  background-blend-mode: overlay;
+  background-size: 200% 700%, cover;
   background-position:
-    calc(var(--ratio-x, 0.5) * 100%)
-    calc(var(--ratio-y, 0.5) * 100%);
+    calc(var(--ratio-x,.5) * 100%) calc(var(--ratio-y,.5) * 300%),
+    center;
+  filter: brightness(.85) contrast(2.75) saturate(.65);
 }
 
-/* Mundane: no foil */
-.card-scene[data-rarity="1"] .card-foil {
-  display: none;
+.card-scene[data-rarity="2"][data-revealed]:hover .card-shine {
+  opacity: calc(.1 + var(--pointer-from-center, 0) * .35);
+}
+.card-scene[data-rarity="2"][data-revealed]:hover .card-glare {
+  opacity: .2;
 }
 
-/* Wandering */
-.card-scene[data-rarity="2"] .card-foil {
-  --foil-color-a: rgba(96, 165, 250, 0.45);
-  --foil-color-b: rgba(147, 197, 253, 0.2);
-}
-.card-scene[data-rarity="2"][data-revealed]:hover .card-foil { opacity: 0.3; }
 
-/* Mystic */
-.card-scene[data-rarity="3"] .card-foil {
-  --foil-color-a: rgba(168, 85, 247, 0.55);
-  --foil-color-b: rgba(192, 132, 252, 0.25);
-}
-.card-scene[data-rarity="3"][data-revealed]:hover .card-foil { opacity: 0.4; }
+/* ═══════════════════════════════════════════════════════════
+   RARITY 3 — MYSTIC
+   Full rainbow conic holo + glitter sparkle.
+   Animates at idle, pointer controls brightness at hover.
+   ═══════════════════════════════════════════════════════════ */
 
-/* Arcane */
-.card-scene[data-rarity="4"] .card-foil {
-  --foil-color-a: rgba(249, 115, 22, 0.55);
-  --foil-color-b: rgba(251, 191, 36, 0.35);
-}
-.card-scene[data-rarity="4"][data-revealed]:hover .card-foil { opacity: 0.5; }
-
-/* Primordial — idles at low opacity, intensifies on hover */
-.card-scene[data-rarity="5"] .card-foil {
-  --foil-color-a: rgba(234, 179, 8, 0.65);
-  --foil-color-b: rgba(253, 224, 71, 0.4);
-  opacity: 0.15;
-  animation: foil-idle-pulse 2s ease-in-out infinite;
-}
-.card-scene[data-rarity="5"][data-revealed]:hover .card-foil {
-  opacity: 0.7;
-  animation: none;
+@keyframes holo-rotate {
+  to { --shine-angle: 360deg; }
 }
 
-@keyframes foil-idle-pulse {
-  0%, 100% { opacity: 0.15; }
-  50% { opacity: 0.3; }
+.card-scene[data-rarity="3"] .card-shine {
+  background-image:
+    var(--glitter),
+    conic-gradient(
+      from var(--shine-angle, 0deg),
+      var(--sp1), var(--sp2), var(--sp3),
+      var(--sp4), var(--sp5), var(--sp6), var(--sp1)
+    ),
+    repeating-linear-gradient(
+      -30deg,
+      var(--sp1)  0%, var(--sp2)  3.5%,
+      var(--sp3)  7%, var(--sp4) 10.5%,
+      var(--sp5) 14%, var(--sp6) 17.5%,
+      var(--sp1) 21%
+    );
+  background-blend-mode: soft-light, overlay;
+  background-size: 25%, 200% 200%, 350% 350%;
+  background-position:
+    calc(var(--ratio-x,.5) * 100%)         calc(var(--ratio-y,.5) * 100%),
+    calc(var(--ratio-x,.5) * 100%)         calc(var(--ratio-y,.5) * 100%),
+    calc(var(--ratio-x,.5) * 120% - 10%)  calc(var(--ratio-y,.5) * 120% - 10%);
+  filter: brightness(calc(.55 + var(--pointer-from-center, 0) * .25))
+          contrast(2.2) saturate(.75);
+  animation: holo-rotate 6s linear infinite;
 }
+
+/* Idle shimmer on Mystic (even without hover) */
+.card-scene[data-rarity="3"][data-revealed] .card-shine {
+  opacity: .15;
+}
+.card-scene[data-rarity="3"][data-revealed]:hover .card-shine {
+  opacity: calc(.25 + var(--pointer-from-center, 0) * .55);
+}
+.card-scene[data-rarity="3"][data-revealed]:hover .card-glare {
+  opacity: .4;
+}
+
+/* Counter-rotating second layer adds depth */
+.card-scene[data-rarity="3"] .card-shine::before {
+  background-image:
+    repeating-linear-gradient(
+      133deg,
+      var(--sp4)  0%, var(--sp5)  2%,
+      var(--sp6)  4%, var(--sp1)  6%,
+      var(--sp2)  8%, var(--sp3) 10%,
+      var(--sp4) 12%
+    );
+  background-size: 300% 300%;
+  background-position:
+    calc(100% - var(--ratio-x,.5) * 100%)
+    calc(100% - var(--ratio-y,.5) * 100%);
+  mix-blend-mode: difference;
+  opacity: .35;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   RARITY 4 — ARCANE
+   Shiny foil: vertical + diagonal sunpillar gradients with
+   cross-hatch overlay. Intense saturation and contrast.
+   ═══════════════════════════════════════════════════════════ */
+
+.card-scene[data-rarity="4"] .card-shine {
+  background-image:
+    var(--glitter),
+    repeating-linear-gradient(
+      0deg,
+      var(--sp1)  0%, var(--sp2)  2%,
+      var(--sp3)  4%, var(--sp4)  6%,
+      var(--sp5)  8%, var(--sp6) 10%,
+      var(--sp1) 12%
+    ),
+    repeating-linear-gradient(
+      133deg,
+      var(--sp4)  0%, var(--sp5)  2%,
+      var(--sp6)  4%, var(--sp1)  6%,
+      var(--sp2)  8%, var(--sp3) 10%,
+      var(--sp4) 12%
+    ),
+    radial-gradient(
+      farthest-corner ellipse
+        at calc(var(--ratio-x,.5) * 100%) calc(var(--ratio-y,.5) * 100%),
+      hsla(0,0%,0%,.1) 0%,
+      hsla(0,0%,0%,.5) 90%
+    );
+  background-blend-mode: soft-light, hue, hard-light, overlay;
+  background-size: 25%, 200% 700%, 300% 300%, cover;
+  background-position:
+    calc(var(--ratio-x,.5) * 100%)         calc(var(--ratio-y,.5) * 100%),
+    calc(var(--ratio-x,.5) * 100%)         calc(var(--ratio-y,.5) * 400%),
+    calc(100% - var(--ratio-x,.5) * 100%) calc(100% - var(--ratio-y,.5) * 300%),
+    center;
+  filter: brightness(calc(.4 + var(--pointer-from-center, 0) * .4))
+          contrast(1.4) saturate(2.25);
+}
+
+.card-scene[data-rarity="4"][data-revealed] .card-shine {
+  opacity: .1;
+}
+.card-scene[data-rarity="4"][data-revealed]:hover .card-shine {
+  opacity: calc(.25 + var(--pointer-from-center, 0) * .5);
+}
+.card-scene[data-rarity="4"][data-revealed]:hover .card-glare {
+  opacity: .55;
+}
+
+/* Fine cross-hatch etching on Arcane cards */
+.card-scene[data-rarity="4"] .card-shine::before {
+  background-image:
+    repeating-linear-gradient(
+       45deg,
+      hsla(0,0%,100%,.07) 0px, hsla(0,0%,100%,.07) 1px,
+      transparent 1px, transparent 5px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      hsla(0,0%,100%,.07) 0px, hsla(0,0%,100%,.07) 1px,
+      transparent 1px, transparent 5px
+    );
+  mix-blend-mode: overlay;
+  opacity: .6;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   RARITY 5 — PRIMORDIAL
+   Galaxy / cosmos. Three-layer parallax: conic galaxy swirl,
+   parallax nebula, star-streak animation. Dramatic at rest,
+   overwhelming when tilted.
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes cosmos-drift {
+  to { --shine-angle: 360deg; }
+}
+
+.card-scene[data-rarity="5"] .card-shine {
+  background-image:
+    var(--glitter),
+    conic-gradient(
+      from var(--shine-angle, 0deg) at 50% 50%,
+      hsl(260,80%,25%)  0%,
+      hsl(220,90%,55%) 18%,
+      hsl(180,90%,70%) 28%,
+      hsl(280,90%,65%) 42%,
+      hsl(320,80%,55%) 57%,
+      hsl(260,90%,35%) 72%,
+      hsl(220,80%,60%) 88%,
+      hsl(260,80%,25%) 100%
+    ),
+    radial-gradient(
+      ellipse 130% 90%
+        at calc(var(--ratio-x,.5) * 130% - 15%) calc(var(--ratio-y,.5) * 130% - 15%),
+      hsl(220,100%,85%)  0%,
+      hsl(260,100%,65%) 30%,
+      hsl(300, 80%,35%) 60%,
+      transparent       80%
+    ),
+    radial-gradient(
+      farthest-corner circle
+        at calc(var(--ratio-x,.5) * 80% + 10%) calc(var(--ratio-y,.5) * 80% + 10%),
+      hsla(0,0%,0%,.1) 0%,
+      hsla(0,0%,0%,.7) 90%
+    );
+  background-blend-mode: soft-light, color-dodge, difference, overlay;
+  background-size: 25%, 220% 220%, 350% 350%, cover;
+  background-position:
+    calc(var(--ratio-x,.5) * 100%)         calc(var(--ratio-y,.5) * 100%),
+    calc(var(--ratio-x,.5) * 100%)         calc(var(--ratio-y,.5) * 100%),
+    calc(var(--ratio-x,.5) * 160% - 30%)  calc(var(--ratio-y,.5) * 160% - 30%),
+    center;
+  filter: brightness(calc(.35 + var(--pointer-from-center, 0) * .45))
+          contrast(1.9) saturate(1.6);
+  animation: cosmos-drift 5s linear infinite;
+}
+
+/* Idle glow — Primordial cards pulse even without interaction */
+.card-scene[data-rarity="5"][data-revealed] .card-shine {
+  opacity: .3;
+}
+.card-scene[data-rarity="5"][data-revealed]:hover .card-shine {
+  opacity: calc(.45 + var(--pointer-from-center, 0) * .45);
+}
+.card-scene[data-rarity="5"][data-revealed]:hover .card-glare {
+  opacity: .65;
+}
+
+/* Star streaks layer — diagonal light rays rotating with the galaxy */
+.card-scene[data-rarity="5"] .card-shine::before {
+  background-image:
+    radial-gradient(
+      circle
+        at calc(var(--ratio-x,.5) * 70% + 15%) calc(var(--ratio-y,.5) * 70% + 15%),
+      hsla(220,100%,95%,.6)  0%,
+      hsla(280,100%,90%,.3) 20%,
+      transparent 60%
+    ),
+    repeating-linear-gradient(
+      calc(var(--shine-angle, 0deg) + 30deg),
+      hsla(260,100%,70%,.15)  0%,
+      hsla(220,100%,90%,.3)  1.5%,
+      transparent            2.5%,
+      hsla(300,100%,70%,.1)  4%,
+      transparent            6%
+    );
+  mix-blend-mode: screen;
+  background-size: cover, 350% 350%;
+  background-position:
+    center,
+    calc(var(--ratio-x,.5) * 100%) calc(var(--ratio-y,.5) * 100%);
+}
+
+/* Nebula bloom — deep-space color bleed */
+.card-scene[data-rarity="5"] .card-shine::after {
+  background-image:
+    radial-gradient(
+      ellipse 85% 65%
+        at calc(30% + var(--ratio-x,.5) * 40%) calc(30% + var(--ratio-y,.5) * 40%),
+      hsla(280,100%,80%,.5) 0%,
+      hsla(220,100%,70%,.3) 35%,
+      transparent           70%
+    );
+  mix-blend-mode: color-dodge;
+  opacity: .7;
+}
+
+/* Second glare layer on Primordial: chromatic aberration tint */
+.card-scene[data-rarity="5"][data-revealed]:hover .card-glare::after {
+  content: "";
+  background: radial-gradient(
+    farthest-corner circle
+      at calc(var(--ratio-x,.5) * 100%) calc(var(--ratio-y,.5) * 100%),
+    hsla(220,100%,90%,.55)  0%,
+    hsla(280,100%,70%,.35) 25%,
+    transparent            65%
+  );
+  mix-blend-mode: screen;
+}
+
 
 /* ─── Radiant border ─── */
 .card-radiant-border {
@@ -177,24 +446,20 @@
   inset: -3px;
   border-radius: 10px;
   background: conic-gradient(
-    from 0deg,
-    #eab308,
-    #f97316,
-    #a855f7,
-    #60a5fa,
-    #eab308
+    from 0deg, #eab308, #f97316, #a855f7, #60a5fa, #eab308
   );
   background-size: 200% 200%;
   animation: radiant-shimmer 3s linear infinite;
   z-index: -1;
-  opacity: 0.8;
+  opacity: .8;
 }
 
 /* ─── Reveal glow burst ─── */
 @keyframes reveal-glow {
   0%   { box-shadow: 0 0 0px transparent; }
-  40%  { box-shadow: 0 0 50px var(--rarity-color, rgba(255,255,255,0.3)), 0 0 100px rgba(255,255,255,0.1); }
-  100% { box-shadow: 0 0 18px var(--rarity-color, rgba(255,255,255,0.1)); }
+  40%  { box-shadow: 0 0 50px var(--rarity-color, rgba(255,255,255,.3)),
+                     0 0 100px rgba(255,255,255,.1); }
+  100% { box-shadow: 0 0 18px var(--rarity-color, rgba(255,255,255,.1)); }
 }
 
 .card-scene[data-revealed] .card-front {
@@ -208,24 +473,25 @@
   left: 0;
   right: 0;
   text-align: center;
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
+  font-size: .65rem;
+  letter-spacing: .15em;
   text-transform: uppercase;
   color: var(--color-text-primary);
-  opacity: 0.35;
+  opacity: .35;
   pointer-events: none;
   animation: hint-pulse 2s ease-in-out infinite;
 }
 
 @keyframes hint-pulse {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 0.6; }
+  0%, 100% { opacity: .35; }
+  50%       { opacity: .6; }
 }
 
 /* ─── Reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
   .card-flipper,
-  .card-foil,
+  .card-shine,
+  .card-glare,
   .card-radiant-border,
   .card-reveal-hint {
     transition: none !important;
@@ -234,5 +500,6 @@
   .card-scene[data-revealed] .card-flipper {
     transform: rotateY(180deg) !important;
   }
-  .card-scene[data-rarity="5"] .card-foil { opacity: 0.25; }
+  .card-scene[data-rarity="5"][data-revealed] .card-shine { opacity: .25; }
+  .card-scene[data-rarity="3"][data-revealed] .card-shine { opacity: .15; }
 }
