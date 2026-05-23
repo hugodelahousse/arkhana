@@ -4,14 +4,14 @@ Daily tarot card pull app. Dark fantasy aesthetic. One card per user per UTC day
 
 ## Stack
 - React Router v7 (SSR, framework mode) + Vite
-- Express server (`server/index.ts`) — serves the built app
+- Express server (`server.js` outer shell + `server/app.ts` inner app)
 - Drizzle ORM + Postgres (`db/schema/`)
 - better-auth (email/password, `/api/auth/*`)
 - Tailwind CSS v4 + design tokens (`app/styles/tokens.css`)
 - Config via Zod-validated env vars — never use `process.env` directly in app code, import from `config/index.ts`. Exception: `db/index.ts` reads `DATABASE_URL` directly so seed/migration scripts work without requiring all app env vars
 
 ## Commands
-- Dev: `pnpm dev` (starts Express + React Router via tsx, requires build first; use `pnpm build && pnpm dev` after changes to server/)
+- Dev: `pnpm dev` (starts Express + Vite dev server with HMR, no build needed)
 - Build: `pnpm build`
 - DB push (sync schema): `pnpm db:push`
 - DB seed (78 cards): `pnpm db:seed`
@@ -29,7 +29,7 @@ Daily tarot card pull app. Dark fantasy aesthetic. One card per user per UTC day
 - `isReversed` and `isRadiant` are roll-time modifiers on `user_cards`, not card properties
 - Rarity labels (Mundane…Primordial) live in `RARITY_LABELS` in `app/lib/cards.ts` — never hardcode them elsewhere
 - `pullDate` is always `"YYYY-MM-DD"` UTC string
-- Auth session injected into React Router context via `server/index.ts getLoadContext`; access as `context.user`
+- Auth session injected into React Router context via `server/app.ts getLoadContext`; access as `context.user`
 - Do NOT use `.server.ts` suffix for modules imported at route-file top level — the React Router `dot-server` plugin blocks this. Name them `.ts` and rely on tree-shaking.
 
 ## Route structure

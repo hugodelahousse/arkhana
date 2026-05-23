@@ -5,8 +5,8 @@
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "build": "react-router build",
-    "dev": "tsx server/index.ts",
-    "start": "tsx server/index.ts",
+    "dev": "node --env-file=.env server.js",
+    "start": "node server.js",
     "typecheck": "react-router typegen && tsc",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
