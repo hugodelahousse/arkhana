@@ -6,7 +6,7 @@ import { Link } from "react-router";
 import { Nav } from "../components/layout/nav";
 import { TarotCard } from "../components/TarotCard";
 import { getUserCards, dailyPull } from "../lib/pull";
-import { CARD_BY_ID, RARITY_LABELS, getCardDescription } from "../lib/cards";
+import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug } from "../lib/cards";
 import { useAutoReveal } from "../lib/useAutoReveal";
 import { todayUTC } from "../lib/utils";
 import { config } from "../../config/index.js";
@@ -160,7 +160,7 @@ export default function Home({ loaderData, actionData }: Route.ComponentProps) {
                       {getCardDescription(result.card, result.rarityScore, result.isReversed)}
                     </p>
                     <Link
-                      to={`/card/${result.card.id}`}
+                      to={`/collection/${cardSlug(result.card)}`}
                       className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-2"
                       style={{ color: "var(--color-text-primary)" }}
                     >
@@ -263,7 +263,7 @@ export default function Home({ loaderData, actionData }: Route.ComponentProps) {
                 return (
                   <Link
                     key={pull.id}
-                    to={`/card/${pull.cardId}`}
+                    to={`/collection/${cardSlug(CARD_BY_ID[pull.cardId])}`}
                     className="flex items-center justify-between py-3 border-b opacity-70 hover:opacity-100 transition-opacity"
                     style={{ borderColor: "var(--color-bg-elevated)" }}
                   >

@@ -1649,6 +1649,14 @@ export const CARD_BY_ID: Record<number, CardDefinition> = Object.fromEntries(
   CARDS.map((c) => [c.id, c])
 );
 
+export function cardSlug(card: CardDefinition): string {
+  return card.name.toLowerCase().replace(/ /g, "-");
+}
+
+export const CARD_BY_SLUG: Record<string, CardDefinition> = Object.fromEntries(
+  CARDS.map((c) => [cardSlug(c), c])
+);
+
 export const RARITY_LABELS: Record<number, string> = {
   1: "Mundane",
   2: "Wandering",

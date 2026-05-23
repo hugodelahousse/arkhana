@@ -26,7 +26,7 @@
 
 .card-scene[data-revealed] { cursor: default; }
 
-.card-scene[data-size="sm"] { width: 140px; }
+.card-scene[data-size="sm"] { width: 100%; }
 .card-scene[data-size="md"] { width: 240px; }
 .card-scene[data-size="lg"] { width: 320px; }
 

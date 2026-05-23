@@ -41,7 +41,7 @@ Daily tarot card pull app. Dark fantasy aesthetic. One card per user per UTC day
 | `/dashboard` | required | Today's pull status + recent cards |
 | `/pull` | required | Draw card action + reveal |
 | `/collection` | required | 78-card grid |
-| `/card/:id` | required | Card detail + user pull history |
+| `/collection/:slug` | required | Card detail + pull history; 404 if not yet drawn (slug = `the-fool`, `seven-of-cups`, etc.) |
 
 ## Future features (see GitHub Issues)
 - Daily pack system (1 Major + 4 Minor per pull)
