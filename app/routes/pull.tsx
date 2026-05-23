@@ -1,11 +1,11 @@
 import { redirect, Form } from "react-router";
-import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import type { Route } from "./+types/pull";
 import { Nav } from "../components/layout/nav";
 import { TarotCard } from "../components/TarotCard";
 import { dailyPull } from "../lib/pull";
 import { RARITY_LABELS, getCardDescription } from "../lib/cards";
+import { useAutoReveal } from "../lib/useAutoReveal";
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (!context.user) return redirect("/auth/signin");
@@ -29,13 +29,7 @@ export default function Pull({ loaderData, actionData }: Route.ComponentProps) {
     ? RARITY_LABELS[result.rarityScore]?.toLowerCase()
     : null;
 
-  const [revealed, setRevealed] = useState(false);
-
-  useEffect(() => {
-    if (!result) return;
-    const t = setTimeout(() => setRevealed(true), 600);
-    return () => clearTimeout(t);
-  }, [result]);
+  const [revealed, revealNow] = useAutoReveal(!!result, 600);
 
   return (
     <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
@@ -89,7 +83,7 @@ export default function Pull({ loaderData, actionData }: Route.ComponentProps) {
                 isReversed={result.isReversed}
                 isRadiant={result.isRadiant}
                 revealed={revealed}
-                onReveal={() => setRevealed(true)}
+                onReveal={revealNow}
                 size="lg"
                 showHint={!revealed}
               />

@@ -1,13 +1,17 @@
 /* ─── Scene (perspective context) ─── */
 .card-scene {
   display: inline-block;
-  cursor: pointer;
   perspective: 1200px;
+  cursor: pointer;
 }
 
-.card-scene.size-sm { width: 140px; }
-.card-scene.size-md { width: 240px; }
-.card-scene.size-lg { width: 320px; }
+.card-scene[data-revealed] {
+  cursor: default;
+}
+
+.card-scene[data-size="sm"] { width: 140px; }
+.card-scene[data-size="md"] { width: 240px; }
+.card-scene[data-size="lg"] { width: 320px; }
 
 /* ─── Tilt wrapper (motion-driven) ─── */
 .card-tilt {
@@ -24,7 +28,7 @@
   width: 100%;
 }
 
-.card-flipper.is-revealed {
+.card-scene[data-revealed] .card-flipper {
   transform: rotateY(180deg);
 }
 
@@ -77,8 +81,8 @@
   user-select: none;
 }
 
-.card-scene.size-sm .card-back-sigil { font-size: 1.5rem; }
-.card-scene.size-lg .card-back-sigil { font-size: 3rem; }
+.card-scene[data-size="sm"] .card-back-sigil { font-size: 1.5rem; }
+.card-scene[data-size="lg"] .card-back-sigil { font-size: 3rem; }
 
 .card-front {
   transform: rotateY(180deg);
@@ -91,7 +95,7 @@
   display: block;
 }
 
-.card-front.is-reversed img {
+.card-scene[data-reversed] .card-front img {
   transform: rotate(180deg);
 }
 
@@ -124,34 +128,43 @@
     calc(var(--ratio-y, 0.5) * 100%);
 }
 
-/* Per-rarity foil colors and hover activation */
-.foil-rarity-1 { display: none; }
+/* Mundane: no foil */
+.card-scene[data-rarity="1"] .card-foil {
+  display: none;
+}
 
-.foil-rarity-2 {
+/* Wandering */
+.card-scene[data-rarity="2"] .card-foil {
   --foil-color-a: rgba(96, 165, 250, 0.45);
   --foil-color-b: rgba(147, 197, 253, 0.2);
 }
-.foil-rarity-2.is-hovered { opacity: 0.3; }
+.card-scene[data-rarity="2"][data-revealed]:hover .card-foil { opacity: 0.3; }
 
-.foil-rarity-3 {
+/* Mystic */
+.card-scene[data-rarity="3"] .card-foil {
   --foil-color-a: rgba(168, 85, 247, 0.55);
   --foil-color-b: rgba(192, 132, 252, 0.25);
 }
-.foil-rarity-3.is-hovered { opacity: 0.4; }
+.card-scene[data-rarity="3"][data-revealed]:hover .card-foil { opacity: 0.4; }
 
-.foil-rarity-4 {
+/* Arcane */
+.card-scene[data-rarity="4"] .card-foil {
   --foil-color-a: rgba(249, 115, 22, 0.55);
   --foil-color-b: rgba(251, 191, 36, 0.35);
 }
-.foil-rarity-4.is-hovered { opacity: 0.5; }
+.card-scene[data-rarity="4"][data-revealed]:hover .card-foil { opacity: 0.5; }
 
-.foil-rarity-5 {
+/* Primordial — idles at low opacity, intensifies on hover */
+.card-scene[data-rarity="5"] .card-foil {
   --foil-color-a: rgba(234, 179, 8, 0.65);
   --foil-color-b: rgba(253, 224, 71, 0.4);
-  animation: foil-idle-pulse 2s ease-in-out infinite;
   opacity: 0.15;
+  animation: foil-idle-pulse 2s ease-in-out infinite;
 }
-.foil-rarity-5.is-hovered { opacity: 0.7; animation: none; }
+.card-scene[data-rarity="5"][data-revealed]:hover .card-foil {
+  opacity: 0.7;
+  animation: none;
+}
 
 @keyframes foil-idle-pulse {
   0%, 100% { opacity: 0.15; }
@@ -184,7 +197,7 @@
   100% { box-shadow: 0 0 18px var(--rarity-color, rgba(255,255,255,0.1)); }
 }
 
-.card-flipper.is-revealed .card-front {
+.card-scene[data-revealed] .card-front {
   animation: reveal-glow 1.2s ease-out 0.35s both;
 }
 
@@ -218,8 +231,8 @@
     transition: none !important;
     animation: none !important;
   }
-  .card-flipper.is-revealed {
+  .card-scene[data-revealed] .card-flipper {
     transform: rotateY(180deg) !important;
   }
-  .foil-rarity-5 { opacity: 0.25; }
+  .card-scene[data-rarity="5"] .card-foil { opacity: 0.25; }
 }

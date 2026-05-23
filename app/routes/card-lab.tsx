@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CARDS, CARD_BY_ID, RARITY_LABELS, getCardDescription } from "../lib/cards";
 import { TarotCard } from "../components/TarotCard";
+import { useAutoReveal } from "../lib/useAutoReveal";
 import { motion, AnimatePresence } from "motion/react";
 
 export function meta() {
@@ -14,22 +15,24 @@ export default function CardLab() {
   const [rarity, setRarity] = useState<RarityScore>(3);
   const [isRadiant, setIsRadiant] = useState(false);
   const [isReversed, setIsReversed] = useState(false);
-  const [revealed, setRevealed] = useState(false);
+  const [drawn, setDrawn] = useState(false);
   const [drawKey, setDrawKey] = useState(0);
+
+  const [revealed, revealNow] = useAutoReveal(drawn, 800);
 
   const card = CARD_BY_ID[cardId];
   const rarityLabel = RARITY_LABELS[rarity]?.toLowerCase();
 
   function handleDraw() {
-    setRevealed(false);
+    setDrawn(false);
     setDrawKey((k) => k + 1);
-    const t = setTimeout(() => setRevealed(true), 800);
-    return () => clearTimeout(t);
+    // Let the reset flush before triggering, so useAutoReveal sees the transition
+    requestAnimationFrame(() => setDrawn(true));
   }
 
   function handleCardChange(newId: number) {
     setCardId(newId);
-    setRevealed(false);
+    setDrawn(false);
     setDrawKey((k) => k + 1);
   }
 
@@ -184,7 +187,7 @@ export default function CardLab() {
             isReversed={isReversed}
             isRadiant={isRadiant}
             revealed={revealed}
-            onReveal={() => setRevealed(true)}
+            onReveal={revealNow}
             size="lg"
             showHint={!revealed}
           />
