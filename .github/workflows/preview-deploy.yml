@@ -15,6 +15,8 @@ permissions:
 
 jobs:
   deploy-preview:
+    # Disabled — using Render for previews. Re-enable when back on VPS (remove this if condition).
+    if: false
     uses: ./.github/workflows/deploy-dokku.yml
     with:
       app_name: preview-pr-${{ github.event.pull_request.number }}
