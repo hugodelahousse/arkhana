@@ -99,11 +99,16 @@ jobs:
 
       - name: Setup app
         run: |
-          SECRET_B64=$(printf '%s' "${{ secrets.BETTER_AUTH_SECRET }}" | base64 -w0)
           ssh dokku@${{ secrets.DOKKU_HOST }} -- arkhana-ci:setup \
             ${{ env.APP_NAME }} \
-            ${{ env.DOMAIN }} \
-            $SECRET_B64
+            ${{ env.DOMAIN }}
+
+      - name: Set config
+        run: |
+          ssh dokku@${{ secrets.DOKKU_HOST }} -- config:set --no-restart ${{ env.APP_NAME }} \
+            NODE_ENV=production \
+            BETTER_AUTH_SECRET='${{ secrets.BETTER_AUTH_SECRET }}' \
+            BETTER_AUTH_URL='https://${{ env.DOMAIN }}'
 
   deploy:
     runs-on: ubuntu-latest
