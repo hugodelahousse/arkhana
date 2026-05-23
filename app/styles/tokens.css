@@ -1,0 +1,58 @@
+:root {
+  /* Primitives */
+  --primitive-black-950: #0a0a0f;
+  --primitive-black-900: #13131a;
+  --primitive-black-800: #1e1e2e;
+  --primitive-gold-400: #e8b96a;
+  --primitive-gold-600: #c9933a;
+  --primitive-cream-50: #f5efe0;
+  --primitive-rarity-1: #9ca3af;
+  --primitive-rarity-2: #60a5fa;
+  --primitive-rarity-3: #a855f7;
+  --primitive-rarity-4: #f97316;
+  --primitive-rarity-5: #eab308;
+  --primitive-font-serif: "Cormorant Garamond Variable", Georgia, serif;
+
+  /* Semantic */
+  --color-bg-base: var(--primitive-black-950);
+  --color-bg-surface: var(--primitive-black-900);
+  --color-bg-elevated: var(--primitive-black-800);
+  --color-text-primary: var(--primitive-cream-50);
+  --color-text-muted: var(--primitive-gold-400);
+  --color-border-default: var(--primitive-gold-600);
+  --color-rarity-mundane: var(--primitive-rarity-1);
+  --color-rarity-wandering: var(--primitive-rarity-2);
+  --color-rarity-mystic: var(--primitive-rarity-3);
+  --color-rarity-arcane: var(--primitive-rarity-4);
+  --color-rarity-primordial: var(--primitive-rarity-5);
+  --font-serif: var(--primitive-font-serif);
+}
+
+@keyframes radiant-shimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.is-radiant {
+  position: relative;
+}
+
+.is-radiant::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    #eab308,
+    #f97316,
+    #a855f7,
+    #60a5fa,
+    #eab308
+  );
+  background-size: 200% 200%;
+  animation: radiant-shimmer 3s linear infinite;
+  z-index: -1;
+  opacity: 0.7;
+}

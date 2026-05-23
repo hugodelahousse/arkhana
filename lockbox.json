@@ -1,0 +1,5 @@
+{
+  "dir": "./config",
+  "importSource": "@charcoalhq/lockbox",
+  "skipRequiredFieldValidation": []
+}
