@@ -45,7 +45,30 @@ function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
       ratioY.set((ny + 1) / 2);
     }
 
-    window.addEventListener("deviceorientation", onOrientation);
+    function register() {
+      window.addEventListener("deviceorientation", onOrientation);
+    }
+
+    // iOS 13+ requires a user-gesture permission request before DeviceOrientationEvent fires
+    const DevOrientation = DeviceOrientationEvent as unknown as {
+      requestPermission?: () => Promise<"granted" | "denied">;
+    };
+    if (typeof DevOrientation.requestPermission === "function") {
+      const el = ref.current;
+      function onTouch() {
+        DevOrientation.requestPermission!().then((state) => {
+          if (state === "granted") register();
+        });
+        el?.removeEventListener("touchstart", onTouch);
+      }
+      el?.addEventListener("touchstart", onTouch, { once: true });
+      return () => {
+        el?.removeEventListener("touchstart", onTouch);
+        window.removeEventListener("deviceorientation", onOrientation);
+      };
+    }
+
+    register();
     return () => window.removeEventListener("deviceorientation", onOrientation);
   }, []); // stable motion values — intentionally empty deps
 
