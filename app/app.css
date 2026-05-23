@@ -1,0 +1,15 @@
+@import "tailwindcss";
+@import "./styles/tokens.css";
+@import "@fontsource-variable/cormorant-garamond";
+
+@theme {
+  --font-serif: var(--primitive-font-serif);
+}
+
+html,
+body {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-serif);
+  color-scheme: dark;
+}
