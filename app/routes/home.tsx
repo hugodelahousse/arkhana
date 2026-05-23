@@ -82,7 +82,7 @@ export function meta() {
 export default function Home({ loaderData, actionData }: Route.ComponentProps) {
   const submit = useSubmit();
   const navigation = useNavigation();
-  const isPulling = navigation.state === "submitting" && !navigation.formData?.get("_action");
+  const isPulling = navigation.state === "submitting" && navigation.formData?.get("_action") === "pull";
   const result = actionData && "card" in actionData ? actionData : null;
   const rarityLabel = result ? RARITY_LABELS[result.rarityScore]?.toLowerCase() : null;
   const [revealed, revealNow] = useAutoReveal(!!result, 600);
@@ -197,7 +197,7 @@ export default function Home({ loaderData, actionData }: Route.ComponentProps) {
                   isReversed={false}
                   isRadiant={false}
                   revealed={false}
-                  onReveal={() => submit({}, { method: "post" })}
+                  onReveal={() => submit({ _action: "pull" }, { method: "post" })}
                   size="lg"
                   showHint={!isPulling}
                 />

@@ -49,38 +49,36 @@ export async function dailyPull(userId: string): Promise<PullResult> {
   const isRadiant = rollRadiant();
   const isReversed = rollReversed();
 
-  try {
-    const [inserted] = await db
-      .insert(userCards)
-      .values({ userId, cardId, rarityScore, isRadiant, isReversed, pullDate })
-      .returning();
+  const [inserted] = await db
+    .insert(userCards)
+    .values({ userId, cardId, rarityScore, isRadiant, isReversed, pullDate })
+    .onConflictDoNothing()
+    .returning();
 
+  if (!inserted) {
+    const [row] = await db
+      .select()
+      .from(userCards)
+      .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate)))
+      .limit(1);
     return {
-      status: "success",
-      card: CARD_BY_ID[cardId],
-      rarityScore,
-      isRadiant,
-      isReversed,
-      pullId: inserted.id,
+      status: "already_pulled",
+      card: CARD_BY_ID[row.cardId],
+      rarityScore: row.rarityScore as Rarity,
+      isRadiant: row.isRadiant,
+      isReversed: row.isReversed,
+      pullId: row.id,
     };
-  } catch (err: unknown) {
-    if (err instanceof Error && err.message.includes("user_cards_user_day_idx")) {
-      const [row] = await db
-        .select()
-        .from(userCards)
-        .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate)))
-        .limit(1);
-      return {
-        status: "already_pulled",
-        card: CARD_BY_ID[row.cardId],
-        rarityScore: row.rarityScore as Rarity,
-        isRadiant: row.isRadiant,
-        isReversed: row.isReversed,
-        pullId: row.id,
-      };
-    }
-    throw err;
   }
+
+  return {
+    status: "success",
+    card: CARD_BY_ID[cardId],
+    rarityScore,
+    isRadiant,
+    isReversed,
+    pullId: inserted.id,
+  };
 }
 
 const pullFields = {

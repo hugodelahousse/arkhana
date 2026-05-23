@@ -14,7 +14,7 @@ export function cardImageSlug(cardId: number, pack = "default"): string {
 
 export function getCardDescription(
   card: CardDefinition,
-  rarityScore: 1 | 2 | 3 | 4 | 5,
+  rarityScore: Rarity,
   isReversed: boolean
 ): string {
   return (isReversed ? card.reversedDescriptions : card.descriptions)[
