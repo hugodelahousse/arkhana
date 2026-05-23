@@ -1,7 +1,18 @@
 import { createRequestHandler } from "@react-router/express";
 import express from "express";
 import { toNodeHandler } from "better-auth/node";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 import { auth } from "./auth.js";
+import { db } from "../db/index.js";
+import { cards } from "../db/schema/cards.js";
+import { CARDS } from "../app/lib/cards.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+await migrate(db, { migrationsFolder: join(__dirname, "../migrations") });
+await db.insert(cards).values(CARDS.map((c) => ({ id: c.id, name: c.name }))).onConflictDoNothing();
 
 const app = express();
 
