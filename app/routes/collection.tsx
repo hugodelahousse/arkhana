@@ -6,7 +6,7 @@ import { CARDS, MAJOR_ARCANA, MINOR_BY_SUIT } from "../lib/cards";
 import { Link } from "react-router";
 
 export async function loader({ context }: Route.LoaderArgs) {
-  if (!context.user) return redirect("/auth/signin");
+  if (!context.user) return redirect("/");
   const pulledIds = await getPulledCardIds(context.user.id);
   return { user: context.user, pulledIds: [...pulledIds] };
 }

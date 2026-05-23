@@ -10,7 +10,7 @@ const paramsSchema = z.object({
 });
 
 export async function loader({ context, params }: Route.LoaderArgs) {
-  if (!context.user) return redirect("/auth/signin");
+  if (!context.user) return redirect("/");
   const parsed = paramsSchema.safeParse(params);
   if (!parsed.success) throw data("Card not found", { status: 404 });
   const card = CARD_BY_ID[parsed.data.id];
