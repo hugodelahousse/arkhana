@@ -28,7 +28,10 @@
 
 .card-scene[data-size="sm"] { width: 100%; }
 .card-scene[data-size="md"] { width: 240px; }
-.card-scene[data-size="lg"] { width: 320px; }
+.card-scene[data-size="lg"] { width: 220px; }
+@media (min-width: 640px) {
+  .card-scene[data-size="lg"] { width: 320px; }
+}
 
 /* ─── Tilt wrapper (motion-driven) ─── */
 .card-tilt { transform-style: preserve-3d; }

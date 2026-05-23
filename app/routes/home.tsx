@@ -106,7 +106,7 @@ export default function Home({ loaderData, actionData }: Route.ComponentProps) {
         {/* Today's pull */}
         <section className="space-y-6 text-center">
           <h2
-            className="text-xs tracking-widest uppercase opacity-50"
+            className="text-sm sm:text-xs tracking-widest uppercase opacity-50"
             style={{ color: "var(--color-text-primary)" }}
           >
             Today
@@ -356,16 +356,16 @@ function LandingPage({ authError }: { authError?: string | null }) {
   const cardId = SHOWCASE_CARDS[cardIndex];
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
-      <div className="max-w-md w-full space-y-10">
+    <main className="min-h-[100dvh] flex flex-col items-center justify-center px-6 py-8 text-center">
+      <div className="max-w-md w-full space-y-6 sm:space-y-10">
         <h1
-          className="text-6xl font-light tracking-widest"
+          className="text-4xl sm:text-6xl font-light tracking-widest"
           style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-serif)" }}
         >
           ARKHANA
         </h1>
 
-        <div className="flex justify-center" style={{ paddingBottom: "1rem" }}>
+        <div className="flex justify-center">
           <TarotCard
             card={CARD_BY_ID[cardId]}
             rarityScore={rarity}
@@ -377,7 +377,7 @@ function LandingPage({ authError }: { authError?: string | null }) {
         </div>
 
         <p
-          className="text-lg tracking-wide"
+          className="text-base sm:text-lg tracking-wide"
           style={{
             color: "var(--color-text-primary)",
             opacity: 0.6,
