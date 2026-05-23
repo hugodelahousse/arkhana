@@ -1,0 +1,3 @@
+[plugin]
+description = "CI deploy helper — setup and deploy in one SSH call"
+version = "0.1.0"
