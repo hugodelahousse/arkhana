@@ -26,4 +26,5 @@ COPY ./server /app/server
 COPY ./db /app/db
 COPY ./config /app/config
 WORKDIR /app
+EXPOSE 3000
 CMD ["pnpm", "run", "start"]
