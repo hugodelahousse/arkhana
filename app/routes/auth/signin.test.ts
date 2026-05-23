@@ -72,7 +72,7 @@ describe("signin action", () => {
     expect(signinOpts.headers["origin"]).toBe("http://localhost:3000");
   });
 
-  it("redirects to /dashboard on successful sign-in", async () => {
+  it("redirects to / on successful sign-in", async () => {
     const request = makeSigninRequest("http://localhost:3000");
 
     fetchMock.mockResolvedValueOnce(
@@ -85,7 +85,7 @@ describe("signin action", () => {
     const result = await action({ request, context: {} as never, params: {} });
 
     expect((result as Response).status).toBe(302);
-    expect((result as Response).headers.get("location")).toBe("/dashboard");
+    expect((result as Response).headers.get("location")).toBe("/");
     expect((result as Response).headers.get("set-cookie")).toBe("session=abc");
   });
 
