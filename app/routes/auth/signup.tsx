@@ -27,7 +27,7 @@ export async function action({ request }: Route.ActionArgs) {
     new URL("/api/auth/sign-up/email", request.url).toString(),
     {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", "origin": new URL(request.url).origin },
       body: JSON.stringify({ name, email, password }),
     }
   );
@@ -42,7 +42,7 @@ export async function action({ request }: Route.ActionArgs) {
     new URL("/api/auth/sign-in/email", request.url).toString(),
     {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", "origin": new URL(request.url).origin },
       body: JSON.stringify({ email, password }),
     }
   );
