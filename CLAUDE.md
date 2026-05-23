@@ -8,19 +8,19 @@ Daily tarot card pull app. Dark fantasy aesthetic. One card per user per UTC day
 - Drizzle ORM + Postgres (`db/schema/`)
 - better-auth (email/password, `/api/auth/*`)
 - Tailwind CSS v4 + design tokens (`app/styles/tokens.css`)
-- Config via `@charcoalhq/lockbox` — never use `process.env` directly, import from `config/index.ts`
+- Config via Zod-validated env vars — never use `process.env` directly, import from `config/index.ts`
 
 ## Commands
-- Dev: `LOCKBOX_PRIVATE_KEY=<key> pnpm dev` (starts Express + React Router via tsx, requires build first for prod; use `pnpm build && pnpm dev` after changes to server/)
-- Build: `LOCKBOX_PRIVATE_KEY=<key> pnpm build`
+- Dev: `pnpm dev` (starts Express + React Router via tsx, requires build first; use `pnpm build && pnpm dev` after changes to server/)
+- Build: `pnpm build`
 - DB push (sync schema): `pnpm db:push`
 - DB seed (78 cards): `pnpm db:seed`
 - DB studio: `pnpm db:studio`
 
 ## Environment
+- Copy `.env.example` → `.env` and fill in values (`.env` is gitignored)
 - Local Postgres: `postgresql://arkhana:arkhana@localhost:5432/arkhana` (start with `pg_ctlcluster 16 main start`)
 - Docker not available in this remote environment
-- Private key stored at `.lockbox/private-key`; export as `LOCKBOX_PRIVATE_KEY` env var
 
 ## Key conventions
 - All DB queries through Drizzle — no raw SQL

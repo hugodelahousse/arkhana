@@ -1,25 +1,19 @@
-import { createConfig } from "@charcoalhq/lockbox";
 import { z } from "zod";
-import developmentConfig from "./development/generated.js";
-import productionConfig from "./production/generated.js";
 
 const schema = z.object({
-  databaseUrl: z.string().url(),
-  betterAuthSecret: z.string().min(32),
-  betterAuthUrl: z.string().url(),
-  port: z.coerce.number().default(3000),
-  nodeEnv: z
-    .enum(["development", "production", "test"])
-    .default("development"),
+  DATABASE_URL: z.string().url(),
+  BETTER_AUTH_SECRET: z.string().min(32),
+  BETTER_AUTH_URL: z.string().url(),
+  PORT: z.coerce.number().default(3000),
+  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 });
 
-const environment = (process.env.NODE_ENV ?? "development") as
-  | "development"
-  | "production";
+const parsed = schema.parse(process.env);
 
-export const { config } = await createConfig({
-  configs: { development: developmentConfig, production: productionConfig },
-  environment,
-  privateKey: process.env.LOCKBOX_PRIVATE_KEY,
-  schema,
-});
+export const config = {
+  databaseUrl: parsed.DATABASE_URL,
+  betterAuthSecret: parsed.BETTER_AUTH_SECRET,
+  betterAuthUrl: parsed.BETTER_AUTH_URL,
+  port: parsed.PORT,
+  nodeEnv: parsed.NODE_ENV,
+};

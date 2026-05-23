@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.11",
-    "@charcoalhq/lockbox": "^0.2.0",
     "@fontsource-variable/cormorant-garamond": "^5.2.6",
     "@react-router/express": "^7.15.1",
     "@react-router/node": "7.15.1",
