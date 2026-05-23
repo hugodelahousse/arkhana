@@ -116,7 +116,6 @@
   inset: 0;
   border-radius: 8px;
   pointer-events: none;
-  overflow: hidden;
 }
 
 .card-shine {
@@ -124,6 +123,9 @@
   mix-blend-mode: color-dodge;
   opacity: 0;
   transition: opacity 0.3s ease;
+  /* clip-path reliably rounds the corners even with mix-blend-mode active;
+     overflow:hidden is ignored by Safari when blend modes are set */
+  clip-path: inset(0 round 8px);
   will-change: transform, opacity, background-image, background-size,
                background-position, background-blend-mode, filter;
 }
@@ -137,6 +139,7 @@
   mix-blend-mode: overlay;
   opacity: 0;
   transition: opacity 0.3s ease;
+  clip-path: inset(0 round 8px);
   background-image: radial-gradient(
     farthest-corner circle
       at calc(var(--ratio-x, .5) * 100%) calc(var(--ratio-y, .5) * 100%),
