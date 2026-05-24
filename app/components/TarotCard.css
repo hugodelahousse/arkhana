@@ -78,8 +78,8 @@
   opacity: var(--hold-progress, 0);
 }
 
-/* On reveal, flash the rarity color and fade out */
-.card-scene[data-revealed] .card-back::after {
+/* On reveal (user-triggered only), flash the rarity color and fade out */
+.card-scene[data-just-revealed] .card-back::after {
   box-shadow:
     0 0 15px 3px var(--rarity-color, var(--color-card-back-accent)),
     0 0 35px 8px color-mix(in srgb, var(--rarity-color, var(--color-card-back-accent)) 45%, transparent),

@@ -1,4 +1,4 @@
-import { memo, useRef, useCallback } from "react";
+import { memo, useRef, useCallback, useState } from "react";
 import { motion, useSpring } from "motion/react";
 import type { MotionStyle } from "motion/react";
 import { cardImageUrl } from "../lib/cardImages";
@@ -92,7 +92,13 @@ export const TarotCard = memo(function TarotCard({
   const tilt = useCardTilt(sceneRef);
   const rarityLabel = RARITY_LABELS[rarityScore]?.toLowerCase() ?? "mundane";
 
-  const hold = useHoldReveal(!revealed ? onReveal : undefined, sceneRef);
+  const [justRevealed, setJustRevealed] = useState(false);
+  const handleReveal = useCallback(() => {
+    setJustRevealed(true);
+    onReveal?.();
+  }, [onReveal]);
+
+  const hold = useHoldReveal(!revealed ? handleReveal : undefined, sceneRef);
 
   return (
     <div
@@ -101,6 +107,7 @@ export const TarotCard = memo(function TarotCard({
       data-size={size}
       data-rarity={rarityScore}
       data-revealed={revealed || undefined}
+      data-just-revealed={justRevealed || undefined}
       data-reversed={isReversed || undefined}
       data-radiant={isRadiant || undefined}
       style={{ "--rarity-color": `var(--color-rarity-${rarityLabel})` } as React.CSSProperties}
@@ -112,7 +119,7 @@ export const TarotCard = memo(function TarotCard({
       onTouchEnd={!revealed ? hold.cancel : undefined}
       onTouchCancel={!revealed ? hold.cancel : undefined}
       onClick={() => tilt.onTap()}
-      onKeyDown={!revealed ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onReveal?.(); } } : undefined}
+      onKeyDown={!revealed ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleReveal(); } } : undefined}
       role={!revealed ? "button" : undefined}
       tabIndex={!revealed ? 0 : undefined}
       aria-label={revealed ? card.name : "Unrevealed tarot card, hold to reveal"}
