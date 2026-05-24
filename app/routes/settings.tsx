@@ -139,7 +139,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                 pattern="[a-zA-Z0-9_-]+"
                 placeholder="your-username"
                 autoComplete="username"
-                className="flex-1 bg-transparent border px-4 py-2 text-sm placeholder:opacity-40 focus:outline-none focus-visible:ring-1 transition-colors"
+                className="flex-1 bg-transparent border px-4 py-2 text-base sm:text-sm placeholder:opacity-40 focus:outline-none focus-visible:ring-1 transition-colors"
                 style={{
                   borderColor: "var(--color-border-default)",
                   color: "var(--color-text-primary)",

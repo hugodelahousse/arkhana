@@ -66,7 +66,7 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
             required
             placeholder="your@email.com"
             autoComplete="email"
-            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
           />
           <label htmlFor="password" className="sr-only">Password</label>
           <input
@@ -76,7 +76,7 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
             required
             placeholder="Password"
             autoComplete="current-password"
-            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
           />
           <button
             type="submit"
