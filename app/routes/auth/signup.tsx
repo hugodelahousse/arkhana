@@ -61,7 +61,7 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
           <Link to="/" className="text-2xl tracking-widest text-muted block">
             ARKHANA
           </Link>
-          <p className="text-xs tracking-widest uppercase opacity-40">
+          <p className="text-xs tracking-widest uppercase opacity-60">
             Create your account
           </p>
         </div>
@@ -77,7 +77,7 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             type="text"
             placeholder="Name (optional)"
             autoComplete="name"
-            className="w-full bg-transparent border border-border px-4 py-3 text-sm opacity-60 focus:opacity-100 placeholder:opacity-30 focus:outline-none focus-visible:ring-1 focus-visible:ring-border"
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
           />
           <label htmlFor="email" className="sr-only">Email address</label>
           <input
@@ -87,7 +87,7 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             required
             placeholder="your@email.com"
             autoComplete="email"
-            className="w-full bg-transparent border border-border px-4 py-3 text-sm opacity-60 focus:opacity-100 placeholder:opacity-30 focus:outline-none focus-visible:ring-1 focus-visible:ring-border"
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
           />
           <label htmlFor="password" className="sr-only">Password, minimum 8 characters</label>
           <input
@@ -98,20 +98,20 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             minLength={8}
             placeholder="Password (min 8 characters)"
             autoComplete="new-password"
-            className="w-full bg-transparent border border-border px-4 py-3 text-sm opacity-60 focus:opacity-100 placeholder:opacity-30 focus:outline-none focus-visible:ring-1 focus-visible:ring-border"
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
           />
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-muted transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-muted hover:opacity-80 disabled:opacity-40 transition-opacity"
           >
             {isSubmitting ? "…" : "Enter the archive"}
           </button>
         </Form>
 
-        <p className="text-center text-xs opacity-40">
+        <p className="text-center text-xs opacity-60">
           Already a keeper?{" "}
-          <Link to="/auth/signin" className="opacity-70 hover:opacity-100 transition-opacity underline">
+          <Link to="/auth/signin" className="opacity-80 hover:opacity-100 transition-opacity underline">
             Sign in
           </Link>
         </p>
