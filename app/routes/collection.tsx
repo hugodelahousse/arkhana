@@ -4,6 +4,7 @@ import { ViewTransition, addTransitionType } from "react";
 import type { Route } from "./+types/collection";
 import { Nav } from "../components/layout/nav";
 import { TarotCard } from "../components/TarotCard";
+import { Button } from "../components/Button";
 import { getAllPulls } from "../lib/pull";
 import { MAJOR_ARCANA, MINOR_BY_SUIT, cardSlug } from "../lib/cards";
 import type { CardDefinition, Rarity } from "../lib/cards";
@@ -39,16 +40,26 @@ export function meta() {
   return [{ title: "Collection — Arkhana" }];
 }
 
+const SUIT_ICONS: Record<string, string> = {
+  wands: "⚡",
+  cups: "♦",
+  swords: "†",
+  pentacles: "✧",
+};
+
 export default function Collection({ loaderData }: Route.ComponentProps) {
   const { user, bestByCard } = loaderData;
   const discoveredCount = Object.keys(bestByCard).length;
-  const [hideUndiscovered, setHideUndiscovered] = useState(false);
+  const [hideUndiscovered, setHideUndiscovered] = useState(true);
+
+  const majorDiscovered = MAJOR_ARCANA.filter((c) => bestByCard[c.id]).length;
 
   return (
     <DirectionalTransition>
       <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
         <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-4xl mx-auto px-6 py-12 space-y-12">
+
           <div className="text-center space-y-3">
             <h1
               className="text-2xl font-light tracking-widest"
@@ -62,50 +73,92 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
             >
               {discoveredCount}/78 discovered
             </p>
-            <button
-              onClick={() => setHideUndiscovered((v) => !v)}
-              className="text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity"
-              style={{ color: "var(--color-text-primary)" }}
-            >
-              {hideUndiscovered ? "Show all cards" : "Hide undiscovered"}
-            </button>
+            <Button size="sm" onClick={() => setHideUndiscovered((v) => !v)}>
+              {hideUndiscovered ? "Show all" : "Discovered only"}
+            </Button>
           </div>
 
-          <section className="space-y-4">
-            <h2
-              className="text-xs tracking-widest uppercase opacity-50 flex items-baseline gap-2"
-              style={{ color: "var(--color-text-primary)" }}
-            >
-              Major Arcana
-              <span className="opacity-60">
-                {MAJOR_ARCANA.filter((c) => bestByCard[c.id]).length}/{MAJOR_ARCANA.length}
+          {/* Category icon navigation */}
+          <nav className="flex flex-wrap justify-center gap-6 sm:gap-10">
+            <a href="#major-arcana" className="flex flex-col items-center gap-2 group text-center">
+              <span
+                className="text-3xl opacity-50 group-hover:opacity-90 transition-opacity"
+                style={{ fontFamily: "var(--font-serif)" }}
+              >
+                ✦
               </span>
-            </h2>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
-              {MAJOR_ARCANA.filter((c) => !hideUndiscovered || bestByCard[c.id]).map((card) => (
-                <CardTile key={card.id} card={card} best={bestByCard[card.id]} />
-              ))}
-            </div>
-          </section>
+              <p className="text-xs tracking-widest uppercase opacity-40 group-hover:opacity-70 transition-opacity"
+                style={{ color: "var(--color-text-primary)" }}>
+                Major Arcana
+              </p>
+              <p className="text-xs opacity-30" style={{ color: "var(--color-text-primary)" }}>
+                {majorDiscovered}/{MAJOR_ARCANA.length}
+              </p>
+            </a>
+            {MINOR_BY_SUIT.map(({ suit, cards }) => {
+              const discovered = cards.filter((c) => bestByCard[c.id]).length;
+              return (
+                <a key={suit} href={`#${suit}`} className="flex flex-col items-center gap-2 group text-center">
+                  <span
+                    className="text-3xl opacity-50 group-hover:opacity-90 transition-opacity"
+                    style={{ fontFamily: "var(--font-serif)" }}
+                  >
+                    {SUIT_ICONS[suit]}
+                  </span>
+                  <p
+                    className="text-xs tracking-widest uppercase opacity-40 capitalize group-hover:opacity-70 transition-opacity"
+                    style={{ color: "var(--color-text-primary)" }}
+                  >
+                    {suit}
+                  </p>
+                  <p className="text-xs opacity-30" style={{ color: "var(--color-text-primary)" }}>
+                    {discovered}/{cards.length}
+                  </p>
+                </a>
+              );
+            })}
+          </nav>
 
-          {MINOR_BY_SUIT.map(({ suit, cards }) => (
-            <section key={suit} className="space-y-4">
+          {(!hideUndiscovered || majorDiscovered > 0) && (
+            <section id="major-arcana" className="space-y-4">
               <h2
-                className="text-xs tracking-widest uppercase opacity-50 capitalize flex items-baseline gap-2"
+                className="text-xs tracking-widest uppercase opacity-50 flex items-baseline gap-2"
                 style={{ color: "var(--color-text-primary)" }}
               >
-                {suit}
+                Major Arcana
                 <span className="opacity-60">
-                  {cards.filter((c) => bestByCard[c.id]).length}/{cards.length}
+                  {majorDiscovered}/{MAJOR_ARCANA.length}
                 </span>
               </h2>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-4">
-                {cards.filter((c) => !hideUndiscovered || bestByCard[c.id]).map((card) => (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+                {MAJOR_ARCANA.filter((c) => !hideUndiscovered || bestByCard[c.id]).map((card) => (
                   <CardTile key={card.id} card={card} best={bestByCard[card.id]} />
                 ))}
               </div>
             </section>
-          ))}
+          )}
+
+          {MINOR_BY_SUIT.filter(({ cards }) => !hideUndiscovered || cards.some((c) => bestByCard[c.id])).map(({ suit, cards }) => {
+            const suitDiscovered = cards.filter((c) => bestByCard[c.id]).length;
+            return (
+              <section key={suit} id={suit} className="space-y-4">
+                <h2
+                  className="text-xs tracking-widest uppercase opacity-50 capitalize flex items-baseline gap-2"
+                  style={{ color: "var(--color-text-primary)" }}
+                >
+                  {suit}
+                  <span className="opacity-60">
+                    {suitDiscovered}/{cards.length}
+                  </span>
+                </h2>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-4">
+                  {cards.filter((c) => !hideUndiscovered || bestByCard[c.id]).map((card) => (
+                    <CardTile key={card.id} card={card} best={bestByCard[card.id]} />
+                  ))}
+                </div>
+              </section>
+            );
+          })}
         </main>
       </div>
     </DirectionalTransition>

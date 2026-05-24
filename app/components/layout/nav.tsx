@@ -1,4 +1,5 @@
 import { Link, Form } from "react-router";
+import { buttonClass } from "../Button";
 
 export function Nav({ userName, isAnonymous }: { userName: string; isAnonymous?: boolean }) {
   return (
@@ -52,10 +53,7 @@ export function Nav({ userName, isAnonymous }: { userName: string; isAnonymous?:
         >
           <p className="uppercase opacity-40">Sign up to preserve your collection</p>
           <div className="flex items-center gap-4 shrink-0">
-            <Link
-              to="/auth/signup"
-              className="uppercase border border-border px-3 py-1 hover:opacity-90 transition-opacity"
-            >
+            <Link to="/auth/signup" className={buttonClass("sm")}>
               Create account
             </Link>
             <Link
