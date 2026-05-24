@@ -6,6 +6,7 @@ import { Link } from "react-router";
 import { Nav } from "../components/layout/nav";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { SpreadSummaryGrid } from "../components/SpreadSummaryGrid";
+import { ShareButton } from "../components/ShareButton";
 import { getSpreadType } from "../lib/spreads";
 import { getTodaySpread } from "../lib/spread-pull";
 import { getOrigin } from "../lib/utils";
@@ -62,7 +63,7 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
   ];
 }
 
-export default function SpreadDateRoute({ loaderData }: Route.ComponentProps) {
+export default function SpreadDateRoute({ loaderData, params }: Route.ComponentProps) {
   const { user, name, subtitle, positions, cards, formattedDate, isToday } = loaderData;
 
   return (
@@ -101,7 +102,13 @@ export default function SpreadDateRoute({ loaderData }: Route.ComponentProps) {
 
             <SpreadSummaryGrid cards={cards} positions={positions} />
 
-            <div className="text-center pt-4 space-y-3">
+            <div className="flex flex-col items-center pt-4 space-y-4">
+              <ShareButton
+                title={`${name} — Arkhana`}
+                url={`/spread/${params.type}/${params.date}`}
+                text={`${name}: ${subtitle}`}
+                label="Share reading"
+              />
               <Link
                 to="/history"
                 className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity"
