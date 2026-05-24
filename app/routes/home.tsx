@@ -169,7 +169,7 @@ function SpreadContemplateReveal({
               style={{ background: "var(--color-rarity-mystic)", opacity: 0.3 }}
             />
             <p
-              className="text-sm leading-relaxed opacity-70 italic"
+              className="text-base leading-relaxed opacity-80 italic"
               style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
             >
               {positions[position]?.contemplationPrompt}
@@ -304,7 +304,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     <DirectionalTransition>
       <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
         <Nav userName={user.name} isAnonymous={user.isAnonymous} />
-        <main className="max-w-2xl mx-auto px-6 py-12 space-y-12">
+        <main className="max-w-2xl mx-auto px-6 py-6 sm:py-12 space-y-8 sm:space-y-12">
 
           {isSundayToday && spreadDef ? (
             <section className="space-y-6">
@@ -339,7 +339,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       style={{ background: "var(--color-text-primary)" }}
                     />
                     <p
-                      className="text-sm leading-relaxed opacity-70 max-w-sm mx-auto"
+                      className="text-base leading-relaxed opacity-80 max-w-sm mx-auto"
                       style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
                     >
                       {spreadDef.description}
@@ -607,7 +607,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               ) : (
                 <div className="space-y-6">
                   <p
-                    className="text-lg opacity-60"
+                    className="text-xl opacity-80"
                     style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
                   >
                     {isPulling ? "The fates are turning…" : "The cards await your question."}
