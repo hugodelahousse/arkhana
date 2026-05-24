@@ -32,8 +32,12 @@
 /* ─── Scene (perspective context) ─── */
 .card-scene {
   display: inline-block;
+  position: relative;
   perspective: 1200px;
   cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   transition:
     --ratio-x 350ms ease-out,
     --ratio-y 350ms ease-out,
@@ -54,6 +58,48 @@
 }
 
 .card-scene[data-revealed] { cursor: default; }
+
+/* ─── Hold-to-reveal glow ─── */
+/* Soft halo that fades in with --hold-progress (0–1), driven by RAF in useHoldReveal */
+.card-scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: -1;
+  box-shadow:
+    0 0 12px 2px var(--color-card-back-accent),
+    0 0 30px 6px color-mix(in srgb, var(--color-card-back-accent) 45%, transparent),
+    0 0 50px 12px color-mix(in srgb, var(--color-card-back-accent) 15%, transparent);
+  opacity: var(--hold-progress, 0);
+}
+
+/* On reveal, flash the rarity color and fade out */
+.card-scene[data-revealed]::before {
+  box-shadow:
+    0 0 15px 3px var(--rarity-color, var(--color-card-back-accent)),
+    0 0 35px 8px color-mix(in srgb, var(--rarity-color, var(--color-card-back-accent)) 45%, transparent),
+    0 0 60px 15px color-mix(in srgb, var(--rarity-color, var(--color-card-back-accent)) 15%, transparent);
+  animation: hold-glow-reveal 0.8s ease-out forwards;
+}
+
+@keyframes hold-glow-reveal {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ─── Focus ring ─── */
+.card-scene { outline: none; }
+.card-scene:focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 11px;
+  border: 2px solid color-mix(in srgb, var(--color-card-back-accent) 60%, transparent);
+  pointer-events: none;
+  z-index: 5;
+}
 
 .card-scene[data-size="sm"] { width: 100%; }
 .card-scene[data-size="md"] { width: 240px; }
@@ -141,7 +187,8 @@
 .card-scene[data-size="sm"] .card-back-sigil { font-size: 1.5rem; }
 .card-scene[data-size="lg"] .card-back-sigil { font-size: 3rem; }
 
-.card-front { transform: rotateY(180deg); overflow: hidden; }
+
+.card-front { transform: rotateY(180deg); border-radius: 0; }
 
 .card-front img {
   width: 100%;
@@ -167,7 +214,7 @@
 .card-glare::after {
   position: absolute;
   inset: 0;
-  border-radius: 8px;
+  border-radius: 0;
   pointer-events: none;
   overflow: hidden;
 }
@@ -517,8 +564,18 @@
   100% { box-shadow: 0 0 18px var(--rarity-color, rgba(255,255,255,.1)); }
 }
 
+@keyframes reveal-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
 .card-scene[data-revealed] .card-front {
   animation: reveal-glow 1.2s ease-out 0.35s both;
+}
+
+.card-scene[data-revealed] {
+  animation: reveal-pop 0.25s ease-out both;
 }
 
 /* ─── Reveal hint ─── */
@@ -544,6 +601,8 @@
 
 /* ─── Reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
+  .card-scene,
+  .card-scene::before,
   .card-flipper,
   .card-shine,
   .card-glare,

@@ -1,10 +1,11 @@
-import { memo, useEffect, useRef, useCallback } from "react";
+import { memo, useRef, useCallback } from "react";
 import { motion, useSpring } from "motion/react";
 import type { MotionStyle } from "motion/react";
 import { cardImageUrl } from "../lib/cardImages";
 import { RARITY_LABELS } from "../lib/cards";
 import type { CardDefinition, Rarity } from "../lib/cards";
 import { useOrientationEffect } from "../lib/orientation";
+import { useHoldReveal } from "../lib/useHoldReveal";
 import "./TarotCard.css";
 
 export interface TarotCardProps {
@@ -91,6 +92,8 @@ export const TarotCard = memo(function TarotCard({
   const tilt = useCardTilt(sceneRef);
   const rarityLabel = RARITY_LABELS[rarityScore]?.toLowerCase() ?? "mundane";
 
+  const hold = useHoldReveal(!revealed ? onReveal : undefined, sceneRef);
+
   return (
     <div
       ref={sceneRef}
@@ -102,12 +105,17 @@ export const TarotCard = memo(function TarotCard({
       data-radiant={isRadiant || undefined}
       style={{ "--rarity-color": `var(--color-rarity-${rarityLabel})` } as React.CSSProperties}
       onMouseMove={tilt.onMouseMove}
-      onMouseLeave={tilt.onMouseLeave}
-      onClick={() => { tilt.onTap(); if (!revealed) onReveal?.(); }}
-      onKeyDown={!revealed ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tilt.onTap(); onReveal?.(); } } : undefined}
+      onMouseLeave={() => { tilt.onMouseLeave(); if (!revealed) hold.cancel(); }}
+      onMouseDown={!revealed ? hold.start : undefined}
+      onMouseUp={!revealed ? hold.cancel : undefined}
+      onTouchStart={!revealed ? (e) => { e.preventDefault(); tilt.onTap(); hold.start(); } : undefined}
+      onTouchEnd={!revealed ? hold.cancel : undefined}
+      onTouchCancel={!revealed ? hold.cancel : undefined}
+      onClick={() => tilt.onTap()}
+      onKeyDown={!revealed ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onReveal?.(); } } : undefined}
       role={!revealed ? "button" : undefined}
       tabIndex={!revealed ? 0 : undefined}
-      aria-label={revealed ? card.name : "Unrevealed tarot card, press to reveal"}
+      aria-label={revealed ? card.name : "Unrevealed tarot card, hold to reveal"}
     >
       <motion.div className="card-tilt" style={tilt.style}>
         <div className="card-flipper">
@@ -131,7 +139,7 @@ export const TarotCard = memo(function TarotCard({
       </motion.div>
 
       {showHint && !revealed && (
-        <div className="card-reveal-hint" aria-hidden="true">tap to reveal</div>
+        <div className="card-reveal-hint" aria-hidden="true">hold to reveal</div>
       )}
     </div>
   );

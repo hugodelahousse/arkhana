@@ -29,7 +29,7 @@ export async function dailyPull(userId: string): Promise<PullResult> {
   const existing = await db
     .select()
     .from(userCards)
-    .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate)))
+    .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate), eq(userCards.pullType, "daily")))
     .limit(1);
 
   if (existing.length > 0) {
@@ -95,7 +95,7 @@ export async function getTodayPull(userId: string, pullDate: string) {
   const [row] = await db
     .select(pullFields)
     .from(userCards)
-    .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate)))
+    .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate), eq(userCards.pullType, "daily")))
     .limit(1);
   return row ?? null;
 }
@@ -104,7 +104,7 @@ export async function getRecentPulls(userId: string, limit = 5) {
   return db
     .select(pullFields)
     .from(userCards)
-    .where(eq(userCards.userId, userId))
+    .where(and(eq(userCards.userId, userId), eq(userCards.pullType, "daily")))
     .orderBy(desc(userCards.pulledAt))
     .limit(limit);
 }
@@ -129,6 +129,21 @@ export async function getAllPulls(userId: string) {
     })
     .from(userCards)
     .where(eq(userCards.userId, userId));
+}
+
+export async function getDailyPullHistory(userId: string) {
+  return db
+    .select({
+      id: userCards.id,
+      cardId: userCards.cardId,
+      rarityScore: sql<number>`${userCards.rarityScore}`,
+      isRadiant: userCards.isRadiant,
+      isReversed: userCards.isReversed,
+      pullDate: userCards.pullDate,
+    })
+    .from(userCards)
+    .where(and(eq(userCards.userId, userId), eq(userCards.pullType, "daily")))
+    .orderBy(desc(userCards.pullDate));
 }
 
 export async function getUserCardHistory(userId: string, cardId: number) {
