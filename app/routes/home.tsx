@@ -3,17 +3,25 @@ import { motion, AnimatePresence } from "motion/react";
 import type { Route } from "./+types/home";
 import { Link } from "react-router";
 import { Nav } from "../components/layout/nav";
-import { LandingPage } from "../components/LandingPage";
 import { TarotCard } from "../components/TarotCard";
 import { getTodayPull, getRecentPulls, getUniqueCardCount, dailyPull } from "../lib/pull";
 import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity } from "../lib/cards";
 import { useAutoReveal } from "../lib/useAutoReveal";
 import { todayUTC } from "../lib/utils";
-import { createHmac } from "node:crypto";
 import { config } from "../../config/index.js";
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (!context.user) {
+    const origin = new URL(config.betterAuthUrl).origin;
+    const anonRes = await fetch(
+      new URL("/api/auth/sign-in/anonymous", config.betterAuthUrl).toString(),
+      { method: "POST", headers: { "content-type": "application/json", origin } }
+    );
+    if (anonRes.ok) {
+      const setCookie = anonRes.headers.get("set-cookie");
+      if (setCookie) throw redirect("/", { headers: { "set-cookie": setCookie } });
+    }
+    // Fallback: anonymous sign-in failed (e.g. DB unavailable)
     return {
       user: null as null,
       todayPull: null as Awaited<ReturnType<typeof getTodayPull>> | null,
@@ -33,43 +41,7 @@ export async function loader({ context }: Route.LoaderArgs) {
   return { user: context.user, todayPull, recentPulls, totalUnique };
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
-  const form = await request.formData();
-
-  if (form.get("_action") === "auth") {
-    const email = String(form.get("email") || "").trim().toLowerCase();
-    if (!email || !email.includes("@")) {
-      return { authError: "Please enter a valid email." };
-    }
-
-    const name = email.split("@")[0];
-    // Passwordless UX: derive a per-user password via HMAC so it's not guessable.
-    // Proper fix: migrate to better-auth magic links once SMTP is configured.
-    const password = createHmac("sha256", config.betterAuthSecret)
-      .update(email)
-      .digest("hex");
-    const origin = new URL(config.betterAuthUrl).origin;
-    const headers = { "content-type": "application/json", origin };
-
-    // Try sign-up first (no-ops if user already exists), then sign-in
-    await fetch(
-      new URL("/api/auth/sign-up/email", config.betterAuthUrl).toString(),
-      { method: "POST", headers, body: JSON.stringify({ name, email, password }) }
-    );
-
-    const signInRes = await fetch(
-      new URL("/api/auth/sign-in/email", config.betterAuthUrl).toString(),
-      { method: "POST", headers, body: JSON.stringify({ email, password }) }
-    );
-
-    if (!signInRes.ok) {
-      return { authError: "Something went wrong. Please try again." };
-    }
-
-    const setCookie = signInRes.headers.get("set-cookie");
-    return redirect("/", { headers: setCookie ? { "set-cookie": setCookie } : {} });
-  }
-
+export async function action({ context }: Route.ActionArgs) {
   if (!context.user) return redirect("/");
   const result = await dailyPull(context.user.id);
   return result;
@@ -79,7 +51,7 @@ export function meta() {
   return [{ title: "Arkhana" }];
 }
 
-export default function Home({ loaderData, actionData }: Route.ComponentProps) {
+export default function Home({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher();
   const isPulling = fetcher.state === "submitting";
   const result = fetcher.data && "card" in fetcher.data ? fetcher.data : null;
@@ -87,11 +59,11 @@ export default function Home({ loaderData, actionData }: Route.ComponentProps) {
   const [revealed, revealNow] = useAutoReveal(!!result, 600);
 
   if (!loaderData.user) {
-    const authError =
-      actionData && "authError" in actionData
-        ? (actionData as { authError: string }).authError
-        : null;
-    return <LandingPage authError={authError} />;
+    return (
+      <div className="min-h-screen bg-base flex items-center justify-center">
+        <p className="text-sm opacity-40 tracking-widest uppercase">The archive stirs…</p>
+      </div>
+    );
   }
 
   const { user, todayPull, recentPulls, totalUnique } = loaderData;
@@ -100,7 +72,7 @@ export default function Home({ loaderData, actionData }: Route.ComponentProps) {
 
   return (
     <div className="min-h-screen bg-base">
-      <Nav userName={user.name} />
+      <Nav userName={user.name} isAnonymous={user.isAnonymous} />
       <main className="max-w-2xl mx-auto px-6 py-12 space-y-12">
 
         <section className="space-y-6 text-center">
@@ -204,6 +176,29 @@ export default function Home({ loaderData, actionData }: Route.ComponentProps) {
             </div>
           )}
         </section>
+
+        {user.isAnonymous && !result && (
+          <section className="border border-border/50 px-6 py-5 space-y-4 text-center">
+            <div className="space-y-1">
+              <p className="text-xs tracking-widest uppercase opacity-40">Your reading is ephemeral</p>
+              <p className="text-sm opacity-60">Sign up to preserve your collection &amp; streak</p>
+            </div>
+            <div className="flex items-center justify-center gap-6">
+              <Link
+                to="/auth/signup"
+                className="px-5 py-2 text-xs tracking-widest uppercase border border-border hover:opacity-90 transition-opacity"
+              >
+                Create account
+              </Link>
+              <Link
+                to="/auth/signin"
+                className="text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
+              >
+                Sign in
+              </Link>
+            </div>
+          </section>
+        )}
 
         {!result && (
           <section className="flex justify-center gap-12 py-6 border-t border-b border-elevated">
