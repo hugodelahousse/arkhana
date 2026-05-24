@@ -60,7 +60,7 @@
 .card-back {
   background:
     radial-gradient(
-      ellipse at calc(var(--ratio-x, .5) * 100%) calc(var(--ratio-y, .5) * 100%),
+      ellipse at calc(var(--glow-x, .5) * 100%) calc(var(--glow-y, .5) * 100%),
       color-mix(in srgb, var(--color-card-back-accent) 22%, transparent) 0%,
       transparent 65%
     ),
@@ -79,7 +79,7 @@
   border-radius: 8px;
   pointer-events: none;
   background: radial-gradient(
-    circle at calc(var(--ratio-x, .5) * 100%) calc(var(--ratio-y, .5) * 100%),
+    circle at calc(var(--glow-x, .5) * 100%) calc(var(--glow-y, .5) * 100%),
     rgba(255,255,255,.07) 0%,
     transparent 55%
   );
@@ -163,7 +163,7 @@
   transition: opacity 0.3s ease;
   background-image: radial-gradient(
     farthest-corner circle
-      at calc(var(--ratio-x, .5) * 100%) calc(var(--ratio-y, .5) * 100%),
+      at calc(var(--glow-x, .5) * 100%) calc(var(--glow-y, .5) * 100%),
     hsla(0,0%,100%,.8)  10%,
     hsla(0,0%,100%,.65) 20%,
     hsla(0,0%,0%,.5)    90%

@@ -38,6 +38,15 @@ function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
     rotateY.set(nx * 15);
     ratioX.set((nx + 1) / 2);
     ratioY.set((ny + 1) / 2);
+    // Project the world-space light position onto this card's bounding box so
+    // each card gets a unique glow angle rather than all sharing the same value.
+    if (ref.current) {
+      const { left, top, width, height } = ref.current.getBoundingClientRect();
+      const lightX = window.innerWidth  * (nx + 1) / 2;
+      const lightY = window.innerHeight * (ny + 1) / 2;
+      ref.current.style.setProperty("--glow-x", String((lightX - left) / width));
+      ref.current.style.setProperty("--glow-y", String((lightY - top)  / height));
+    }
   });
 
   const onTap = useCallback(() => {
@@ -62,6 +71,9 @@ function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
     rotateY.set(nx * 15);
     ratioX.set((nx + 1) / 2);
     ratioY.set((ny + 1) / 2);
+    // For mouse, cursor position within the card is the light source.
+    ref.current.style.setProperty("--glow-x", String((e.clientX - left) / width));
+    ref.current.style.setProperty("--glow-y", String((e.clientY - top)  / height));
     ref.current.style.setProperty(
       "--pointer-from-center",
       String(Math.min(1, Math.hypot(nx, ny) / Math.SQRT2))
@@ -73,6 +85,8 @@ function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
     rotateY.set(0);
     ratioX.set(0.5);
     ratioY.set(0.5);
+    ref.current?.style.setProperty("--glow-x", "0.5");
+    ref.current?.style.setProperty("--glow-y", "0.5");
     ref.current?.style.setProperty("--pointer-from-center", "0");
   }, [ref, rotateX, rotateY, ratioX, ratioY]);
 
