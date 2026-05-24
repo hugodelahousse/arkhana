@@ -217,40 +217,16 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             )}
           </section>
 
-          {user.isAnonymous && !result && (
-            <section className="border border-border/50 px-6 py-5 space-y-4 text-center">
-              <div className="space-y-1">
-                <p className="text-xs tracking-widest uppercase opacity-40">Your reading is ephemeral</p>
-                <p className="text-sm opacity-60">Sign up to preserve your collection &amp; streak</p>
-              </div>
-              <div className="flex items-center justify-center gap-6">
-                <Link
-                  to="/auth/signup"
-                  className="px-5 py-2 text-xs tracking-widest uppercase border border-border hover:opacity-90 transition-opacity"
-                >
-                  Create account
-                </Link>
-                <Link
-                  to="/auth/signin"
-                  className="text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
-                >
-                  Sign in
-                </Link>
-              </div>
-            </section>
-          )}
-
           {!result && (
             <section
               className="flex justify-center gap-12 py-6 border-t border-b"
               style={{ borderColor: "var(--color-bg-elevated)" }}
             >
-              <div className="text-center space-y-1">
-                <p className="text-2xl" style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-serif)" }}>
-                  {totalUnique}
-                </p>
-                <p className="text-xs tracking-widest uppercase opacity-40" style={{ color: "var(--color-text-primary)" }}>
-                  of 78 discovered
+              <div className="text-center">
+                <p className="whitespace-nowrap" style={{ fontFamily: "var(--font-serif)" }}>
+                  <span className="text-2xl" style={{ color: "var(--color-text-muted)" }}>{totalUnique}</span>
+                  <span className="text-base opacity-50" style={{ color: "var(--color-text-muted)" }}>/78</span>
+                  <span className="text-xs tracking-widest uppercase opacity-40 ml-2" style={{ color: "var(--color-text-primary)" }}>discovered</span>
                 </p>
               </div>
             </section>

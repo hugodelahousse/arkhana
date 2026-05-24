@@ -1,9 +1,10 @@
 import { memo, useEffect, useRef, useCallback } from "react";
-import { motion, useSpring, useMotionValue, useMotionValueEvent } from "motion/react";
+import { motion, useSpring } from "motion/react";
 import type { MotionStyle } from "motion/react";
 import { cardImageUrl } from "../lib/cardImages";
 import { RARITY_LABELS } from "../lib/cards";
 import type { CardDefinition, Rarity } from "../lib/cards";
+import { useOrientationEffect } from "../lib/orientation";
 import "./TarotCard.css";
 
 export interface TarotCardProps {
@@ -17,53 +18,16 @@ export interface TarotCardProps {
   showHint?: boolean;
 }
 
-// Module-level singleton: one deviceorientation listener shared across all mounted cards.
-// Without this, the collection page (78 cards) would register 78 separate listeners.
-type OrientationHandler = (nx: number, ny: number) => void;
-const orientationHandlers = new Set<OrientationHandler>();
-let orientationListenerBound = false;
-
-function subscribeOrientation(handler: OrientationHandler): () => void {
-  if (!orientationListenerBound && typeof window !== "undefined") {
-    window.addEventListener(
-      "deviceorientation",
-      (e: DeviceOrientationEvent) => {
-        if (e.gamma === null || e.beta === null) return;
-        const nx = Math.max(-1, Math.min(1, e.gamma / 45));
-        const ny = Math.max(-1, Math.min(1, (e.beta - 45) / 45));
-        orientationHandlers.forEach((h) => h(nx, ny));
-      },
-      { passive: true },
-    );
-    orientationListenerBound = true;
-  }
-  orientationHandlers.add(handler);
-  return () => orientationHandlers.delete(handler);
-}
-
 function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
   const rotateX = useSpring(0, { stiffness: 300, damping: 30 });
   const rotateY = useSpring(0, { stiffness: 300, damping: 30 });
-  const ratioX = useMotionValue(0.5);
-  const ratioY = useMotionValue(0.5);
   const orientationActiveRef = useRef(false);
 
-  useMotionValueEvent(ratioX, "change", (v) =>
-    ref.current?.style.setProperty("--ratio-x", String(v))
-  );
-  useMotionValueEvent(ratioY, "change", (v) =>
-    ref.current?.style.setProperty("--ratio-y", String(v))
-  );
-
-  useEffect(() => {
-    return subscribeOrientation((nx, ny) => {
-      orientationActiveRef.current = true;
-      rotateX.set(-ny * 15);
-      rotateY.set(nx * 15);
-      ratioX.set((nx + 1) / 2);
-      ratioY.set((ny + 1) / 2);
-    });
-  }, []);
+  useOrientationEffect((nx, ny) => {
+    orientationActiveRef.current = true;
+    rotateX.set(-ny * 15);
+    rotateY.set(nx * 15);
+  });
 
   const onTap = useCallback(() => {
     if (orientationActiveRef.current) return;
@@ -85,21 +49,25 @@ function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
     const ny = ((e.clientY - top) / height) * 2 - 1;
     rotateX.set(-ny * 15);
     rotateY.set(nx * 15);
-    ratioX.set((nx + 1) / 2);
-    ratioY.set((ny + 1) / 2);
+    ref.current.style.setProperty("--ratio-x", String((nx + 1) / 2));
+    ref.current.style.setProperty("--ratio-y", String((ny + 1) / 2));
+    ref.current.style.setProperty("--glow-x",  String((e.clientX - left) / width));
+    ref.current.style.setProperty("--glow-y",  String((e.clientY - top)  / height));
     ref.current.style.setProperty(
       "--pointer-from-center",
       String(Math.min(1, Math.hypot(nx, ny) / Math.SQRT2))
     );
-  }, [ref, rotateX, rotateY, ratioX, ratioY]);
+  }, [ref, rotateX, rotateY]);
 
   const onMouseLeave = useCallback(() => {
     rotateX.set(0);
     rotateY.set(0);
-    ratioX.set(0.5);
-    ratioY.set(0.5);
+    ref.current?.style.setProperty("--ratio-x", "0.5");
+    ref.current?.style.setProperty("--ratio-y", "0.5");
+    ref.current?.style.setProperty("--glow-x",  "0.5");
+    ref.current?.style.setProperty("--glow-y",  "0.5");
     ref.current?.style.setProperty("--pointer-from-center", "0");
-  }, [ref, rotateX, rotateY, ratioX, ratioY]);
+  }, [ref, rotateX, rotateY]);
 
   return {
     style: { rotateX, rotateY } as MotionStyle,
