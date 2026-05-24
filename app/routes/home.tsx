@@ -10,6 +10,7 @@ import { getTodayPull, getRecentPulls, getUniqueCardCount, dailyPull } from "../
 import { getTodaySpread } from "../lib/spread-pull";
 import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity } from "../lib/cards";
 import { useAutoReveal } from "../lib/useAutoReveal";
+import { DateTime } from "luxon";
 import { todayUTC } from "../lib/utils";
 import { config } from "../../config/index.js";
 import { DirectionalTransition } from "../components/DirectionalTransition";
@@ -36,8 +37,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 
   const userId = context.user.id;
   const todayStr = todayUTC();
-  const now = new Date();
-  const isSundayToday = now.getUTCDay() === 0;
+  const isSundayToday = DateTime.utc().weekday === 7;
 
   const [recentPulls, totalUnique, sundaySpread] = await Promise.all([
     getRecentPulls(userId, 5),
@@ -62,7 +62,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 export async function action({ context }: Route.ActionArgs) {
   if (!context.user) return redirect("/");
-  if (new Date().getUTCDay() === 0) return redirect("/spread/sunday-weekly");
+  if (DateTime.utc().weekday === 7) return redirect("/spread/sunday-weekly");
   const result = await dailyPull(context.user.id);
   return result;
 }

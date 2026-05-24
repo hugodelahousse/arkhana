@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { redirect, useFetcher, data } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
+import { DateTime } from "luxon";
 import type { Route } from "./+types/spread.$type";
 import { Link } from "react-router";
 import { Nav } from "../components/layout/nav";
@@ -18,10 +19,10 @@ export async function loader({ context, params }: Route.LoaderArgs) {
   const spreadDef = getSpreadType(params.type);
   if (!spreadDef) throw data("Spread not found", { status: 404 });
 
-  const now = new Date();
-  const spreadDate = now.toISOString().slice(0, 10);
+  const now = DateTime.utc();
+  const spreadDate = now.toISODate()!;
   const isAvailable = spreadDef.isAvailable(now);
-  const nextAvailable = spreadDef.nextAvailable(now).toISOString();
+  const nextAvailable = spreadDef.nextAvailable(now).toISO()!;
 
   const existingCards = isAvailable
     ? await getTodaySpread(context.user.id, params.type, spreadDate)
@@ -44,7 +45,7 @@ export async function action({ context, params }: Route.ActionArgs) {
   if (!context.user) return redirect("/");
   const spreadDef = getSpreadType(params.type);
   if (!spreadDef) throw data("Spread not found", { status: 404 });
-  return drawSpread(context.user.id, params.type, new Date());
+  return drawSpread(context.user.id, params.type, DateTime.utc());
 }
 
 export function meta({ data: loaderData }: Route.MetaArgs) {
@@ -269,12 +270,9 @@ export default function SpreadRoute({ loaderData }: Route.ComponentProps) {
     }
   }
 
-  const nextSunday = new Date(nextAvailable).toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  });
+  const nextSunday = DateTime.fromISO(nextAvailable, { zone: "utc" }).toFormat(
+    "cccc, LLLL d"
+  );
 
   return (
     <DirectionalTransition>

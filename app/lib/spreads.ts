@@ -4,14 +4,16 @@ export interface SpreadPosition {
   contemplationPrompt: string;
 }
 
+import { DateTime } from "luxon";
+
 export interface SpreadTypeDefinition {
   id: string;
   name: string;
   subtitle: string;
   description: string;
   positions: SpreadPosition[];
-  isAvailable: (date: Date) => boolean;
-  nextAvailable: (date: Date) => Date;
+  isAvailable: (date: DateTime) => boolean;
+  nextAvailable: (date: DateTime) => DateTime;
 }
 
 export const SPREAD_REGISTRY: Record<string, SpreadTypeDefinition> = {
@@ -47,13 +49,12 @@ export const SPREAD_REGISTRY: Record<string, SpreadTypeDefinition> = {
           "Having sat with mind, body, and spirit — what is the one guiding action the week asks of you? What must you actually do?",
       },
     ],
-    isAvailable: (date: Date) => date.getUTCDay() === 0,
-    nextAvailable: (date: Date) => {
-      const daysUntil = (7 - date.getUTCDay()) % 7 || 7;
-      const next = new Date(date);
-      next.setUTCDate(date.getUTCDate() + daysUntil);
-      next.setUTCHours(0, 0, 0, 0);
-      return next;
+    // Luxon weekday: 1=Monday … 7=Sunday
+    isAvailable: (date: DateTime) => date.setZone("utc").weekday === 7,
+    nextAvailable: (date: DateTime) => {
+      const utc = date.setZone("utc");
+      const daysUntil = (7 - utc.weekday) % 7 || 7;
+      return utc.plus({ days: daysUntil }).startOf("day");
     },
   },
 };
@@ -62,7 +63,7 @@ export function getSpreadType(id: string): SpreadTypeDefinition | null {
   return SPREAD_REGISTRY[id] ?? null;
 }
 
-export function getTodaySpreadType(date: Date): SpreadTypeDefinition | null {
+export function getTodaySpreadType(date: DateTime): SpreadTypeDefinition | null {
   return (
     Object.values(SPREAD_REGISTRY).find((s) => s.isAvailable(date)) ?? null
   );

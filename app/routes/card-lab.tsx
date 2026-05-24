@@ -36,32 +36,10 @@ export default function CardLab() {
     setDrawKey((k) => k + 1);
   }
 
-  const selectStyle: React.CSSProperties = {
-    background: "var(--color-bg-elevated)",
-    color: "var(--color-text-primary)",
-    border: "1px solid var(--color-border-default)",
-    padding: "0.4rem 0.6rem",
-    fontSize: "0.8rem",
-    fontFamily: "var(--font-serif)",
-    letterSpacing: "0.05em",
-    outline: "none",
-    cursor: "pointer",
-  };
-
-  const labelStyle: React.CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.25rem",
-    fontSize: "0.65rem",
-    letterSpacing: "0.12em",
-    textTransform: "uppercase",
-    color: "var(--color-text-muted)",
-  };
-
   return (
     <div
-      className="min-h-screen"
-      style={{ background: "var(--color-bg-base)", padding: "2rem" }}
+      className="min-h-screen p-8"
+      style={{ background: "var(--color-bg-base)" }}
     >
       <div className="max-w-2xl mx-auto space-y-10">
         {/* Header */}
@@ -76,26 +54,31 @@ export default function CardLab() {
             className="text-xs tracking-widest uppercase opacity-40"
             style={{ color: "var(--color-text-primary)" }}
           >
-            Test animations, art & effects
+            Test animations, art &amp; effects
           </p>
         </div>
 
         {/* Controls */}
         <div
-          className="flex flex-wrap gap-5 items-end p-5"
-          style={{
-            background: "var(--color-bg-surface)",
-            border: "1px solid",
-            borderColor: "var(--color-bg-elevated)",
-          }}
+          className="flex flex-wrap gap-5 items-end p-5 border"
+          style={{ background: "var(--color-bg-surface)", borderColor: "var(--color-bg-elevated)" }}
         >
           {/* Card picker */}
-          <label style={labelStyle}>
+          <label
+            className="flex flex-col gap-1 text-[0.65rem] tracking-[0.12em] uppercase"
+            style={{ color: "var(--color-text-muted)" }}
+          >
             Card
             <select
               value={cardId}
               onChange={(e) => handleCardChange(Number(e.target.value))}
-              style={{ ...selectStyle, minWidth: "180px" }}
+              className="min-w-[180px] px-[0.6rem] py-[0.4rem] text-[0.8rem] tracking-[0.05em] border outline-none cursor-pointer"
+              style={{
+                background: "var(--color-bg-elevated)",
+                color: "var(--color-text-primary)",
+                borderColor: "var(--color-border-default)",
+                fontFamily: "var(--font-serif)",
+              }}
             >
               {CARDS.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -106,12 +89,21 @@ export default function CardLab() {
           </label>
 
           {/* Rarity */}
-          <label style={labelStyle}>
+          <label
+            className="flex flex-col gap-1 text-[0.65rem] tracking-[0.12em] uppercase"
+            style={{ color: "var(--color-text-muted)" }}
+          >
             Rarity
             <select
               value={rarity}
               onChange={(e) => setRarity(Number(e.target.value) as RarityScore)}
-              style={selectStyle}
+              className="px-[0.6rem] py-[0.4rem] text-[0.8rem] tracking-[0.05em] border outline-none cursor-pointer"
+              style={{
+                background: "var(--color-bg-elevated)",
+                color: "var(--color-text-primary)",
+                borderColor: "var(--color-border-default)",
+                fontFamily: "var(--font-serif)",
+              }}
             >
               {([1, 2, 3, 4, 5] as RarityScore[]).map((r) => (
                 <option key={r} value={r}>
@@ -123,37 +115,29 @@ export default function CardLab() {
 
           {/* Toggles */}
           <label
-            style={{
-              ...labelStyle,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: "0.5rem",
-              cursor: "pointer",
-            }}
+            className="flex flex-row items-center gap-2 text-[0.65rem] tracking-[0.12em] uppercase cursor-pointer"
+            style={{ color: "var(--color-text-muted)" }}
           >
             <input
               type="checkbox"
               checked={isRadiant}
               onChange={(e) => setIsRadiant(e.target.checked)}
-              style={{ accentColor: "var(--color-border-default)", width: "0.9rem", height: "0.9rem" }}
+              className="w-[0.9rem] h-[0.9rem]"
+              style={{ accentColor: "var(--color-border-default)" }}
             />
             Radiant ✦
           </label>
 
           <label
-            style={{
-              ...labelStyle,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: "0.5rem",
-              cursor: "pointer",
-            }}
+            className="flex flex-row items-center gap-2 text-[0.65rem] tracking-[0.12em] uppercase cursor-pointer"
+            style={{ color: "var(--color-text-muted)" }}
           >
             <input
               type="checkbox"
               checked={isReversed}
               onChange={(e) => setIsReversed(e.target.checked)}
-              style={{ accentColor: "var(--color-border-default)", width: "0.9rem", height: "0.9rem" }}
+              className="w-[0.9rem] h-[0.9rem]"
+              style={{ accentColor: "var(--color-border-default)" }}
             />
             Reversed
           </label>
@@ -161,16 +145,10 @@ export default function CardLab() {
           {/* Draw button */}
           <button
             onClick={handleDraw}
-            className="transition-opacity hover:opacity-90"
+            className="px-6 py-2 text-[0.7rem] tracking-[0.15em] uppercase cursor-pointer border bg-transparent hover:opacity-90 transition-opacity"
             style={{
-              padding: "0.5rem 1.5rem",
-              border: "1px solid var(--color-border-default)",
               color: "var(--color-text-muted)",
-              background: "transparent",
-              fontSize: "0.7rem",
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              cursor: "pointer",
+              borderColor: "var(--color-border-default)",
               fontFamily: "var(--font-serif)",
             }}
           >
@@ -179,7 +157,7 @@ export default function CardLab() {
         </div>
 
         {/* Card display */}
-        <div className="flex flex-col items-center gap-8" style={{ paddingTop: "1rem", paddingBottom: "3rem" }}>
+        <div className="flex flex-col items-center gap-8 pt-4 pb-12">
           <TarotCard
             key={drawKey}
             card={card}

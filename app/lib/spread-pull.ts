@@ -1,4 +1,5 @@
 import { and, eq } from "drizzle-orm";
+import { DateTime } from "luxon";
 import { db } from "../../db/index.js";
 import { spreads, spreadCards } from "../../db/schema/spreads.js";
 import { userCards } from "../../db/schema/user-cards.js";
@@ -23,12 +24,12 @@ export type SpreadPullResult =
       spreadId: number;
       cards: SpreadCardResult[];
     }
-  | { status: "unavailable"; nextAvailable: Date };
+  | { status: "unavailable"; nextAvailable: DateTime };
 
 export async function drawSpread(
   userId: string,
   spreadTypeId: string,
-  now: Date
+  now: DateTime
 ): Promise<SpreadPullResult> {
   const spreadDef = getSpreadType(spreadTypeId);
   if (!spreadDef || !spreadDef.isAvailable(now)) {
@@ -36,11 +37,11 @@ export async function drawSpread(
       status: "unavailable",
       nextAvailable: spreadDef
         ? spreadDef.nextAvailable(now)
-        : new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+        : now.setZone("utc").plus({ weeks: 1 }).startOf("day"),
     };
   }
 
-  const spreadDate = now.toISOString().slice(0, 10);
+  const spreadDate = now.setZone("utc").toISODate()!;
 
   const existing = await getTodaySpread(userId, spreadTypeId, spreadDate);
   if (existing) {
