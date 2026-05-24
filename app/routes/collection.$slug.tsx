@@ -248,75 +248,31 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
               </Link>
             </section>
           ) : (
-            /* Public view — card info */
-            <section className="space-y-6">
-              <h2
-                className="text-xs tracking-widest uppercase opacity-50"
-                style={{ color: "var(--color-text-primary)" }}
+            /* Public view — teaser only, no descriptions */
+            <div
+              className="text-center pt-4 space-y-4 border-t"
+              style={{ borderColor: "var(--color-border-default)" }}
+            >
+              <p
+                className="text-sm opacity-50"
+                style={{
+                  color: "var(--color-text-primary)",
+                  fontFamily: "var(--font-serif)",
+                }}
               >
-                The card
-              </h2>
-              <div className="space-y-4">
-                {(card.descriptions as string[]).map((desc: string, i: number) => {
-                  const rarity = (i + 1) as Rarity;
-                  const label = RARITY_LABELS[rarity as Rarity];
-                  return (
-                    <div
-                      key={i}
-                      className="p-5 border space-y-2"
-                      style={{
-                        borderColor: `var(--color-rarity-${label?.toLowerCase()})`,
-                        background: "var(--color-bg-surface)",
-                        opacity: 0.8,
-                      }}
-                    >
-                      <span
-                        className="text-xs tracking-widest uppercase"
-                        style={{
-                          color: `var(--color-rarity-${label?.toLowerCase()})`,
-                        }}
-                      >
-                        {label}
-                      </span>
-                      <p
-                        className="text-sm leading-relaxed"
-                        style={{
-                          color: "var(--color-text-primary)",
-                          fontFamily: "var(--font-serif)",
-                          opacity: 0.85,
-                        }}
-                      >
-                        {desc}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-              <div
-                className="text-center pt-4 space-y-4 border-t"
-                style={{ borderColor: "var(--color-border-default)" }}
+                Pull your own card to reveal its meaning.
+              </p>
+              <Link
+                to="/"
+                className="inline-block px-6 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
+                style={{
+                  borderColor: "var(--color-text-primary)",
+                  color: "var(--color-text-primary)",
+                }}
               >
-                <p
-                  className="text-sm opacity-50"
-                  style={{
-                    color: "var(--color-text-primary)",
-                    fontFamily: "var(--font-serif)",
-                  }}
-                >
-                  Pull this card in your daily reading.
-                </p>
-                <Link
-                  to="/auth/signup"
-                  className="inline-block px-6 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
-                  style={{
-                    borderColor: "var(--color-text-primary)",
-                    color: "var(--color-text-primary)",
-                  }}
-                >
-                  Start your journey →
-                </Link>
-              </div>
-            </section>
+                Draw today's card →
+              </Link>
+            </div>
           )}
         </main>
       </div>
