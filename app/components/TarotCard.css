@@ -59,48 +59,46 @@
 
 .card-scene[data-revealed] { cursor: default; }
 
-/* ─── Hold-to-reveal sweep glow ─── */
-/* Conic sweep around the card edges driven by --hold-progress (0–1) */
+/* ─── Hold-to-reveal glow ─── */
+/* Soft halo that fades in with --hold-progress (0–1), driven by RAF in useHoldReveal */
 .card-scene::before {
   content: "";
   position: absolute;
-  inset: -10px;
-  border-radius: 18px;
-  padding: 10px;
-  background: conic-gradient(
-    from -90deg at 50% 50%,
-    var(--color-card-back-accent) calc(var(--hold-progress, 0) * 360deg),
-    transparent               calc(var(--hold-progress, 0) * 360deg)
-  );
-  /* Mask the filled interior so only the border ring carries the gradient */
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
+  inset: 0;
+  border-radius: 8px;
   pointer-events: none;
-  z-index: 4;
-  /* Wide blur turns the hard ring into a soft diffuse glow */
-  filter: blur(8px) brightness(1.4);
+  z-index: -1;
+  box-shadow:
+    0 0 12px 2px var(--color-card-back-accent),
+    0 0 30px 6px color-mix(in srgb, var(--color-card-back-accent) 45%, transparent),
+    0 0 50px 12px color-mix(in srgb, var(--color-card-back-accent) 15%, transparent);
+  opacity: var(--hold-progress, 0);
 }
 
 /* On reveal, flash the rarity color and fade out */
 .card-scene[data-revealed]::before {
-  background: conic-gradient(
-    from -90deg at 50% 50%,
-    var(--rarity-color, var(--color-card-back-accent)) 360deg,
-    transparent 360deg
-  );
-  filter: blur(10px) brightness(1.6);
+  box-shadow:
+    0 0 15px 3px var(--rarity-color, var(--color-card-back-accent)),
+    0 0 35px 8px color-mix(in srgb, var(--rarity-color, var(--color-card-back-accent)) 45%, transparent),
+    0 0 60px 15px color-mix(in srgb, var(--rarity-color, var(--color-card-back-accent)) 15%, transparent);
   animation: hold-glow-reveal 0.8s ease-out forwards;
 }
 
 @keyframes hold-glow-reveal {
   0%   { opacity: 1; }
   100% { opacity: 0; }
+}
+
+/* ─── Focus ring ─── */
+.card-scene { outline: none; }
+.card-scene:focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 11px;
+  border: 2px solid color-mix(in srgb, var(--color-card-back-accent) 60%, transparent);
+  pointer-events: none;
+  z-index: 5;
 }
 
 .card-scene[data-size="sm"] { width: 100%; }

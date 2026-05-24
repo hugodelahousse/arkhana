@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, LayoutGroup } from "motion/react";
 import { TarotCard } from "./TarotCard";
 import { RARITY_LABELS, getCardDescription, type Rarity } from "../lib/cards";
 import type { SpreadCardResult } from "../lib/spread-pull";
@@ -23,10 +23,7 @@ function CardDetailOverlay({
   }, []);
 
   return createPortal(
-    // Portal to document.body so position:fixed is relative to the viewport,
-    // not any ancestor motion.div that may have an active transform.
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
       <motion.div
         className="fixed inset-0"
         style={{ background: "rgba(0,0,0,0.85)" }}
@@ -36,7 +33,6 @@ function CardDetailOverlay({
         transition={{ duration: 0.2 }}
         onClick={onClose}
       />
-      {/* Centering wrapper — 100dvh + safe-area padding so content clears browser chrome */}
       <div
         className="relative z-10 flex flex-col items-center justify-center px-6"
         style={{
@@ -46,31 +42,39 @@ function CardDetailOverlay({
         }}
         onClick={onClose}
       >
-      <motion.div
+      <div
         className="flex flex-col items-center gap-5 w-full max-w-xs"
-        initial={{ scale: 0.92, opacity: 0, y: 12 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.92, opacity: 0, y: 12 }}
-        transition={{ duration: 0.25, ease: "easeOut" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <p
-          className="text-xs tracking-widest uppercase opacity-40"
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.4 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3, delay: 0.15 }}
+          className="text-xs tracking-widest uppercase"
           style={{ color: "var(--color-text-primary)" }}
         >
           {posLabel}
-        </p>
+        </motion.p>
 
-        <TarotCard
-          card={card.card}
-          rarityScore={card.rarityScore as Rarity}
-          isReversed={card.isReversed}
-          isRadiant={card.isRadiant}
-          revealed={true}
-          size="md"
-        />
+        <motion.div layoutId={`spread-card-${card.position}`} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
+          <TarotCard
+            card={card.card}
+            rarityScore={card.rarityScore as Rarity}
+            isReversed={card.isReversed}
+            isRadiant={card.isRadiant}
+            revealed={true}
+            size="md"
+          />
+        </motion.div>
 
-        <div className="text-center space-y-2">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3, delay: 0.15 }}
+          className="text-center space-y-2"
+        >
           <p
             className="text-xs tracking-widest uppercase"
             style={{ color: `var(--color-rarity-${rarityLabel})` }}
@@ -93,16 +97,20 @@ function CardDetailOverlay({
           >
             {getCardDescription(card.card, card.rarityScore, card.isReversed)}
           </p>
-        </div>
+        </motion.div>
 
-        <button
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.4 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
           onClick={onClose}
-          className="mt-2 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity"
+          className="mt-2 text-xs tracking-widest uppercase hover:opacity-70 transition-opacity"
           style={{ color: "var(--color-text-primary)" }}
         >
           close
-        </button>
-      </motion.div>
+        </motion.button>
+      </div>
       </div>
     </div>,
     document.body
@@ -127,7 +135,12 @@ function SpreadCardCell({
       >
         {posLabel}
       </p>
-      <div className="cursor-pointer w-24 sm:w-28" onClick={onSelect}>
+      <motion.div
+        layoutId={`spread-card-${card.position}`}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="cursor-pointer w-24 sm:w-28"
+        onClick={onSelect}
+      >
         <TarotCard
           card={card.card}
           rarityScore={card.rarityScore as Rarity}
@@ -136,7 +149,7 @@ function SpreadCardCell({
           revealed={true}
           size="sm"
         />
-      </div>
+      </motion.div>
       <div className="text-center space-y-1">
         <p
           className="text-xs tracking-widest uppercase"
@@ -213,7 +226,7 @@ export function SpreadSummaryGrid({
     );
 
   return (
-    <>
+    <LayoutGroup>
       {grid}
       <AnimatePresence>
         {selectedCard && (
@@ -224,6 +237,6 @@ export function SpreadSummaryGrid({
           />
         )}
       </AnimatePresence>
-    </>
+    </LayoutGroup>
   );
 }

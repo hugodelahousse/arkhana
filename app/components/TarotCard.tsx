@@ -105,10 +105,9 @@ export const TarotCard = memo(function TarotCard({
       data-radiant={isRadiant || undefined}
       style={{ "--rarity-color": `var(--color-rarity-${rarityLabel})` } as React.CSSProperties}
       onMouseMove={tilt.onMouseMove}
-      onMouseLeave={tilt.onMouseLeave}
+      onMouseLeave={() => { tilt.onMouseLeave(); if (!revealed) hold.cancel(); }}
       onMouseDown={!revealed ? hold.start : undefined}
       onMouseUp={!revealed ? hold.cancel : undefined}
-      onMouseLeave={(e) => { tilt.onMouseLeave(e); if (!revealed) hold.cancel(); }}
       onTouchStart={!revealed ? (e) => { e.preventDefault(); tilt.onTap(); hold.start(); } : undefined}
       onTouchEnd={!revealed ? hold.cancel : undefined}
       onTouchCancel={!revealed ? hold.cancel : undefined}
