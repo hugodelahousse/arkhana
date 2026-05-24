@@ -36,10 +36,14 @@ function CardDetailOverlay({
         transition={{ duration: 0.2 }}
         onClick={onClose}
       />
-      {/* Centering wrapper — min-height 100dvh accounts for mobile browser chrome */}
+      {/* Centering wrapper — 100dvh + safe-area padding so content clears browser chrome */}
       <div
-        className="relative z-10 flex flex-col items-center justify-center p-6 py-10"
-        style={{ minHeight: "100dvh" }}
+        className="relative z-10 flex flex-col items-center justify-center px-6"
+        style={{
+          minHeight: "100dvh",
+          paddingTop: "max(2.5rem, env(safe-area-inset-top))",
+          paddingBottom: "max(2.5rem, env(safe-area-inset-bottom))",
+        }}
         onClick={onClose}
       >
       <motion.div
