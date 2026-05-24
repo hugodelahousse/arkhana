@@ -124,7 +124,7 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             disabled={isSubmitting}
             className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-muted hover:opacity-80 disabled:opacity-40 transition-opacity"
           >
-            {isSubmitting ? "…" : "Enter the archive"}
+            {isSubmitting ? "…" : "Enter the arkhive"}
           </button>
         </Form>
 

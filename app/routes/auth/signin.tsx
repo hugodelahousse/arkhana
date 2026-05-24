@@ -50,7 +50,7 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
             ARKHANA
           </Link>
           <p className="text-xs tracking-widest uppercase opacity-60">
-            Return to your archive
+            Return to your arkhive
           </p>
         </div>
 

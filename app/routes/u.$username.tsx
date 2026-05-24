@@ -88,7 +88,7 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
               className="text-xs tracking-widest uppercase opacity-40"
               style={{ color: "var(--color-text-primary)" }}
             >
-              Keeper of the Archive
+              Keeper of the Arkhive
             </p>
             <h1
               className="text-4xl font-light"
@@ -186,7 +186,7 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
               className="text-xs opacity-30 tracking-widest uppercase"
               style={{ color: "var(--color-text-primary)" }}
             >
-              {pct}% of the archive unlocked
+              {pct}% of the arkhive unlocked
             </p>
           </div>
         </section>

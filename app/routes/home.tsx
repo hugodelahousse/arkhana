@@ -105,9 +105,9 @@ export function meta({ data }: Route.MetaArgs) {
   const origin = data?.origin ?? "";
   return [
     { title: "Arkhana" },
-    { name: "description", content: "Daily Tarot · One card. Every day. Uncover your archive." },
+    { name: "description", content: "Daily Tarot · One card. Every day. Uncover your arkhive." },
     { property: "og:title", content: "Arkhana" },
-    { property: "og:description", content: "Daily Tarot · One card. Every day. Uncover your archive." },
+    { property: "og:description", content: "Daily Tarot · One card. Every day. Uncover your arkhive." },
     { property: "og:image", content: `${origin}/api/og.png?type=app` },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
@@ -301,7 +301,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   if (!loaderData.user) {
     return (
       <div className="min-h-screen bg-base flex items-center justify-center">
-        <p className="text-sm opacity-40 tracking-widest uppercase">The archive stirs…</p>
+        <p className="text-sm opacity-40 tracking-widest uppercase">The arkhive stirs…</p>
       </div>
     );
   }
