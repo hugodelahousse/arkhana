@@ -56,19 +56,22 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
               Collection
             </h1>
             <p
-              className="text-xs tracking-widest uppercase opacity-40"
+              className="text-xs tracking-widest uppercase opacity-40 whitespace-nowrap"
               style={{ color: "var(--color-text-primary)" }}
             >
-              {discoveredCount} of 78 discovered
+              {discoveredCount}/78 discovered
             </p>
           </div>
 
           <section className="space-y-4">
             <h2
-              className="text-xs tracking-widest uppercase opacity-50"
+              className="text-xs tracking-widest uppercase opacity-50 flex items-baseline gap-2"
               style={{ color: "var(--color-text-primary)" }}
             >
               Major Arcana
+              <span className="opacity-60">
+                {MAJOR_ARCANA.filter((c) => bestByCard[c.id]).length}/{MAJOR_ARCANA.length}
+              </span>
             </h2>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
               {MAJOR_ARCANA.map((card) => (
@@ -80,10 +83,13 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
           {MINOR_BY_SUIT.map(({ suit, cards }) => (
             <section key={suit} className="space-y-4">
               <h2
-                className="text-xs tracking-widest uppercase opacity-50 capitalize"
+                className="text-xs tracking-widest uppercase opacity-50 capitalize flex items-baseline gap-2"
                 style={{ color: "var(--color-text-primary)" }}
               >
                 {suit}
+                <span className="opacity-60">
+                  {cards.filter((c) => bestByCard[c.id]).length}/{cards.length}
+                </span>
               </h2>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-4">
                 {cards.map((card) => (

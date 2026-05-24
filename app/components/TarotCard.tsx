@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useCallback } from "react";
-import { motion, useSpring, useMotionValue, useMotionValueEvent } from "motion/react";
+import { motion, useSpring, useMotionValueEvent } from "motion/react";
 import type { MotionStyle } from "motion/react";
 import { cardImageUrl } from "../lib/cardImages";
 import { RARITY_LABELS } from "../lib/cards";
@@ -29,8 +29,8 @@ function subscribeOrientation(handler: OrientationHandler): () => void {
       "deviceorientation",
       (e: DeviceOrientationEvent) => {
         if (e.gamma === null || e.beta === null) return;
-        const nx = Math.max(-1, Math.min(1, e.gamma / 45));
-        const ny = Math.max(-1, Math.min(1, (e.beta - 45) / 45));
+        const nx = Math.max(-1, Math.min(1, e.gamma / 90));
+        const ny = Math.max(-1, Math.min(1, (e.beta - 45) / 90));
         orientationHandlers.forEach((h) => h(nx, ny));
       },
       { passive: true },
@@ -44,8 +44,8 @@ function subscribeOrientation(handler: OrientationHandler): () => void {
 function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
   const rotateX = useSpring(0, { stiffness: 300, damping: 30 });
   const rotateY = useSpring(0, { stiffness: 300, damping: 30 });
-  const ratioX = useMotionValue(0.5);
-  const ratioY = useMotionValue(0.5);
+  const ratioX = useSpring(0.5, { stiffness: 80, damping: 20 });
+  const ratioY = useSpring(0.5, { stiffness: 80, damping: 20 });
   const orientationActiveRef = useRef(false);
 
   useMotionValueEvent(ratioX, "change", (v) =>
