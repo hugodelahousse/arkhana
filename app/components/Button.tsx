@@ -21,7 +21,7 @@ export function Button({
   return (
     <button
       className={buttonClass(size, className)}
-      style={{ borderColor: "var(--color-border-default)", color: "var(--color-text-primary)" }}
+      style={{ borderColor: "var(--color-text-primary)", color: "var(--color-text-primary)" }}
       {...props}
     >
       {children}
