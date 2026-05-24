@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { TarotCard } from "./TarotCard";
 import { RARITY_LABELS, getCardDescription, type Rarity } from "../lib/cards";
@@ -21,20 +22,21 @@ function CardDetailOverlay({
     return () => { document.body.style.overflow = prev; };
   }, []);
 
-  return (
-    // Outer: fixed full-screen, scrollable so tall content doesn't clip on small phones
+  return createPortal(
+    // Portal to document.body so position:fixed is relative to the viewport,
+    // not any ancestor motion.div that may have an active transform.
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop — click to close, always covers full dvh */}
+      {/* Backdrop */}
       <motion.div
         className="fixed inset-0"
-        style={{ background: "rgba(0,0,0,0.85)", minHeight: "100dvh" }}
+        style={{ background: "rgba(0,0,0,0.85)" }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
         onClick={onClose}
       />
-      {/* Centering wrapper — min-height: 100dvh keeps content vertically centered even on mobile */}
+      {/* Centering wrapper — min-height 100dvh accounts for mobile browser chrome */}
       <div
         className="relative z-10 flex flex-col items-center justify-center p-6 py-10"
         style={{ minHeight: "100dvh" }}
@@ -98,7 +100,8 @@ function CardDetailOverlay({
         </button>
       </motion.div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
