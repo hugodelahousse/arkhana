@@ -15,7 +15,7 @@ import { eq } from "drizzle-orm";
 import { TarotCard } from "../components/TarotCard";
 import { ShareButton } from "../components/ShareButton";
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, request }: Route.LoaderArgs) {
   const pullId = parseInt(params.pullId, 10);
   if (isNaN(pullId)) throw data("Not found", { status: 404 });
 
@@ -33,12 +33,12 @@ export async function loader({ params }: Route.LoaderArgs) {
 
   const handle = profile?.displayUsername ?? profile?.username ?? null;
 
-  return { pull, card, handle };
+  return { pull, card, handle, origin: new URL(request.url).origin };
 }
 
 export function meta({ data: loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "Arkhana" }];
-  const { pull, card, handle } = loaderData;
+  const { pull, card, handle, origin } = loaderData;
   const rarity = pull.rarityScore as Rarity;
   const rarityLabel = RARITY_LABELS[rarity];
   const who = handle ? `@${handle} drew ` : "";
@@ -50,7 +50,7 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
     .join(", ");
   const title = `${who}${card.name}${modifier ? ` · ${modifier}` : ""} — Arkhana`;
   const description = `${rarityLabel} · ${getCardDescription(card, rarity, pull.isReversed)}`;
-  const ogImage = `/api/og.png?type=card&cardId=${pull.cardId}&rarity=${rarity}&reversed=${pull.isReversed}&radiant=${pull.isRadiant}`;
+  const ogImage = `${origin}/api/og.png?type=card&cardId=${pull.cardId}&rarity=${rarity}&reversed=${pull.isReversed}&radiant=${pull.isRadiant}`;
 
   return [
     { title },

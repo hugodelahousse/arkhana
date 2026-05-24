@@ -8,7 +8,7 @@ import { getUserPublicStats } from "../lib/pull";
 import { CARD_BY_ID, RARITY_LABELS, type Rarity } from "../lib/cards";
 import { ShareButton } from "../components/ShareButton";
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, request }: Route.LoaderArgs) {
   const username = params.username.toLowerCase();
   const [profile] = await db
     .select({
@@ -25,15 +25,15 @@ export async function loader({ params }: Route.LoaderArgs) {
   if (!profile) throw data("Not found", { status: 404 });
 
   const stats = await getUserPublicStats(profile.id);
-  return { profile, stats };
+  return { profile, stats, origin: new URL(request.url).origin };
 }
 
 export function meta({ data: loaderData, params }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "Arkhana" }];
-  const { profile, stats } = loaderData;
+  const { profile, stats, origin } = loaderData;
   const handle = profile.displayUsername ?? params.username;
   const description = `${handle} has discovered ${stats.uniqueCards}/78 cards on Arkhana.`;
-  const ogImage = `/api/og.png?type=collection&username=${encodeURIComponent(handle)}&discovered=${stats.uniqueCards}`;
+  const ogImage = `${origin}/api/og.png?type=collection&username=${encodeURIComponent(handle)}&discovered=${stats.uniqueCards}`;
   return [
     { title: `@${handle} — Arkhana` },
     { name: "description", content: description },

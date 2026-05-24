@@ -14,7 +14,7 @@ import { config } from "../../config/index.js";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ context, request }: Route.LoaderArgs) {
   if (!context.user) {
     const origin = new URL(config.betterAuthUrl).origin;
     const anonRes = await fetch(
@@ -31,6 +31,7 @@ export async function loader({ context }: Route.LoaderArgs) {
       todayPull: null as Awaited<ReturnType<typeof getTodayPull>> | null,
       recentPulls: [] as Awaited<ReturnType<typeof getRecentPulls>>,
       totalUnique: 0,
+      origin: new URL(request.url).origin,
     };
   }
 
@@ -42,7 +43,8 @@ export async function loader({ context }: Route.LoaderArgs) {
     getUniqueCardCount(userId),
   ]);
 
-  return { user: context.user, todayPull, recentPulls, totalUnique };
+  const requestOrigin = new URL(request.url).origin;
+  return { user: context.user, todayPull, recentPulls, totalUnique, origin: requestOrigin };
 }
 
 export async function action({ context }: Route.ActionArgs) {
@@ -51,18 +53,19 @@ export async function action({ context }: Route.ActionArgs) {
   return result;
 }
 
-export function meta() {
+export function meta({ data }: Route.MetaArgs) {
+  const origin = data?.origin ?? "";
   return [
     { title: "Arkhana" },
     { name: "description", content: "Daily Tarot · One card. Every day. Uncover your archive." },
     { property: "og:title", content: "Arkhana" },
     { property: "og:description", content: "Daily Tarot · One card. Every day. Uncover your archive." },
-    { property: "og:image", content: "/api/og.png?type=app" },
+    { property: "og:image", content: `${origin}/api/og.png?type=app` },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:title", content: "Arkhana" },
     { name: "twitter:description", content: "Daily Tarot · One card. Every day." },
-    { name: "twitter:image", content: "/api/og.png?type=app" },
+    { name: "twitter:image", content: `${origin}/api/og.png?type=app` },
   ];
 }
 

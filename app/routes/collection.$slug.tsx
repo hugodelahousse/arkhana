@@ -16,21 +16,21 @@ import { Link, useNavigate } from "react-router";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
 
-export async function loader({ context, params }: Route.LoaderArgs) {
+export async function loader({ context, params, request }: Route.LoaderArgs) {
   const card = CARD_BY_SLUG[params.slug];
   if (!card) throw data("Card not found", { status: 404 });
 
   const history =
     context.user ? await getUserCardHistory(context.user.id, card.id) : [];
 
-  return { user: context.user ?? null, card, history };
+  return { user: context.user ?? null, card, history, origin: new URL(request.url).origin };
 }
 
 export function meta({ data: loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "Arkhana" }];
-  const { card } = loaderData;
+  const { card, origin } = loaderData;
   const description = card.descriptions[2];
-  const ogImage = `/api/og.png?type=card&cardId=${card.id}&rarity=3`;
+  const ogImage = `${origin}/api/og.png?type=card&cardId=${card.id}&rarity=3`;
   return [
     { title: `${card.name} — Arkhana` },
     { name: "description", content: description },

@@ -17,7 +17,7 @@ interface BestPull {
   isReversed: boolean;
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ context, request }: Route.LoaderArgs) {
   if (!context.user) return redirect("/");
   const allPulls = await getAllPulls(context.user.id);
 
@@ -33,20 +33,21 @@ export async function loader({ context }: Route.LoaderArgs) {
     }
   }
 
-  return { user: context.user, bestByCard };
+  return { user: context.user, bestByCard, origin: new URL(request.url).origin };
 }
 
 export function meta({ data }: Route.MetaArgs) {
   // data may be undefined if loader redirected
-  const d = data as { user: { username?: string | null } | null; bestByCard: Record<number, unknown> } | undefined;
+  const d = data as { user: { username?: string | null } | null; bestByCard: Record<number, unknown>; origin: string } | undefined;
   const discovered = d ? Object.keys(d.bestByCard ?? {}).length : 0;
   const username = d?.user?.username;
+  const origin = d?.origin ?? "";
   const description = username
     ? `@${username} has discovered ${discovered}/78 cards on Arkhana.`
     : `${discovered}/78 cards discovered on Arkhana.`;
   const ogImage = username
-    ? `/api/og.png?type=collection&username=${encodeURIComponent(username)}&discovered=${discovered}`
-    : `/api/og.png?type=app`;
+    ? `${origin}/api/og.png?type=collection&username=${encodeURIComponent(username)}&discovered=${discovered}`
+    : `${origin}/api/og.png?type=app`;
   return [
     { title: "Collection — Arkhana" },
     { name: "description", content: description },
