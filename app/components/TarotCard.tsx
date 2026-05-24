@@ -1,7 +1,7 @@
 import { memo, useRef, useCallback } from "react";
 import { motion, useSpring } from "motion/react";
 import type { MotionStyle } from "motion/react";
-import { cardImageUrl } from "../lib/cardImages";
+import { cardImageUrl, cardMaskUrl, cardNameMaskUrl, cardTopMaskUrl } from "../lib/cardImages";
 import { RARITY_LABELS } from "../lib/cards";
 import type { CardDefinition, Rarity } from "../lib/cards";
 import { useOrientationEffect } from "../lib/orientation";
@@ -91,6 +91,10 @@ export const TarotCard = memo(function TarotCard({
   const sceneRef = useRef<HTMLDivElement>(null);
   const tilt = useCardTilt(sceneRef);
   const rarityLabel = RARITY_LABELS[rarityScore]?.toLowerCase() ?? "mundane";
+  const hasSubjectMask = rarityScore >= 3;
+  const hasParallax = rarityScore >= 4;
+  const isMajor = card.arcana === "major";
+  const imgSrc = cardImageUrl(card.id);
 
   const hold = useHoldReveal(!revealed ? onReveal : undefined, sceneRef);
 
@@ -103,7 +107,14 @@ export const TarotCard = memo(function TarotCard({
       data-revealed={revealed || undefined}
       data-reversed={isReversed || undefined}
       data-radiant={isRadiant || undefined}
-      style={{ "--rarity-color": `var(--color-rarity-${rarityLabel})` } as React.CSSProperties}
+      style={{
+        "--rarity-color": `var(--color-rarity-${rarityLabel})`,
+        ...(hasSubjectMask ? {
+          "--mask-url": `url(${cardMaskUrl(card.id)})`,
+          "--name-mask-url": `url(${cardNameMaskUrl(card.id)})`,
+          "--top-mask-url": isMajor ? `url(${cardTopMaskUrl(card.id)})` : "none",
+        } : {}),
+      } as React.CSSProperties}
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={() => { tilt.onMouseLeave(); if (!revealed) hold.cancel(); }}
       onMouseDown={!revealed ? hold.start : undefined}
@@ -126,12 +137,32 @@ export const TarotCard = memo(function TarotCard({
 
           <div className="card-face card-front">
             <img
-              src={cardImageUrl(card.id)}
+              src={imgSrc}
               alt={card.name}
               loading="eager"
               draggable={false}
             />
+            {hasParallax && (
+              <>
+                <img
+                  className="card-subject"
+                  src={imgSrc}
+                  alt=""
+                  loading="eager"
+                  draggable={false}
+                  aria-hidden="true"
+                />
+                {rarityScore >= 5 && (
+                  <>
+                    <img className="card-text-layer card-name-layer" src={imgSrc} alt="" draggable={false} aria-hidden="true" />
+                    {isMajor && <img className="card-text-layer card-top-layer" src={imgSrc} alt="" draggable={false} aria-hidden="true" />}
+                  </>
+                )}
+              </>
+            )}
             <div className="card-shine" />
+            {hasSubjectMask && <div className="card-name-foil" aria-hidden="true" />}
+            {hasSubjectMask && isMajor && <div className="card-top-foil" aria-hidden="true" />}
             <div className="card-glare" />
             {isRadiant && <div className="card-radiant-border" aria-hidden="true" />}
           </div>
