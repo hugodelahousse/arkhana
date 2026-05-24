@@ -14,6 +14,7 @@ import { OrientationProvider } from "./lib/orientation";
 export const links: Route.LinksFunction = () => [
   { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
   { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+  { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
