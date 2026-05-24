@@ -32,8 +32,12 @@
 /* ─── Scene (perspective context) ─── */
 .card-scene {
   display: inline-block;
+  position: relative;
   perspective: 1200px;
   cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   transition:
     --ratio-x 350ms ease-out,
     --ratio-y 350ms ease-out,
@@ -54,6 +58,49 @@
 }
 
 .card-scene[data-revealed] { cursor: default; }
+
+/* ─── Hold-to-reveal sweep glow ─── */
+/* Conic sweep around the card edges driven by --hold-progress (0–1) */
+.card-scene::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 11px;
+  padding: 3px;
+  background: conic-gradient(
+    from -90deg at 50% 50%,
+    var(--color-card-back-accent) calc(var(--hold-progress, 0) * 360deg),
+    transparent               calc(var(--hold-progress, 0) * 360deg)
+  );
+  /* Mask so only the 3px border ring shows */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 4;
+  filter: drop-shadow(0 0 5px var(--color-card-back-accent));
+}
+
+/* On reveal, flash the rarity color and fade out */
+.card-scene[data-revealed]::before {
+  background: conic-gradient(
+    from -90deg at 50% 50%,
+    var(--rarity-color, var(--color-card-back-accent)) 360deg,
+    transparent 360deg
+  );
+  filter: drop-shadow(0 0 8px var(--rarity-color, var(--color-card-back-accent)));
+  animation: hold-glow-reveal 0.7s ease-out forwards;
+}
+
+@keyframes hold-glow-reveal {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
 
 .card-scene[data-size="sm"] { width: 100%; }
 .card-scene[data-size="md"] { width: 240px; }
@@ -141,15 +188,8 @@
 .card-scene[data-size="sm"] .card-back-sigil { font-size: 1.5rem; }
 .card-scene[data-size="lg"] .card-back-sigil { font-size: 3rem; }
 
-.card-hold-ring {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
 
-.card-front { transform: rotateY(180deg); overflow: hidden; }
+.card-front { transform: rotateY(180deg); border-radius: 0; }
 
 .card-front img {
   width: 100%;
@@ -175,7 +215,7 @@
 .card-glare::after {
   position: absolute;
   inset: 0;
-  border-radius: 8px;
+  border-radius: 0;
   pointer-events: none;
   overflow: hidden;
 }
@@ -563,6 +603,7 @@
 /* ─── Reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
   .card-scene,
+  .card-scene::before,
   .card-flipper,
   .card-shine,
   .card-glare,

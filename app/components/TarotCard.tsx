@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useCallback } from "react";
+import { memo, useRef, useCallback } from "react";
 import { motion, useSpring } from "motion/react";
 import type { MotionStyle } from "motion/react";
 import { cardImageUrl } from "../lib/cardImages";
@@ -92,11 +92,7 @@ export const TarotCard = memo(function TarotCard({
   const tilt = useCardTilt(sceneRef);
   const rarityLabel = RARITY_LABELS[rarityScore]?.toLowerCase() ?? "mundane";
 
-  const hold = useHoldReveal(!revealed ? onReveal : undefined);
-
-  // SVG ring constants
-  const RING_R = 26;
-  const RING_CIRCUM = 2 * Math.PI * RING_R;
+  const hold = useHoldReveal(!revealed ? onReveal : undefined, sceneRef);
 
   return (
     <div
@@ -127,33 +123,6 @@ export const TarotCard = memo(function TarotCard({
           <div className="card-face card-back">
             <div className="card-back-art" />
             <span className="card-back-sigil" aria-hidden="true">✦</span>
-
-            {/* Hold-progress ring — only visible while holding */}
-            {hold.progress > 0 && hold.progress < 1 && (
-              <svg
-                className="card-hold-ring"
-                viewBox="0 0 64 64"
-                aria-hidden="true"
-              >
-                <circle
-                  cx="32" cy="32" r={RING_R}
-                  fill="none"
-                  stroke="var(--color-card-back-accent)"
-                  strokeWidth="2"
-                  strokeOpacity="0.25"
-                />
-                <circle
-                  cx="32" cy="32" r={RING_R}
-                  fill="none"
-                  stroke="var(--color-card-back-accent)"
-                  strokeWidth="2.5"
-                  strokeDasharray={RING_CIRCUM}
-                  strokeDashoffset={RING_CIRCUM * (1 - hold.progress)}
-                  strokeLinecap="round"
-                  transform="rotate(-90 32 32)"
-                />
-              </svg>
-            )}
           </div>
 
           <div className="card-face card-front">
