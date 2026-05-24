@@ -27,14 +27,6 @@ function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
     orientationActiveRef.current = true;
     rotateX.set(-ny * 15);
     rotateY.set(nx * 15);
-    if (ref.current) {
-      const rx = (nx + 1) / 2;
-      const ry = (ny + 1) / 2;
-      ref.current.style.setProperty("--ratio-x", String(rx));
-      ref.current.style.setProperty("--ratio-y", String(ry));
-      ref.current.style.setProperty("--glow-x",  String(rx));
-      ref.current.style.setProperty("--glow-y",  String(ry));
-    }
   });
 
   const onTap = useCallback(() => {

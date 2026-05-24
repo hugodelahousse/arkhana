@@ -35,8 +35,12 @@ export function OrientationProvider({ children }: { children: ReactNode }) {
       if (!base.current) base.current = { gamma: e.gamma, beta: e.beta };
       const nx = Math.max(-1, Math.min(1, (e.gamma - base.current.gamma) / 90));
       const ny = Math.max(-1, Math.min(1, (e.beta  - base.current.beta)  / 90));
-      document.documentElement.style.setProperty("--ratio-x", String((nx + 1) / 2));
-      document.documentElement.style.setProperty("--ratio-y", String((ny + 1) / 2));
+      const rx = String((nx + 1) / 2);
+      const ry = String((ny + 1) / 2);
+      document.documentElement.style.setProperty("--ratio-x", rx);
+      document.documentElement.style.setProperty("--ratio-y", ry);
+      document.documentElement.style.setProperty("--glow-x",  rx);
+      document.documentElement.style.setProperty("--glow-y",  ry);
       handlers.current.forEach((h) => h(nx, ny));
     };
     window.addEventListener("deviceorientation", onOrientation, { passive: true });
