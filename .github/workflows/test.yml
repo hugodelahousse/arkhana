@@ -6,6 +6,22 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: arkhana
+          POSTGRES_PASSWORD: arkhana
+          POSTGRES_DB: arkhana
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://arkhana:arkhana@localhost:5432/arkhana
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -14,4 +30,5 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm db:push
       - run: pnpm test
