@@ -121,11 +121,17 @@ function SpreadContemplateReveal({
   isLast: boolean;
   onAdvance: () => void;
 }) {
-  const [ready, setReady] = useState(false);
-  const [cardRevealed, revealNow] = useAutoReveal(ready, 700);
+  const [cardRevealed, setCardRevealed] = useState(false);
+  const [showContinue, setShowContinue] = useState(false);
   const rarityLabel = RARITY_LABELS[card.rarityScore]?.toLowerCase();
   const posLabel = positions[position]?.label ?? "";
   const nextLabel = positions[position + 1]?.label;
+
+  useEffect(() => {
+    if (!cardRevealed) return;
+    const t = setTimeout(() => setShowContinue(true), 1000);
+    return () => clearTimeout(t);
+  }, [cardRevealed]);
 
   return (
     <motion.div
@@ -133,7 +139,7 @@ function SpreadContemplateReveal({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -16 }}
       transition={{ duration: 0.5 }}
-      className="text-center space-y-8 pt-8 flex flex-col items-center"
+      className="text-center space-y-5 sm:space-y-8 pt-2 sm:pt-8 flex flex-col items-center"
     >
       <div className="space-y-2">
         <p
@@ -143,7 +149,7 @@ function SpreadContemplateReveal({
           {position + 1} of {positions.length}
         </p>
         <h2
-          className="text-4xl font-light tracking-wide"
+          className="text-3xl sm:text-4xl font-light tracking-wide"
           style={{ color: "var(--color-rarity-mystic)", fontFamily: "var(--font-serif)" }}
         >
           {posLabel}
@@ -151,12 +157,12 @@ function SpreadContemplateReveal({
       </div>
 
       <AnimatePresence>
-        {!ready && (
+        {!cardRevealed && (
           <motion.div
             key="prompt"
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="space-y-4 max-w-xs w-full"
+            className="max-w-xs w-full space-y-3"
           >
             <div
               className="w-16 h-px mx-auto"
@@ -178,7 +184,7 @@ function SpreadContemplateReveal({
         isReversed={card.isReversed}
         isRadiant={card.isRadiant}
         revealed={cardRevealed}
-        onReveal={revealNow}
+        onReveal={() => setCardRevealed(true)}
         size="lg"
         showHint={!cardRevealed}
       />
@@ -220,21 +226,10 @@ function SpreadContemplateReveal({
         )}
       </AnimatePresence>
 
-      <AnimatePresence mode="wait">
-        {!ready ? (
+      <AnimatePresence>
+        {showContinue && (
           <motion.button
-            key="ready-btn"
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => setReady(true)}
-            className="px-8 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
-            style={{ color: "var(--color-text-primary)", borderColor: "var(--color-rarity-mystic)" }}
-          >
-            I am ready
-          </motion.button>
-        ) : cardRevealed ? (
-          <motion.button
-            key="advance-btn"
+            key="continue"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
@@ -244,7 +239,7 @@ function SpreadContemplateReveal({
           >
             {isLast ? "See your reading" : `Continue to ${nextLabel}`}
           </motion.button>
-        ) : null}
+        )}
       </AnimatePresence>
     </motion.div>
   );

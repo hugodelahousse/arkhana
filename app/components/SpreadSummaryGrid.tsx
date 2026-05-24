@@ -24,7 +24,7 @@ function SpreadCardCell({
       >
         {posLabel}
       </p>
-      <div className="cursor-pointer" onClick={onToggle}>
+      <div className="cursor-pointer w-24 sm:w-28" onClick={onToggle}>
         <TarotCard
           card={card.card}
           rarityScore={card.rarityScore as Rarity}
