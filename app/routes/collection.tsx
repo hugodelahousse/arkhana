@@ -80,23 +80,26 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
 
           {/* Category icon navigation */}
           <nav className="flex flex-wrap justify-center gap-6 sm:gap-10">
-            <a href="#major-arcana" className="flex flex-col items-center gap-2 group text-center">
-              <span
-                className="text-3xl opacity-50 group-hover:opacity-90 transition-opacity"
-                style={{ fontFamily: "var(--font-serif)" }}
-              >
-                ✦
-              </span>
-              <p className="text-xs tracking-widest uppercase opacity-40 group-hover:opacity-70 transition-opacity"
-                style={{ color: "var(--color-text-primary)" }}>
-                Major Arcana
-              </p>
-              <p className="text-xs opacity-30" style={{ color: "var(--color-text-primary)" }}>
-                {majorDiscovered}/{MAJOR_ARCANA.length}
-              </p>
-            </a>
+            {(!hideUndiscovered || majorDiscovered > 0) && (
+              <a href="#major-arcana" className="flex flex-col items-center gap-2 group text-center">
+                <span
+                  className="text-3xl opacity-50 group-hover:opacity-90 transition-opacity"
+                  style={{ fontFamily: "var(--font-serif)" }}
+                >
+                  ✦
+                </span>
+                <p className="text-xs tracking-widest uppercase opacity-40 group-hover:opacity-70 transition-opacity"
+                  style={{ color: "var(--color-text-primary)" }}>
+                  Major Arcana
+                </p>
+                <p className="text-xs opacity-30" style={{ color: "var(--color-text-primary)" }}>
+                  {majorDiscovered}/{MAJOR_ARCANA.length}
+                </p>
+              </a>
+            )}
             {MINOR_BY_SUIT.map(({ suit, cards }) => {
               const discovered = cards.filter((c) => bestByCard[c.id]).length;
+              if (hideUndiscovered && discovered === 0) return null;
               return (
                 <a key={suit} href={`#${suit}`} className="flex flex-col items-center gap-2 group text-center">
                   <span
