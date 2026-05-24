@@ -4,6 +4,7 @@ import type { MotionStyle } from "motion/react";
 import { cardImageUrl } from "../lib/cardImages";
 import { RARITY_LABELS } from "../lib/cards";
 import type { CardDefinition, Rarity } from "../lib/cards";
+import { subscribeOrientation } from "../lib/orientation";
 import "./TarotCard.css";
 
 export interface TarotCardProps {
@@ -15,39 +16,6 @@ export interface TarotCardProps {
   onReveal?: () => void;
   size?: "sm" | "md" | "lg";
   showHint?: boolean;
-}
-
-// Module-level singleton: one deviceorientation listener shared across all mounted cards.
-// Without this, the collection page (78 cards) would register 78 separate listeners.
-type OrientationHandler = (nx: number, ny: number) => void;
-const orientationHandlers = new Set<OrientationHandler>();
-let orientationListenerBound = false;
-// Baseline angles captured on the first orientation event so the effect is
-// relative to however the user is holding their phone at mount time.
-let baseGamma: number | null = null;
-let baseBeta: number | null = null;
-
-function subscribeOrientation(handler: OrientationHandler): () => void {
-  if (!orientationListenerBound && typeof window !== "undefined") {
-    window.addEventListener(
-      "deviceorientation",
-      (e: DeviceOrientationEvent) => {
-        if (e.gamma === null || e.beta === null) return;
-        if (baseGamma === null) baseGamma = e.gamma;
-        if (baseBeta === null) baseBeta = e.beta;
-        const nx = Math.max(-1, Math.min(1, (e.gamma - baseGamma) / 90));
-        const ny = Math.max(-1, Math.min(1, (e.beta  - baseBeta)  / 90));
-        // Publish globally so any CSS on the page can react without per-component wiring
-        document.documentElement.style.setProperty("--ratio-x", String((nx + 1) / 2));
-        document.documentElement.style.setProperty("--ratio-y", String((ny + 1) / 2));
-        orientationHandlers.forEach((h) => h(nx, ny));
-      },
-      { passive: true },
-    );
-    orientationListenerBound = true;
-  }
-  orientationHandlers.add(handler);
-  return () => orientationHandlers.delete(handler);
 }
 
 function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
