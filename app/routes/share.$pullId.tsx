@@ -33,8 +33,9 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     .limit(1);
 
   const handle = profile?.displayUsername ?? profile?.username ?? null;
+  const username = profile?.username ?? null;
 
-  return { pull, card, handle, origin: getOrigin(request) };
+  return { pull, card, handle, username, origin: getOrigin(request) };
 }
 
 export function meta({ data: loaderData }: Route.MetaArgs) {
@@ -67,7 +68,7 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
 }
 
 export default function SharePull({ loaderData }: Route.ComponentProps) {
-  const { pull, card, handle } = loaderData;
+  const { pull, card, handle, username } = loaderData;
   const rarity = pull.rarityScore as Rarity;
   const rarityLabel = RARITY_LABELS[rarity];
   const description = getCardDescription(card, rarity, pull.isReversed);
@@ -169,7 +170,7 @@ export default function SharePull({ loaderData }: Route.ComponentProps) {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <ShareButton
             title={`${card.name} — Arkhana`}
-            url={`/share/${pull.id}`}
+            url={username ? `/u/${username}/pull/${pull.pullDate}` : `/share/${pull.id}`}
             text={`${rarityLabel} ${card.name}${pull.isReversed ? " (Reversed)" : ""}`}
             label="Share this pull"
           />
