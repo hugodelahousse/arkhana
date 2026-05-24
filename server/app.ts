@@ -23,6 +23,7 @@ app.use(
               id: session.user.id,
               name: session.user.name,
               email: session.user.email,
+              username: (session.user as any).username ?? null,
               isAnonymous: (session.user as any).isAnonymous ?? false,
             }
           : null,

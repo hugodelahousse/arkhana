@@ -12,9 +12,16 @@ export async function action({ request }: Route.ActionArgs) {
   const email = String(form.get("email") || "").trim().toLowerCase();
   const password = String(form.get("password") || "");
   const name = String(form.get("name") || "").trim() || email.split("@")[0];
+  const rawUsername = String(form.get("username") || "").trim();
+  const username = rawUsername ||
+    email.split("@")[0].toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 28) ||
+    "user";
 
   if (!email.includes("@")) return data({ error: "Please enter a valid email address." }, { status: 400 });
   if (password.length < 8) return data({ error: "Password must be at least 8 characters." }, { status: 400 });
+  if (rawUsername && (rawUsername.length < 3 || rawUsername.length > 30 || !/^[a-z0-9_-]+$/i.test(rawUsername))) {
+    return data({ error: "Username must be 3–30 characters: letters, numbers, hyphens, underscores." }, { status: 400 });
+  }
 
   const origin = new URL(config.betterAuthUrl).origin;
   const headers = {
@@ -25,7 +32,7 @@ export async function action({ request }: Route.ActionArgs) {
 
   const signUpRes = await fetch(
     new URL("/api/auth/sign-up/email", config.betterAuthUrl).toString(),
-    { method: "POST", headers, body: JSON.stringify({ email, password, name }) }
+    { method: "POST", headers, body: JSON.stringify({ email, password, name, username, displayUsername: rawUsername || username }) }
   );
 
   if (!signUpRes.ok) {
@@ -77,6 +84,18 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             type="text"
             placeholder="Name (optional)"
             autoComplete="name"
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
+          />
+          <label htmlFor="username" className="sr-only">Username (optional)</label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            placeholder="Username (optional)"
+            autoComplete="username"
+            minLength={3}
+            maxLength={30}
+            pattern="[a-zA-Z0-9_-]*"
             className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
           />
           <label htmlFor="email" className="sr-only">Email address</label>

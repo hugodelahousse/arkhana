@@ -12,6 +12,7 @@ import { useAutoReveal } from "../lib/useAutoReveal";
 import { todayUTC } from "../lib/utils";
 import { config } from "../../config/index.js";
 import { DirectionalTransition } from "../components/DirectionalTransition";
+import { ShareButton } from "../components/ShareButton";
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (!context.user) {
@@ -51,7 +52,18 @@ export async function action({ context }: Route.ActionArgs) {
 }
 
 export function meta() {
-  return [{ title: "Arkhana" }];
+  return [
+    { title: "Arkhana" },
+    { name: "description", content: "Daily Tarot · One card. Every day. Uncover your archive." },
+    { property: "og:title", content: "Arkhana" },
+    { property: "og:description", content: "Daily Tarot · One card. Every day. Uncover your archive." },
+    { property: "og:image", content: "/api/og.png?type=app" },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: "Arkhana" },
+    { name: "twitter:description", content: "Daily Tarot · One card. Every day." },
+    { name: "twitter:image", content: "/api/og.png?type=app" },
+  ];
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
@@ -143,14 +155,22 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       >
                         {getCardDescription(result.card, result.rarityScore, result.isReversed)}
                       </p>
-                      <a
-                        href={`/collection/${cardSlug(result.card)}`}
-                        onClick={(e) => { e.preventDefault(); navigateToCard(cardSlug(result.card)); }}
-                        className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-2"
-                        style={{ color: "var(--color-text-primary)" }}
-                      >
-                        Card history →
-                      </a>
+                      <div className="flex items-center justify-center gap-6 pt-2">
+                        <a
+                          href={`/collection/${cardSlug(result.card)}`}
+                          onClick={(e) => { e.preventDefault(); navigateToCard(cardSlug(result.card)); }}
+                          className="text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity"
+                          style={{ color: "var(--color-text-primary)" }}
+                        >
+                          Card history →
+                        </a>
+                        <ShareButton
+                          title={`${result.card.name} — Arkhana`}
+                          url={`/share/${result.pullId}`}
+                          text={`I drew ${result.card.name} (${RARITY_LABELS[result.rarityScore]}) on Arkhana.`}
+                          label="Share pull"
+                        />
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -191,6 +211,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   >
                     {getCardDescription(todayCard, todayPull.rarityScore, todayPull.isReversed)}
                   </p>
+                  <ShareButton
+                    title={`${todayCard.name} — Arkhana`}
+                    url={`/share/${todayPull.id}`}
+                    text={`I drew ${todayCard.name} (${RARITY_LABELS[todayPull.rarityScore]}) on Arkhana.`}
+                    label="Share pull"
+                  />
                 </div>
               </div>
             ) : (

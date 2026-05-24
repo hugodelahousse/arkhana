@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
-import { anonymous } from "better-auth/plugins";
+import { anonymous, username } from "better-auth/plugins";
 import { db } from "../db/index.js";
 import * as schema from "../db/schema/index.js";
 import { config } from "../config/index.js";
@@ -21,6 +21,10 @@ export const auth = betterAuth({
       onLinkAccount: async ({ anonymousUser, newUser }) => {
         await migrateAnonymousPulls(anonymousUser.user.id, newUser.user.id);
       },
+    }),
+    username({
+      minUsernameLength: 3,
+      maxUsernameLength: 30,
     }),
   ],
   session: {
