@@ -12,9 +12,16 @@ export async function action({ request }: Route.ActionArgs) {
   const email = String(form.get("email") || "").trim().toLowerCase();
   const password = String(form.get("password") || "");
   const name = String(form.get("name") || "").trim() || email.split("@")[0];
+  const rawUsername = String(form.get("username") || "").trim();
+  const username = rawUsername ||
+    email.split("@")[0].toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 28) ||
+    "user";
 
   if (!email.includes("@")) return data({ error: "Please enter a valid email address." }, { status: 400 });
   if (password.length < 8) return data({ error: "Password must be at least 8 characters." }, { status: 400 });
+  if (rawUsername && (rawUsername.length < 1 || rawUsername.length > 30 || !/^[a-z0-9_-]+$/i.test(rawUsername))) {
+    return data({ error: "Username must be 1–30 characters: letters, numbers, hyphens, underscores." }, { status: 400 });
+  }
 
   const origin = new URL(config.betterAuthUrl).origin;
   const headers = {
@@ -25,7 +32,7 @@ export async function action({ request }: Route.ActionArgs) {
 
   const signUpRes = await fetch(
     new URL("/api/auth/sign-up/email", config.betterAuthUrl).toString(),
-    { method: "POST", headers, body: JSON.stringify({ email, password, name }) }
+    { method: "POST", headers, body: JSON.stringify({ email, password, name, username, displayUsername: rawUsername || username }) }
   );
 
   if (!signUpRes.ok) {
@@ -77,7 +84,21 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             type="text"
             placeholder="Name (optional)"
             autoComplete="name"
-            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
+            style={{ color: "var(--color-text-primary)" }}
+          />
+          <label htmlFor="username" className="sr-only">Username (optional)</label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            placeholder="Username (optional)"
+            autoComplete="username"
+            minLength={1}
+            maxLength={30}
+            pattern="[a-zA-Z0-9_-]*"
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
+            style={{ color: "var(--color-text-primary)" }}
           />
           <label htmlFor="email" className="sr-only">Email address</label>
           <input
@@ -87,7 +108,8 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             required
             placeholder="your@email.com"
             autoComplete="email"
-            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
+            style={{ color: "var(--color-text-primary)" }}
           />
           <label htmlFor="password" className="sr-only">Password, minimum 8 characters</label>
           <input
@@ -98,14 +120,15 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             minLength={8}
             placeholder="Password (min 8 characters)"
             autoComplete="new-password"
-            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
+            style={{ color: "var(--color-text-primary)" }}
           />
           <button
             type="submit"
             disabled={isSubmitting}
             className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-muted hover:opacity-80 disabled:opacity-40 transition-opacity"
           >
-            {isSubmitting ? "…" : "Enter the archive"}
+            {isSubmitting ? "…" : "Enter the arkhive"}
           </button>
         </Form>
 

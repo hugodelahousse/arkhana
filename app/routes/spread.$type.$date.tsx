@@ -6,10 +6,12 @@ import { Link } from "react-router";
 import { Nav } from "../components/layout/nav";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { SpreadSummaryGrid } from "../components/SpreadSummaryGrid";
+import { ShareButton } from "../components/ShareButton";
 import { getSpreadType } from "../lib/spreads";
 import { getTodaySpread } from "../lib/spread-pull";
+import { getOrigin } from "../lib/utils";
 
-export async function loader({ context, params }: Route.LoaderArgs) {
+export async function loader({ context, params, request }: Route.LoaderArgs) {
   if (!context.user) return redirect("/");
 
   const spreadDef = getSpreadType(params.type);
@@ -34,14 +36,34 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     cards,
     formattedDate,
     isToday,
+    origin: getOrigin(request),
   };
 }
 
 export function meta({ data: loaderData }: Route.MetaArgs) {
-  return [{ title: `${loaderData?.name ?? "Reading"} — Arkhana` }];
+  if (!loaderData) return [{ title: "Arkhana" }];
+  const { name, subtitle, positions, cards, origin } = loaderData;
+  const positionLabels = positions.map((p) => p.label).join(",");
+  const cardIds = cards.map((c) => c.cardId).join(",");
+  const rarities = cards.map((c) => c.rarityScore).join(",");
+  const reversals = cards.map((c) => c.isReversed).join(",");
+  const ogImage =
+    `${origin}/api/og.png?type=spread` +
+    `&spreadName=${encodeURIComponent(name)}` +
+    `&spreadSubtitle=${encodeURIComponent(subtitle)}` +
+    `&positions=${encodeURIComponent(positionLabels)}` +
+    `&cardIds=${cardIds}&rarities=${rarities}&reversals=${reversals}`;
+  return [
+    { title: `${name} — Arkhana` },
+    { property: "og:title", content: `${name} — Arkhana` },
+    { property: "og:description", content: subtitle },
+    { property: "og:image", content: ogImage },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:image", content: ogImage },
+  ];
 }
 
-export default function SpreadDateRoute({ loaderData }: Route.ComponentProps) {
+export default function SpreadDateRoute({ loaderData, params }: Route.ComponentProps) {
   const { user, name, subtitle, positions, cards, formattedDate, isToday } = loaderData;
 
   return (
@@ -80,7 +102,13 @@ export default function SpreadDateRoute({ loaderData }: Route.ComponentProps) {
 
             <SpreadSummaryGrid cards={cards} positions={positions} />
 
-            <div className="text-center pt-4 space-y-3">
+            <div className="flex flex-col items-center pt-4 space-y-4">
+              <ShareButton
+                title={`${name} — Arkhana`}
+                url={`/spread/${params.type}/${params.date}`}
+                text={`${name}: ${subtitle}`}
+                label="Share reading"
+              />
               <Link
                 to="/history"
                 className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity"

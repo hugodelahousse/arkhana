@@ -11,7 +11,10 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { OrientationProvider } from "./lib/orientation";
 
-export const links: Route.LinksFunction = () => [];
+export const links: Route.LinksFunction = () => [
+  { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+  { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (

@@ -153,3 +153,50 @@ export async function getUserCardHistory(userId: string, cardId: number) {
     .where(and(eq(userCards.userId, userId), eq(userCards.cardId, cardId)))
     .orderBy(userCards.pulledAt);
 }
+
+export async function getPullById(pullId: number) {
+  const [row] = await db
+    .select({
+      id: userCards.id,
+      cardId: userCards.cardId,
+      rarityScore: sql<Rarity>`${userCards.rarityScore}`,
+      isRadiant: userCards.isRadiant,
+      isReversed: userCards.isReversed,
+      pullDate: userCards.pullDate,
+      pulledAt: userCards.pulledAt,
+      userId: userCards.userId,
+    })
+    .from(userCards)
+    .where(eq(userCards.id, pullId))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function getUserPublicStats(userId: string) {
+  const [uniqueRow] = await db
+    .select({ count: sql<number>`count(distinct ${userCards.cardId})` })
+    .from(userCards)
+    .where(eq(userCards.userId, userId));
+
+  const [totalRow] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(userCards)
+    .where(eq(userCards.userId, userId));
+
+  const recentCards = await db
+    .select({
+      cardId: userCards.cardId,
+      pullDate: userCards.pullDate,
+      rarityScore: sql<Rarity>`${userCards.rarityScore}`,
+    })
+    .from(userCards)
+    .where(eq(userCards.userId, userId))
+    .orderBy(desc(userCards.pulledAt))
+    .limit(6);
+
+  return {
+    uniqueCards: uniqueRow?.count ?? 0,
+    totalPulls: totalRow?.count ?? 0,
+    recentCards,
+  };
+}

@@ -10,6 +10,7 @@ import { MAJOR_ARCANA, MINOR_BY_SUIT, cardSlug } from "../lib/cards";
 import type { CardDefinition, Rarity } from "../lib/cards";
 import { Link, useNavigate } from "react-router";
 import { DirectionalTransition } from "../components/DirectionalTransition";
+import { getOrigin } from "../lib/utils";
 
 interface BestPull {
   rarityScore: Rarity;
@@ -17,7 +18,7 @@ interface BestPull {
   isReversed: boolean;
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ context, request }: Route.LoaderArgs) {
   if (!context.user) return redirect("/");
   const allPulls = await getAllPulls(context.user.id);
 
@@ -33,11 +34,30 @@ export async function loader({ context }: Route.LoaderArgs) {
     }
   }
 
-  return { user: context.user, bestByCard };
+  return { user: context.user, bestByCard, origin: getOrigin(request) };
 }
 
-export function meta() {
-  return [{ title: "Collection — Arkhana" }];
+export function meta({ data }: Route.MetaArgs) {
+  // data may be undefined if loader redirected
+  const d = data as { user: { username?: string | null } | null; bestByCard: Record<number, unknown>; origin: string } | undefined;
+  const discovered = d ? Object.keys(d.bestByCard ?? {}).length : 0;
+  const username = d?.user?.username;
+  const origin = d?.origin ?? "";
+  const description = username
+    ? `@${username} has discovered ${discovered}/78 cards on Arkhana.`
+    : `${discovered}/78 cards discovered on Arkhana.`;
+  const ogImage = username
+    ? `${origin}/api/og.png?type=collection&username=${encodeURIComponent(username)}&discovered=${discovered}`
+    : `${origin}/api/og.png?type=app`;
+  return [
+    { title: "Collection — Arkhana" },
+    { name: "description", content: description },
+    { property: "og:title", content: "My Collection — Arkhana" },
+    { property: "og:description", content: description },
+    { property: "og:image", content: ogImage },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:image", content: ogImage },
+  ];
 }
 
 const SUIT_ICONS: Record<string, string> = {

@@ -36,9 +36,12 @@ export function Nav({ userName, isAnonymous }: { userName: string; isAnonymous?:
             </Link>
           ) : (
             <>
-              <span className="hidden sm:inline opacity-30">
+              <Link
+                to="/settings"
+                className="hidden sm:inline opacity-30 hover:opacity-70 transition-opacity"
+              >
                 {userName}
-              </span>
+              </Link>
               <Form method="post" action="/auth/signout">
                 <button
                   type="submit"

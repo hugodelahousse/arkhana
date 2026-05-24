@@ -14,11 +14,12 @@ import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity } 
 import { getSpreadType } from "../lib/spreads";
 import { useAutoReveal } from "../lib/useAutoReveal";
 import { DateTime } from "luxon";
-import { todayUTC } from "../lib/utils";
+import { todayUTC, getOrigin } from "../lib/utils";
 import { config } from "../../config/index.js";
 import { DirectionalTransition } from "../components/DirectionalTransition";
+import { ShareButton } from "../components/ShareButton";
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ context, request }: Route.LoaderArgs) {
   if (!context.user) {
     const origin = new URL(config.betterAuthUrl).origin;
     const anonRes = await fetch(
@@ -38,6 +39,7 @@ export async function loader({ context }: Route.LoaderArgs) {
       sundaySpread: null as SpreadCardResult[] | null,
       spreadDef: null as { name: string; subtitle: string; description: string; positions: { index: number; label: string; contemplationPrompt: string }[] } | null,
       todayStr: todayUTC(),
+      origin: getOrigin(request),
     };
   }
 
@@ -66,6 +68,7 @@ export async function loader({ context }: Route.LoaderArgs) {
       recentPulls,
       totalUnique,
       todayStr,
+      origin: getOrigin(request),
     };
   }
 
@@ -79,6 +82,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     recentPulls,
     totalUnique,
     todayStr,
+    origin: getOrigin(request),
   };
 }
 
@@ -97,8 +101,20 @@ export async function action({ request, context }: Route.ActionArgs) {
   return result;
 }
 
-export function meta() {
-  return [{ title: "Arkhana" }];
+export function meta({ data }: Route.MetaArgs) {
+  const origin = data?.origin ?? "";
+  return [
+    { title: "Arkhana" },
+    { name: "description", content: "Daily Tarot · One card. Every day. Uncover your arkhive." },
+    { property: "og:title", content: "Arkhana" },
+    { property: "og:description", content: "Daily Tarot · One card. Every day. Uncover your arkhive." },
+    { property: "og:image", content: `${origin}/api/og.png?type=app` },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: "Arkhana" },
+    { name: "twitter:description", content: "Daily Tarot · One card. Every day." },
+    { name: "twitter:image", content: `${origin}/api/og.png?type=app` },
+  ];
 }
 
 type SundayPhase =
@@ -285,7 +301,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   if (!loaderData.user) {
     return (
       <div className="min-h-screen bg-base flex items-center justify-center">
-        <p className="text-sm opacity-40 tracking-widest uppercase">The archive stirs…</p>
+        <p className="text-sm opacity-40 tracking-widest uppercase">The arkhive stirs…</p>
       </div>
     );
   }
@@ -454,6 +470,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       </h2>
                     </div>
                     <SpreadSummaryGrid cards={currentCards} positions={positions} />
+                    <div className="flex justify-center pt-2">
+                      <ShareButton
+                        title={`${spreadDef.name} — Arkhana`}
+                        url={`/spread/sunday-weekly/${todayStr}`}
+                        text={`${spreadDef.name}: ${spreadDef.subtitle}`}
+                        label="Share reading"
+                      />
+                    </div>
                   </motion.div>
                 )}
 
@@ -482,14 +506,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       </p>
                     </div>
                     <SpreadSummaryGrid cards={currentCards} positions={positions} />
-                    <div className="text-center pt-2">
-                      <Link
-                        to={`/spread/sunday-weekly/${todayStr}`}
-                        className="text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity"
-                        style={{ color: "var(--color-text-primary)" }}
-                      >
-                        Review your reading →
-                      </Link>
+                    <div className="flex justify-center pt-2">
+                      <ShareButton
+                        title={`${spreadDef.name} — Arkhana`}
+                        url={`/spread/sunday-weekly/${todayStr}`}
+                        text={`${spreadDef.name}: ${spreadDef.subtitle}`}
+                        label="Share reading"
+                      />
                     </div>
                   </motion.div>
                 )}
