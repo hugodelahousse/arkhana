@@ -327,10 +327,6 @@
   animation: holo-rotate 6s linear infinite;
 }
 
-/* Idle shimmer on Mystic (even without hover) */
-.card-scene[data-rarity="3"][data-revealed] .card-shine {
-  opacity: .15;
-}
 .card-scene[data-rarity="3"][data-revealed]:hover .card-shine {
   opacity: calc(.25 + var(--pointer-from-center, 0) * .55);
 }
@@ -397,9 +393,6 @@
           contrast(1.4) saturate(2.25);
 }
 
-.card-scene[data-rarity="4"][data-revealed] .card-shine {
-  opacity: .1;
-}
 .card-scene[data-rarity="4"][data-revealed]:hover .card-shine {
   opacity: calc(.25 + var(--pointer-from-center, 0) * .5);
 }
@@ -476,10 +469,6 @@
   animation: cosmos-drift 5s linear infinite;
 }
 
-/* Idle glow — Primordial cards pulse even without interaction */
-.card-scene[data-rarity="5"][data-revealed] .card-shine {
-  opacity: .3;
-}
 .card-scene[data-rarity="5"][data-revealed]:hover .card-shine {
   opacity: calc(.45 + var(--pointer-from-center, 0) * .45);
 }
@@ -617,6 +606,4 @@
   .card-scene[data-revealed] .card-flipper {
     transform: rotateY(180deg) !important;
   }
-  .card-scene[data-rarity="5"][data-revealed] .card-shine { opacity: .25; }
-  .card-scene[data-rarity="3"][data-revealed] .card-shine { opacity: .15; }
 }
