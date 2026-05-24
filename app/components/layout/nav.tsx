@@ -8,7 +8,7 @@ export function Nav({ userName, isAnonymous }: { userName: string; isAnonymous?:
     >
       <Link
         to="/"
-        className="text-lg sm:text-xl tracking-widest text-muted"
+        className="text-lg sm:text-xl tracking-widest text-muted font-serif"
       >
         ARKHANA
       </Link>
@@ -34,6 +34,7 @@ export function Nav({ userName, isAnonymous }: { userName: string; isAnonymous?:
             <Form method="post" action="/auth/signout">
               <button
                 type="submit"
+                aria-label="Sign out"
                 className="opacity-60 hover:opacity-100 transition-opacity"
               >
                 Leave
