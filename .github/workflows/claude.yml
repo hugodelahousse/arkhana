@@ -1,0 +1,14 @@
+name: Claude Code
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  claude:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: "Implement the feature or fix described in this issue"
