@@ -28,13 +28,15 @@ function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
     rotateX.set(-ny * 15);
     rotateY.set(nx * 15);
     if (ref.current) {
-      ref.current.style.setProperty("--ratio-x", String((nx + 1) / 2));
-      ref.current.style.setProperty("--ratio-y", String((ny + 1) / 2));
       const { left, top, width, height } = ref.current.getBoundingClientRect();
       const lightX = window.innerWidth  * (nx + 1) / 2;
       const lightY = window.innerHeight * (ny + 1) / 2;
-      ref.current.style.setProperty("--glow-x", String((lightX - left) / width));
-      ref.current.style.setProperty("--glow-y", String((lightY - top)  / height));
+      const rx = (lightX - left) / width;
+      const ry = (lightY - top)  / height;
+      ref.current.style.setProperty("--ratio-x", String(rx));
+      ref.current.style.setProperty("--ratio-y", String(ry));
+      ref.current.style.setProperty("--glow-x",  String(rx));
+      ref.current.style.setProperty("--glow-y",  String(ry));
     }
   });
 
