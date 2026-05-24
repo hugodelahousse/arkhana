@@ -525,8 +525,18 @@
   100% { box-shadow: 0 0 18px var(--rarity-color, rgba(255,255,255,.1)); }
 }
 
+@keyframes reveal-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
 .card-scene[data-revealed] .card-front {
   animation: reveal-glow 1.2s ease-out 0.35s both;
+}
+
+.card-scene[data-revealed] {
+  animation: reveal-pop 0.25s ease-out both;
 }
 
 /* ─── Reveal hint ─── */
@@ -552,6 +562,7 @@
 
 /* ─── Reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
+  .card-scene,
   .card-flipper,
   .card-shine,
   .card-glare,

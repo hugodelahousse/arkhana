@@ -30,10 +30,6 @@ export function useHoldReveal(onReveal?: () => void) {
         activeRef.current = false;
         rafRef.current = null;
         startRef.current = null;
-        // Haptic feedback on supported devices
-        if (typeof navigator !== "undefined" && navigator.vibrate) {
-          navigator.vibrate(40);
-        }
         onReveal?.();
       } else {
         rafRef.current = requestAnimationFrame(tick);
