@@ -2,7 +2,10 @@ import { Link, Form } from "react-router";
 
 export function Nav({ userName, isAnonymous }: { userName: string; isAnonymous?: boolean }) {
   return (
-    <nav className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border opacity-80">
+    <nav
+      className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b"
+      style={{ viewTransitionName: "site-nav", borderColor: "var(--color-border-default)", opacity: 0.8 } as React.CSSProperties}
+    >
       <Link
         to="/"
         className="text-lg sm:text-xl tracking-widest text-muted"
