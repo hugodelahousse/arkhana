@@ -31,4 +31,5 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm db:push --force
+      - run: pnpm db:seed
       - run: pnpm test
