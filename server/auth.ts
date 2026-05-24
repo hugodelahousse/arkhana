@@ -1,11 +1,10 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { anonymous } from "better-auth/plugins";
-import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { userCards } from "../db/schema/user-cards.js";
 import * as schema from "../db/schema/index.js";
 import { config } from "../config/index.js";
+import { migrateAnonymousPulls } from "./anonymous-migration.js";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -20,10 +19,7 @@ export const auth = betterAuth({
   plugins: [
     anonymous({
       onLinkAccount: async ({ anonymousUser, newUser }) => {
-        await db
-          .update(userCards)
-          .set({ userId: newUser.user.id })
-          .where(eq(userCards.userId, anonymousUser.user.id));
+        await migrateAnonymousPulls(anonymousUser.user.id, newUser.user.id);
       },
     }),
   ],
