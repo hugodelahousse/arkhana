@@ -15,6 +15,13 @@
       "when": 1779581485757,
       "tag": "0001_workable_scarlet_spider",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779648162079,
+      "tag": "0002_shallow_wrecker",
+      "breakpoints": true
     }
   ]
 }

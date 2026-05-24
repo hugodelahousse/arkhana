@@ -85,6 +85,7 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             placeholder="Name (optional)"
             autoComplete="name"
             className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
+            style={{ color: "var(--color-text-primary)" }}
           />
           <label htmlFor="username" className="sr-only">Username (optional)</label>
           <input
@@ -97,6 +98,7 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             maxLength={30}
             pattern="[a-zA-Z0-9_-]*"
             className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
+            style={{ color: "var(--color-text-primary)" }}
           />
           <label htmlFor="email" className="sr-only">Email address</label>
           <input
@@ -107,6 +109,7 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             placeholder="your@email.com"
             autoComplete="email"
             className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
+            style={{ color: "var(--color-text-primary)" }}
           />
           <label htmlFor="password" className="sr-only">Password, minimum 8 characters</label>
           <input
@@ -118,6 +121,7 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             placeholder="Password (min 8 characters)"
             autoComplete="new-password"
             className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
+            style={{ color: "var(--color-text-primary)" }}
           />
           <button
             type="submit"
