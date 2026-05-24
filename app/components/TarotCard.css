@@ -1,8 +1,32 @@
-/* ─── Registered property for animatable gradient angle ─── */
+/* ─── Registered properties for CSS-native animation ─── */
 @property --shine-angle {
   syntax: "<angle>";
   inherits: false;
   initial-value: 0deg;
+}
+
+/* Foil shift — driven by tilt/mouse, animated via CSS transition */
+@property --ratio-x {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+@property --ratio-y {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+
+/* Card-back glow position — world-space light projected per card */
+@property --glow-x {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+@property --glow-y {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
 }
 
 /* ─── Scene (perspective context) ─── */
@@ -10,6 +34,11 @@
   display: inline-block;
   perspective: 1200px;
   cursor: pointer;
+  transition:
+    --ratio-x 350ms ease-out,
+    --ratio-y 350ms ease-out,
+    --glow-x  500ms ease-out,
+    --glow-y  500ms ease-out;
 
   /* Sunpillar palette — the classic holographic color spectrum */
   --sp1: hsl(2,   100%, 73%);

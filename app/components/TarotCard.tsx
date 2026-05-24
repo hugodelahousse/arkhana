@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useCallback } from "react";
-import { motion, useSpring, useMotionValueEvent } from "motion/react";
+import { motion, useSpring } from "motion/react";
 import type { MotionStyle } from "motion/react";
 import { cardImageUrl } from "../lib/cardImages";
 import { RARITY_LABELS } from "../lib/cards";
@@ -21,26 +21,15 @@ export interface TarotCardProps {
 function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
   const rotateX = useSpring(0, { stiffness: 300, damping: 30 });
   const rotateY = useSpring(0, { stiffness: 300, damping: 30 });
-  const ratioX = useSpring(0.5, { stiffness: 80, damping: 20 });
-  const ratioY = useSpring(0.5, { stiffness: 80, damping: 20 });
   const orientationActiveRef = useRef(false);
-
-  useMotionValueEvent(ratioX, "change", (v) =>
-    ref.current?.style.setProperty("--ratio-x", String(v))
-  );
-  useMotionValueEvent(ratioY, "change", (v) =>
-    ref.current?.style.setProperty("--ratio-y", String(v))
-  );
 
   useOrientationEffect((nx, ny) => {
     orientationActiveRef.current = true;
     rotateX.set(-ny * 15);
     rotateY.set(nx * 15);
-    ratioX.set((nx + 1) / 2);
-    ratioY.set((ny + 1) / 2);
-    // Project the world-space light position onto this card's bounding box so
-    // each card gets a unique glow angle rather than all sharing the same value.
     if (ref.current) {
+      ref.current.style.setProperty("--ratio-x", String((nx + 1) / 2));
+      ref.current.style.setProperty("--ratio-y", String((ny + 1) / 2));
       const { left, top, width, height } = ref.current.getBoundingClientRect();
       const lightX = window.innerWidth  * (nx + 1) / 2;
       const lightY = window.innerHeight * (ny + 1) / 2;
@@ -69,26 +58,25 @@ function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
     const ny = ((e.clientY - top) / height) * 2 - 1;
     rotateX.set(-ny * 15);
     rotateY.set(nx * 15);
-    ratioX.set((nx + 1) / 2);
-    ratioY.set((ny + 1) / 2);
-    // For mouse, cursor position within the card is the light source.
-    ref.current.style.setProperty("--glow-x", String((e.clientX - left) / width));
-    ref.current.style.setProperty("--glow-y", String((e.clientY - top)  / height));
+    ref.current.style.setProperty("--ratio-x", String((nx + 1) / 2));
+    ref.current.style.setProperty("--ratio-y", String((ny + 1) / 2));
+    ref.current.style.setProperty("--glow-x",  String((e.clientX - left) / width));
+    ref.current.style.setProperty("--glow-y",  String((e.clientY - top)  / height));
     ref.current.style.setProperty(
       "--pointer-from-center",
       String(Math.min(1, Math.hypot(nx, ny) / Math.SQRT2))
     );
-  }, [ref, rotateX, rotateY, ratioX, ratioY]);
+  }, [ref, rotateX, rotateY]);
 
   const onMouseLeave = useCallback(() => {
     rotateX.set(0);
     rotateY.set(0);
-    ratioX.set(0.5);
-    ratioY.set(0.5);
-    ref.current?.style.setProperty("--glow-x", "0.5");
-    ref.current?.style.setProperty("--glow-y", "0.5");
+    ref.current?.style.setProperty("--ratio-x", "0.5");
+    ref.current?.style.setProperty("--ratio-y", "0.5");
+    ref.current?.style.setProperty("--glow-x",  "0.5");
+    ref.current?.style.setProperty("--glow-y",  "0.5");
     ref.current?.style.setProperty("--pointer-from-center", "0");
-  }, [ref, rotateX, rotateY, ratioX, ratioY]);
+  }, [ref, rotateX, rotateY]);
 
   return {
     style: { rotateX, rotateY } as MotionStyle,
