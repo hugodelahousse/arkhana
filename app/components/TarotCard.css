@@ -64,15 +64,15 @@
 .card-scene::before {
   content: "";
   position: absolute;
-  inset: -3px;
-  border-radius: 11px;
-  padding: 3px;
+  inset: -10px;
+  border-radius: 18px;
+  padding: 10px;
   background: conic-gradient(
     from -90deg at 50% 50%,
     var(--color-card-back-accent) calc(var(--hold-progress, 0) * 360deg),
     transparent               calc(var(--hold-progress, 0) * 360deg)
   );
-  /* Mask so only the 3px border ring shows */
+  /* Mask the filled interior so only the border ring carries the gradient */
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
@@ -83,7 +83,8 @@
   mask-composite: exclude;
   pointer-events: none;
   z-index: 4;
-  filter: drop-shadow(0 0 5px var(--color-card-back-accent));
+  /* Wide blur turns the hard ring into a soft diffuse glow */
+  filter: blur(8px) brightness(1.4);
 }
 
 /* On reveal, flash the rarity color and fade out */
@@ -93,8 +94,8 @@
     var(--rarity-color, var(--color-card-back-accent)) 360deg,
     transparent 360deg
   );
-  filter: drop-shadow(0 0 8px var(--rarity-color, var(--color-card-back-accent)));
-  animation: hold-glow-reveal 0.7s ease-out forwards;
+  filter: blur(10px) brightness(1.6);
+  animation: hold-glow-reveal 0.8s ease-out forwards;
 }
 
 @keyframes hold-glow-reveal {
