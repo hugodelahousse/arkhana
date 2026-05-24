@@ -198,6 +198,64 @@ export async function getSpreadHistory(userId: string): Promise<
   return [...grouped.values()].reverse();
 }
 
+export async function getSpreadById(spreadId: number): Promise<{
+  userId: string;
+  spreadType: string;
+  spreadDate: string;
+  cards: SpreadCardResult[];
+} | null> {
+  const rows = await db
+    .select({
+      userId: spreads.userId,
+      spreadType: spreads.spreadType,
+      spreadDate: spreads.spreadDate,
+      position: spreadCards.position,
+      positionKey: spreadCards.positionKey,
+      userCardId: userCards.id,
+      cardId: userCards.cardId,
+      rarityScore: userCards.rarityScore,
+      isRadiant: userCards.isRadiant,
+      isReversed: userCards.isReversed,
+    })
+    .from(spreads)
+    .innerJoin(spreadCards, eq(spreadCards.spreadId, spreads.id))
+    .innerJoin(userCards, eq(userCards.id, spreadCards.userCardId))
+    .where(eq(spreads.id, spreadId))
+    .orderBy(spreadCards.position);
+
+  if (rows.length === 0) return null;
+
+  return {
+    userId: rows[0].userId,
+    spreadType: rows[0].spreadType,
+    spreadDate: rows[0].spreadDate,
+    cards: rows.map((row) => ({
+      ...row,
+      rarityScore: row.rarityScore as Rarity,
+      card: CARD_BY_ID[row.cardId],
+    })),
+  };
+}
+
+export async function getSpreadId(
+  userId: string,
+  spreadTypeId: string,
+  spreadDate: string
+): Promise<number | null> {
+  const [row] = await db
+    .select({ id: spreads.id })
+    .from(spreads)
+    .where(
+      and(
+        eq(spreads.userId, userId),
+        eq(spreads.spreadType, spreadTypeId),
+        eq(spreads.spreadDate, spreadDate)
+      )
+    )
+    .limit(1);
+  return row?.id ?? null;
+}
+
 export async function getTodaySpread(
   userId: string,
   spreadTypeId: string,

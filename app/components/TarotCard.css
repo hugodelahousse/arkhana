@@ -57,6 +57,7 @@
   --grain:   url("https://cdn.jsdelivr.net/gh/simeydotme/pokemon-cards-css@main/public/img/grain.webp");
 }
 
+.card-scene:not([data-revealed]) { margin-bottom: 2rem; }
 .card-scene[data-revealed] { cursor: default; }
 
 /* ─── Hold-to-reveal glow ─── */
@@ -103,9 +104,9 @@
 
 .card-scene[data-size="sm"] { width: 100%; }
 .card-scene[data-size="md"] { width: 240px; }
-.card-scene[data-size="lg"] { width: 220px; }
+.card-scene[data-size="lg"] { width: clamp(120px, calc((100dvh - 20rem) * 350 / 600), 220px); }
 @media (min-width: 640px) {
-  .card-scene[data-size="lg"] { width: 320px; }
+  .card-scene[data-size="lg"] { width: clamp(160px, calc((100dvh - 28rem) * 350 / 600), 320px); }
 }
 
 /* ─── Tilt wrapper (motion-driven) ─── */

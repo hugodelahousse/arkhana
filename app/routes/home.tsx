@@ -8,7 +8,7 @@ import { Nav } from "../components/layout/nav";
 import { TarotCard } from "../components/TarotCard";
 import { SpreadSummaryGrid } from "../components/SpreadSummaryGrid";
 import { getTodayPull, getRecentPulls, getUniqueCardCount, dailyPull } from "../lib/pull";
-import { getTodaySpread, drawSpread } from "../lib/spread-pull";
+import { getTodaySpread, drawSpread, getSpreadId } from "../lib/spread-pull";
 import type { SpreadCardResult } from "../lib/spread-pull";
 import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity } from "../lib/cards";
 import { getSpreadType } from "../lib/spreads";
@@ -37,6 +37,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       totalUnique: 0,
       isSundayToday: false,
       sundaySpread: null as SpreadCardResult[] | null,
+      sundaySpreadId: null as number | null,
       spreadDef: null as { name: string; subtitle: string; description: string; positions: { index: number; label: string; contemplationPrompt: string }[] } | null,
       todayStr: todayUTC(),
       origin: getOrigin(request),
@@ -47,10 +48,11 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const todayStr = todayUTC();
   const isSundayToday = DateTime.utc().weekday === 7;
 
-  const [recentPulls, totalUnique, sundaySpread] = await Promise.all([
+  const [recentPulls, totalUnique, sundaySpread, sundaySpreadId] = await Promise.all([
     getRecentPulls(userId, 5),
     getUniqueCardCount(userId),
     isSundayToday ? getTodaySpread(userId, "sunday-weekly", todayStr) : Promise.resolve(null),
+    isSundayToday ? getSpreadId(userId, "sunday-weekly", todayStr) : Promise.resolve(null),
   ]);
 
   const spreadDef = isSundayToday ? (() => {
@@ -63,6 +65,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       user: context.user,
       isSundayToday: true,
       sundaySpread,
+      sundaySpreadId,
       spreadDef,
       todayPull: null as Awaited<ReturnType<typeof getTodayPull>> | null,
       recentPulls,
@@ -77,6 +80,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     user: context.user,
     isSundayToday: false,
     sundaySpread: null as SpreadCardResult[] | null,
+    sundaySpreadId: null as number | null,
     spreadDef: null as typeof spreadDef,
     todayPull,
     recentPulls,
@@ -155,7 +159,7 @@ function SpreadContemplateReveal({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -16 }}
       transition={{ duration: 0.5 }}
-      className="text-center space-y-5 sm:space-y-8 pt-2 sm:pt-8 flex flex-col items-center"
+      className="text-center space-y-4 sm:space-y-6 pt-2 sm:pt-8 flex flex-col items-center"
     >
       <div className="space-y-2">
         <p
@@ -165,35 +169,14 @@ function SpreadContemplateReveal({
           {position + 1} of {positions.length}
         </p>
         <h2
-          className="text-3xl sm:text-4xl font-light tracking-wide"
+          className="text-2xl sm:text-3xl font-light tracking-wide"
           style={{ color: "var(--color-rarity-mystic)", fontFamily: "var(--font-serif)" }}
         >
           {posLabel}
         </h2>
       </div>
 
-      <AnimatePresence>
-        {!cardRevealed && (
-          <motion.div
-            key="prompt"
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="max-w-xs w-full space-y-3"
-          >
-            <div
-              className="w-16 h-px mx-auto"
-              style={{ background: "var(--color-rarity-mystic)", opacity: 0.3 }}
-            />
-            <p
-              className="text-base leading-relaxed opacity-80 italic"
-              style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-            >
-              {positions[position]?.contemplationPrompt}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+      {/* Card: centered in remaining space */}
       <TarotCard
         card={card.card}
         rarityScore={card.rarityScore as Rarity}
@@ -205,58 +188,68 @@ function SpreadContemplateReveal({
         showHint={!cardRevealed}
       />
 
-      <AnimatePresence>
-        {cardRevealed && (
-          <motion.div
-            key="details"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="space-y-4 max-w-xs"
+      {/* Below card: grid overlay — prompt and details share the same slot, no layout shift */}
+      <div className="w-full max-w-xs grid" style={{ gridTemplateAreas: "'slot'" }}>
+        {/* Pre-reveal: contemplation prompt */}
+        <div
+          className="space-y-2 transition-opacity duration-300"
+          style={{
+            gridArea: "slot",
+            opacity: cardRevealed ? 0 : 1,
+            pointerEvents: cardRevealed ? "none" : "auto",
+          }}
+        >
+          <p
+            className="text-sm leading-relaxed opacity-80 italic"
+            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
           >
-            <p
-              className="text-xs tracking-widest uppercase"
-              style={{ color: `var(--color-rarity-${rarityLabel})` }}
-            >
-              {RARITY_LABELS[card.rarityScore]}
-              {card.isRadiant && " ✦"}
-              {card.isReversed && " · Reversed"}
-            </p>
-            <h3
-              className="text-2xl font-light tracking-wide"
-              style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-            >
-              {card.card.name}
-            </h3>
-            <div
-              className="w-8 h-px mx-auto"
-              style={{ background: `var(--color-rarity-${rarityLabel})`, opacity: 0.5 }}
-            />
-            <p
-              className="text-sm leading-relaxed opacity-85"
-              style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-            >
-              {getCardDescription(card.card, card.rarityScore, card.isReversed)}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showContinue && (
-          <motion.button
-            key="continue"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
+            {positions[position]?.contemplationPrompt}
+          </p>
+        </div>
+        {/* Post-reveal: card details + continue button */}
+        <div
+          className="space-y-2 transition-opacity duration-500"
+          style={{
+            gridArea: "slot",
+            opacity: cardRevealed ? 1 : 0,
+            pointerEvents: cardRevealed ? "auto" : "none",
+          }}
+        >
+          <p
+            className="text-xs tracking-widest uppercase"
+            style={{ color: `var(--color-rarity-${rarityLabel})` }}
+          >
+            {RARITY_LABELS[card.rarityScore]}
+            {card.isRadiant && " ✦"}
+            {card.isReversed && " · Reversed"}
+          </p>
+          <h3
+            className="text-xl font-light tracking-wide"
+            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+          >
+            {card.card.name}
+          </h3>
+          <p
+            className="text-sm leading-relaxed opacity-85"
+            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+          >
+            {getCardDescription(card.card, card.rarityScore, card.isReversed)}
+          </p>
+          <button
             onClick={onAdvance}
-            className="px-8 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
-            style={{ color: "var(--color-text-primary)", borderColor: "var(--color-rarity-mystic)" }}
+            className="mt-2 px-8 py-2.5 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
+            style={{
+              color: "var(--color-text-primary)",
+              borderColor: "var(--color-rarity-mystic)",
+              opacity: showContinue ? 1 : 0,
+              pointerEvents: showContinue ? "auto" : "none",
+              transition: "opacity 0.4s",
+            }}
           >
             {isLast ? "See your reading" : `Continue to ${nextLabel}`}
-          </motion.button>
-        )}
-      </AnimatePresence>
+          </button>
+        </div>
+      </div>
     </motion.div>
   );
 }
@@ -269,12 +262,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const rarityLabel = dailyResult ? RARITY_LABELS[dailyResult.rarityScore]?.toLowerCase() : null;
   const [revealed, revealNow] = useAutoReveal(!!dailyResult, 600);
 
-  const { isSundayToday, sundaySpread, spreadDef, todayStr } = loaderData;
+  const { isSundayToday, sundaySpread, sundaySpreadId, spreadDef, todayStr } = loaderData;
 
   const [sundayPhase, setSundayPhase] = useState<SundayPhase>(() =>
     sundaySpread ? { phase: "done" } : { phase: "intro" }
   );
   const [drawnCards, setDrawnCards] = useState<SpreadCardResult[] | null>(sundaySpread ?? null);
+  const [activeSpreadId, setActiveSpreadId] = useState<number | null>(sundaySpreadId);
 
   const spreadActionData = fetcher.data && "_type" in fetcher.data && fetcher.data._type === "spread"
     ? (fetcher.data as { _type: "spread"; status: string; spreadId?: number; cards?: SpreadCardResult[] })
@@ -287,6 +281,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       spreadActionData.cards
     ) {
       setDrawnCards(spreadActionData.cards);
+      if (spreadActionData.spreadId) setActiveSpreadId(spreadActionData.spreadId);
       setSundayPhase({ phase: "contemplating", position: 0 });
     }
   }, [spreadActionData]);
@@ -308,6 +303,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   const { user, todayPull, recentPulls, totalUnique } = loaderData;
   const todayCard = todayPull ? CARD_BY_ID[todayPull.cardId] : null;
+  const spreadShareUrl = user.username
+    ? `/u/${user.username}/pull/${todayStr}`
+    : activeSpreadId ? `/s/${activeSpreadId}` : null;
 
   function navigateToCard(slug: string) {
     startTransition(() => {
@@ -473,8 +471,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     <div className="flex justify-center pt-2">
                       <ShareButton
                         title={`${spreadDef.name} — Arkhana`}
-                        url={`/spread/sunday-weekly/${todayStr}`}
-                        text={`${spreadDef.name}: ${spreadDef.subtitle}`}
+                        url={spreadShareUrl!}
+                        text=""
                         label="Share reading"
                       />
                     </div>
@@ -509,8 +507,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     <div className="flex justify-center pt-2">
                       <ShareButton
                         title={`${spreadDef.name} — Arkhana`}
-                        url={`/spread/sunday-weekly/${todayStr}`}
-                        text={`${spreadDef.name}: ${spreadDef.subtitle}`}
+                        url={spreadShareUrl!}
+                        text=""
                         label="Share reading"
                       />
                     </div>
@@ -529,8 +527,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               </h2>
 
               {dailyResult ? (
-                <div className="space-y-10">
-                  <div className="flex justify-center pb-4">
+                <div className="space-y-6">
+                  <div className="flex justify-center">
                     <TarotCard
                       card={dailyResult.card}
                       rarityScore={dailyResult.rarityScore as Rarity}
@@ -542,52 +540,44 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       showHint={!revealed}
                     />
                   </div>
-                  <AnimatePresence>
-                    {revealed && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.1 }}
-                        className="space-y-5"
-                      >
-                        <p
-                          className="text-xs tracking-widest uppercase"
-                          style={{ color: `var(--color-rarity-${rarityLabel})` }}
-                          aria-label={[RARITY_LABELS[dailyResult.rarityScore], dailyResult.isRadiant ? "Radiant" : null, dailyResult.isReversed ? "Reversed" : null].filter(Boolean).join(", ")}
-                        >
-                          <span aria-hidden="true">
-                            {RARITY_LABELS[dailyResult.rarityScore]}
-                            {dailyResult.isRadiant && " ✦"}
-                            {dailyResult.isReversed && " · Reversed"}
-                          </span>
-                        </p>
-                        <h2
-                          className="text-3xl font-light tracking-wide"
-                          style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                        >
-                          {dailyResult.card.name}
-                        </h2>
-                        <div
-                          className="w-8 h-px mx-auto"
-                          style={{ background: `var(--color-rarity-${rarityLabel})`, opacity: 0.5 }}
-                        />
-                        <p
-                          className="text-sm leading-relaxed max-w-xs mx-auto"
-                          style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)", opacity: 0.85 }}
-                        >
-                          {getCardDescription(dailyResult.card, dailyResult.rarityScore, dailyResult.isReversed)}
-                        </p>
-                        <a
-                          href={`/collection/${cardSlug(dailyResult.card)}`}
-                          onClick={(e) => { e.preventDefault(); navigateToCard(cardSlug(dailyResult.card)); }}
-                          className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-2"
-                          style={{ color: "var(--color-text-primary)" }}
-                        >
-                          Card history →
-                        </a>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  <div
+                    className="space-y-3 transition-opacity duration-500"
+                    style={{
+                      opacity: revealed ? 1 : 0,
+                    }}
+                  >
+                    <p
+                      className="text-xs tracking-widest uppercase"
+                      style={{ color: `var(--color-rarity-${rarityLabel})` }}
+                      aria-label={[RARITY_LABELS[dailyResult.rarityScore], dailyResult.isRadiant ? "Radiant" : null, dailyResult.isReversed ? "Reversed" : null].filter(Boolean).join(", ")}
+                    >
+                      <span aria-hidden="true">
+                        {RARITY_LABELS[dailyResult.rarityScore]}
+                        {dailyResult.isRadiant && " ✦"}
+                        {dailyResult.isReversed && " · Reversed"}
+                      </span>
+                    </p>
+                    <h2
+                      className="text-2xl font-light tracking-wide"
+                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                    >
+                      {dailyResult.card.name}
+                    </h2>
+                    <p
+                      className="text-sm leading-relaxed"
+                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)", opacity: 0.85 }}
+                    >
+                      {getCardDescription(dailyResult.card, dailyResult.rarityScore, dailyResult.isReversed)}
+                    </p>
+                    <a
+                      href={`/collection/${cardSlug(dailyResult.card)}`}
+                      onClick={(e) => { e.preventDefault(); navigateToCard(cardSlug(dailyResult.card)); }}
+                      className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-1"
+                      style={{ color: "var(--color-text-primary)" }}
+                    >
+                      Card history →
+                    </a>
+                  </div>
                 </div>
               ) : todayPull && todayCard ? (
                 <div className="space-y-6">

@@ -22,7 +22,7 @@ export function ShareButton({
     const fullUrl = new URL(url, globalThis.location?.href).toString();
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
-        await navigator.share({ title, text, url: fullUrl });
+        await navigator.share({ title, text: text || undefined, url: fullUrl });
         return;
       } catch {
         // user cancelled or API unavailable — fall through to clipboard
