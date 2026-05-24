@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -26,9 +27,13 @@ export const userCards = pgTable(
     isReversed: boolean("is_reversed").notNull().default(false),
     pullDate: text("pull_date").notNull(), // "YYYY-MM-DD" UTC
     pulledAt: timestamp("pulled_at", { mode: "date" }).notNull().defaultNow(),
+    pullType: text("pull_type").notNull().default("daily"), // "daily" | "spread"
   },
   (t) => [
-    uniqueIndex("user_cards_user_day_idx").on(t.userId, t.pullDate),
+    // Partial unique: only one daily pull per user per day; spread cards are unrestricted
+    uniqueIndex("user_cards_user_day_idx")
+      .on(t.userId, t.pullDate)
+      .where(sql`${t.pullType} = 'daily'`),
     index("user_cards_user_card_idx").on(t.userId, t.cardId),
   ]
 );

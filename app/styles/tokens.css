@@ -28,6 +28,7 @@
   --color-rarity-arcane: var(--primitive-rarity-4);
   --color-rarity-primordial: var(--primitive-rarity-5);
   --color-card-back-accent: var(--primitive-purple-500);
+  --color-accent: var(--primitive-purple-500);
   --font-serif: var(--primitive-font-serif);
 }
 
