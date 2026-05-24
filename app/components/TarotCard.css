@@ -573,11 +573,11 @@
   100% { transform: scale(1); }
 }
 
-.card-scene[data-revealed] .card-front {
+.card-scene[data-just-revealed] .card-front {
   animation: reveal-glow 1.2s ease-out 0.35s both;
 }
 
-.card-scene[data-revealed] {
+.card-scene[data-just-revealed] {
   animation: reveal-pop 0.25s ease-out both;
 }
 
