@@ -222,13 +222,11 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               className="flex justify-center gap-12 py-6 border-t border-b"
               style={{ borderColor: "var(--color-bg-elevated)" }}
             >
-              <div className="text-center space-y-1">
-                <p className="whitespace-nowrap" style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-serif)" }}>
-                  <span className="text-2xl">{totalUnique}</span>
-                  <span className="text-base opacity-50">/78</span>
-                </p>
-                <p className="text-xs tracking-widest uppercase opacity-40" style={{ color: "var(--color-text-primary)" }}>
-                  discovered
+              <div className="text-center">
+                <p className="whitespace-nowrap" style={{ fontFamily: "var(--font-serif)" }}>
+                  <span className="text-2xl" style={{ color: "var(--color-text-muted)" }}>{totalUnique}</span>
+                  <span className="text-base opacity-50" style={{ color: "var(--color-text-muted)" }}>/78</span>
+                  <span className="text-xs tracking-widest uppercase opacity-40 ml-2" style={{ color: "var(--color-text-primary)" }}>discovered</span>
                 </p>
               </div>
             </section>

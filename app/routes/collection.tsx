@@ -1,5 +1,5 @@
 import { redirect } from "react-router";
-import { memo, startTransition, useCallback } from "react";
+import { memo, startTransition, useCallback, useState } from "react";
 import { ViewTransition, addTransitionType } from "react";
 import type { Route } from "./+types/collection";
 import { Nav } from "../components/layout/nav";
@@ -42,13 +42,14 @@ export function meta() {
 export default function Collection({ loaderData }: Route.ComponentProps) {
   const { user, bestByCard } = loaderData;
   const discoveredCount = Object.keys(bestByCard).length;
+  const [hideUndiscovered, setHideUndiscovered] = useState(false);
 
   return (
     <DirectionalTransition>
       <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
         <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-4xl mx-auto px-6 py-12 space-y-12">
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-3">
             <h1
               className="text-2xl font-light tracking-widest"
               style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-serif)" }}
@@ -61,6 +62,13 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
             >
               {discoveredCount}/78 discovered
             </p>
+            <button
+              onClick={() => setHideUndiscovered((v) => !v)}
+              className="text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity"
+              style={{ color: "var(--color-text-primary)" }}
+            >
+              {hideUndiscovered ? "Show all cards" : "Hide undiscovered"}
+            </button>
           </div>
 
           <section className="space-y-4">
@@ -74,7 +82,7 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
               </span>
             </h2>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
-              {MAJOR_ARCANA.map((card) => (
+              {MAJOR_ARCANA.filter((c) => !hideUndiscovered || bestByCard[c.id]).map((card) => (
                 <CardTile key={card.id} card={card} best={bestByCard[card.id]} />
               ))}
             </div>
@@ -92,7 +100,7 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
                 </span>
               </h2>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-4">
-                {cards.map((card) => (
+                {cards.filter((c) => !hideUndiscovered || bestByCard[c.id]).map((card) => (
                   <CardTile key={card.id} card={card} best={bestByCard[card.id]} />
                 ))}
               </div>
