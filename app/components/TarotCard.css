@@ -570,6 +570,22 @@
   animation: reveal-pop 0.25s ease-out both;
 }
 
+/* Persistent rarity aura for all revealed non-mundane cards */
+.card-scene[data-rarity="2"][data-revealed] .card-front,
+.card-scene[data-rarity="3"][data-revealed] .card-front,
+.card-scene[data-rarity="4"][data-revealed] .card-front,
+.card-scene[data-rarity="5"][data-revealed] .card-front {
+  box-shadow: 0 0 18px color-mix(in srgb, var(--rarity-color) 40%, transparent);
+}
+
+/* On touch devices, `:hover` never fires at rest — show a hint of foil at idle.
+   Kept very low so color-dodge doesn't create rainbow on the card's white border. */
+@media (hover: none) {
+  .card-scene[data-rarity="3"][data-revealed] .card-shine { opacity: .05; }
+  .card-scene[data-rarity="4"][data-revealed] .card-shine { opacity: .04; }
+  .card-scene[data-rarity="5"][data-revealed] .card-shine { opacity: .08; }
+}
+
 /* ─── Reveal hint ─── */
 .card-reveal-hint {
   position: absolute;
