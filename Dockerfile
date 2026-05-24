@@ -25,6 +25,8 @@ COPY --from=build-env /app/build /app/build
 COPY ./server.js /app/server.js
 COPY ./db /app/db
 COPY ./config /app/config
+COPY ./migrations /app/migrations
+COPY ./app/lib/cards.ts /app/app/lib/cards.ts
 WORKDIR /app
 EXPOSE 3000
 CMD ["pnpm", "run", "start"]

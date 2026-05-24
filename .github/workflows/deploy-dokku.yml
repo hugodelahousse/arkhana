@@ -19,14 +19,6 @@ on:
         required: false
         type: boolean
         default: false
-      run_seed:
-        required: false
-        type: boolean
-        default: false
-      use_migrate_deploy:
-        required: false
-        type: boolean
-        default: false
 
 env:
   APP_NAME: ${{ inputs.app_name }}
@@ -140,46 +132,6 @@ jobs:
 
       - name: Deploy to Dokku
         run: ssh dokku@${{ secrets.DOKKU_HOST }} git:from-image ${{ env.APP_NAME }} ${{ env.IMAGE_NAME }}:${{ github.sha }}
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Expose database port
-        run: ssh dokku@${{ secrets.DOKKU_HOST }} postgres:expose ${{ env.APP_NAME }}-db || true
-
-      - name: Run database migrations and seed
-        run: |
-          set -e
-
-          DSN=$(ssh dokku@${{ secrets.DOKKU_HOST }} postgres:info ${{ env.APP_NAME }}-db --dsn)
-          DB_PASS=$(echo "$DSN" | sed -n 's|postgres://[^:]*:\([^@]*\)@.*|\1|p' | tr -d '[:space:]')
-          DB_NAME=$(echo "$DSN" | sed -n 's|postgres://[^/]*/\(.*\)|\1|p' | tr -d '[:space:]')
-          EXPOSED_PORT=$(ssh dokku@${{ secrets.DOKKU_HOST }} postgres:info ${{ env.APP_NAME }}-db --exposed-ports | sed 's/.*->//' | tr -d '[:space:]')
-
-          export DATABASE_URL="postgres://postgres:${DB_PASS}@${{ secrets.DOKKU_HOST }}:${EXPOSED_PORT}/${DB_NAME}"
-
-          if [ "${{ inputs.use_migrate_deploy }}" = "true" ]; then
-            pnpm db:migrate
-          else
-            pnpm db:push --force
-          fi
-
-          if [ "${{ inputs.run_seed }}" = "true" ]; then
-            pnpm db:seed
-          fi
-
-      - name: Unexpose database port
-        if: always()
-        run: ssh dokku@${{ secrets.DOKKU_HOST }} postgres:unexpose ${{ env.APP_NAME }}-db || true
 
       - name: Update deployment status (success)
         if: success() && needs.create-deployment.outputs.deployment_id != ''

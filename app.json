@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "dokku": {
+      "predeploy": "tsx ./db/migrate.ts && tsx ./db/seed/run.ts"
+    }
+  }
+}
