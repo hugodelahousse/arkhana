@@ -9,7 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { useGlobalOrientation } from "./lib/orientation";
+import { OrientationProvider } from "./lib/orientation";
 
 export const links: Route.LinksFunction = () => [];
 
@@ -32,8 +32,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  useGlobalOrientation();
-  return <Outlet />;
+  return (
+    <OrientationProvider>
+      <Outlet />
+    </OrientationProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

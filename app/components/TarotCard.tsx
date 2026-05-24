@@ -4,7 +4,7 @@ import type { MotionStyle } from "motion/react";
 import { cardImageUrl } from "../lib/cardImages";
 import { RARITY_LABELS } from "../lib/cards";
 import type { CardDefinition, Rarity } from "../lib/cards";
-import { subscribeOrientation } from "../lib/orientation";
+import { useOrientation } from "../lib/orientation";
 import "./TarotCard.css";
 
 export interface TarotCardProps {
@@ -24,6 +24,7 @@ function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
   const ratioX = useSpring(0.5, { stiffness: 80, damping: 20 });
   const ratioY = useSpring(0.5, { stiffness: 80, damping: 20 });
   const orientationActiveRef = useRef(false);
+  const { subscribe } = useOrientation();
 
   useMotionValueEvent(ratioX, "change", (v) =>
     ref.current?.style.setProperty("--ratio-x", String(v))
@@ -33,14 +34,14 @@ function useCardTilt(ref: React.RefObject<HTMLDivElement | null>) {
   );
 
   useEffect(() => {
-    return subscribeOrientation((nx, ny) => {
+    return subscribe((nx, ny) => {
       orientationActiveRef.current = true;
       rotateX.set(-ny * 15);
       rotateY.set(nx * 15);
       ratioX.set((nx + 1) / 2);
       ratioY.set((ny + 1) / 2);
     });
-  }, []);
+  }, [subscribe]);
 
   const onTap = useCallback(() => {
     if (orientationActiveRef.current) return;
