@@ -54,3 +54,16 @@ export function OrientationProvider({ children }: { children: ReactNode }) {
 export function useOrientation() {
   return useContext(OrientationContext);
 }
+
+/** Subscribe to orientation updates for the lifetime of the calling component. */
+export function useOrientationEffect(handler: Handler) {
+  const { subscribe } = useOrientation();
+  // Keep a ref so the subscription never needs to be re-established when the
+  // handler closure changes (e.g. captures new spring references each render).
+  const handlerRef = useRef(handler);
+  handlerRef.current = handler;
+
+  useEffect(() => {
+    return subscribe((nx, ny) => handlerRef.current(nx, ny));
+  }, [subscribe]);
+}
