@@ -59,7 +59,7 @@ export const CARDS: CardDefinition[] = [
       "Scattered energy yields scattered results. Gather yourself.",
       "Skills exist but remain untapped, hidden behind self-doubt or distraction.",
       "The channel is open but misdirected — power flows into illusion or manipulation.",
-      "Will turned inward becomes manipulation; the tools of creation are being used to deceive.",
+      "The self-deceiving magician: all tools present, all skills available, and the only thing being conjured is an elaborate performance for a self that has forgotten what it actually wants.",
       "The infinite potential of the void collapses into stagnation when will is absent.",
     ],
   },
@@ -237,7 +237,7 @@ export const CARDS: CardDefinition[] = [
     ],
     reversedDescriptions: [
       "Resistance to inevitable change is making things harder than they need to be.",
-      "A run of bad luck — but cycles turn. This too will shift.",
+      "A difficult cycle persists; the resistance to accepting its reality only prolongs the downturn and delays the necessary adaptation.",
       "The wheel is turning but you are clinging to a spoke. Let go.",
       "External forces have taken the wheel. Reclaim what agency you can.",
       "The cycle inverted: change without evolution, motion without meaning.",
@@ -278,7 +278,7 @@ export const CARDS: CardDefinition[] = [
     reversedDescriptions: [
       "Stalling that masquerades as waiting. Useful pause has become avoidance.",
       "Sacrifice is being resisted at cost. What needs to be released?",
-      "The liminal space has overstayed its welcome. It is time to emerge.",
+      "The threshold has become a dwelling — the sacred pause inhabited so long that suspension has started to feel like identity.",
       "Martyrdom without wisdom — suffering without the insight it was meant to deliver.",
       "The suspension that becomes a prison: the sacred pause that refuses to end.",
     ],
@@ -839,8 +839,8 @@ export const CARDS: CardDefinition[] = [
       "Emerging from a period of withdrawal or ennui. The world is reaching you again.",
       "Missed opportunities through excessive rumination are becoming visible. Act now.",
       "The depression has served its purpose; now it is a habit. It is time to move.",
-      "The cup remains unrecognised even when it is directly offered — apathy as willful blindness.",
-      "The primordial restlessness become stasis: creation that notices its incompleteness and refuses to address it.",
+      "The fourth cup — always within reach — is finally seen. What felt like discontent was also longing, and longing acknowledged becomes the first real movement toward what is needed.",
+      "The primordial awakening: creation lifting its eyes from everything it lacked and seeing, at last, what was always being offered. The hand reaches out. The cup received.",
     ],
   },
   {
@@ -902,8 +902,8 @@ export const CARDS: CardDefinition[] = [
       "Clarity is arriving after a period of confusion. A choice is becoming possible.",
       "Illusions are dispelling — what remains is what is real.",
       "The fantasies have been examined and the viable ones are separating from the merely appealing.",
-      "Paralysis by possibility: the imagination that generates without the will to choose.",
-      "The primordial proliferation without resolution: creation that never chose, and so all the cups remain full and none are ever drunk.",
+      "The cups fall away one by one until only the real ones remain. Each discarded illusion is a clarification — the imagination learning to serve the will.",
+      "The primordial choice at last: creation surveying everything it could become and, with full self-knowledge, lifting the one cup it truly wants. The choosing is the arriving.",
     ],
   },
   {
@@ -1156,7 +1156,7 @@ export const CARDS: CardDefinition[] = [
       "Lingering in the aftermath of conflict past its usefulness. Resolve to let go.",
       "Guilt about the way a victory was won is providing an important signal. Listen to it.",
       "The defeated picking up what the victor discarded — power shifting after the hollow win.",
-      "The primordial victory examined and found empty: creation that won everything and gained nothing.",
+      "The primordial release from the field of hollow victory: creation learning that some fights are not worth their costs, and choosing to lay the swords down rather than carry them forever.",
     ],
   },
   {
@@ -1217,9 +1217,9 @@ export const CARDS: CardDefinition[] = [
     reversedDescriptions: [
       "The mental constraints are loosening. Freedom becomes possible through self-knowledge.",
       "Escaping a restrictive situation — or a restrictive pattern of thought — is underway.",
-      "The blindfold remains even after the swords have been removed. Old limitations outlasting their source.",
-      "The cage made permanent — the belief in walls so complete that the open gate is never found.",
-      "The primordial entrapment without release: creation that chose the walls so thoroughly it forgot it could choose otherwise.",
+      "The prison dissolves not when the swords are moved, but when the belief that placed them is examined. Understanding the architecture of your own cage is the key.",
+      "The deepest act of self-liberation: not escaping the cage but recognising it was built from your own convictions — and that the hand that built it holds the only key.",
+      "The primordial release: creation discovering that the walls of its own making were always thinner than belief, and choosing, finally, to walk through them.",
     ],
   },
   {
@@ -1239,8 +1239,8 @@ export const CARDS: CardDefinition[] = [
       "Emerging from a period of anxiety or depression. The weight is lifting.",
       "The inner critic has been given too much authority. Reclaim the floor.",
       "What was imagined as catastrophic is being revealed as manageable.",
-      "The nine swords descending — anxiety that has moved from thought to manifestation.",
-      "The primordial dread without dawn: the mind's imagination permanently arrayed against itself.",
+      "The creative mind that made the night so fearful turns toward morning. The same imagination that conjured the dread can conjure the dawn.",
+      "The primordial dread finally known for what it is: the mind meeting its own shadow and discovering that the nightmare's author can also write the light.",
     ],
   },
   {
@@ -1259,9 +1259,9 @@ export const CARDS: CardDefinition[] = [
     reversedDescriptions: [
       "Recovery is beginning after significant loss or failure.",
       "The worst has passed but its shadow lingers. Be patient with the emergence.",
-      "A catastrophic ending is being resisted past the point of wisdom. Let it complete.",
-      "The swords deepened further — rock bottom not yet reached, and the fall continues.",
-      "The primordial nadir without the dawn: the lowest point reached and the horizon remaining dark.",
+      "The ten swords are final — and in that finality, something clarifying. When there is nothing left to lose, the truth of what remains becomes absolute.",
+      "The survivor walking out from under ten swords carries the strange authority of one who has been to the nadir and chosen to continue. That choice is its own form of power.",
+      "The primordial nadir becomes the ground itself. Rock bottom is also foundation — and from foundation, everything that follows is built upward.",
     ],
   },
   {
