@@ -8,7 +8,7 @@ export function Nav({ userName, isAnonymous }: { userName: string; isAnonymous?:
     >
       <Link
         to="/"
-        className="text-lg sm:text-xl tracking-widest text-muted"
+        className="text-lg sm:text-xl tracking-widest text-muted font-serif"
       >
         ARKHANA
       </Link>

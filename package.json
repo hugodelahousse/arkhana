@@ -20,6 +20,7 @@
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.11",
     "@fontsource-variable/cormorant-garamond": "^5.2.6",
+    "@fontsource-variable/dm-sans": "^5.2.8",
     "@react-router/express": "^7.15.1",
     "@react-router/node": "7.15.1",
     "@react-router/serve": "7.15.1",

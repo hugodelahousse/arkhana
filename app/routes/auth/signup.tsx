@@ -58,7 +58,7 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
     <main className="min-h-[100dvh] flex flex-col items-center justify-center px-6 py-8">
       <div className="max-w-sm w-full space-y-8">
         <div className="text-center space-y-2">
-          <Link to="/" className="text-2xl tracking-widest text-muted block">
+          <Link to="/" className="text-2xl tracking-widest text-muted font-serif block">
             ARKHANA
           </Link>
           <p className="text-xs tracking-widest uppercase opacity-60">
