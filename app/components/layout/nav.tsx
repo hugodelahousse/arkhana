@@ -34,6 +34,7 @@ export function Nav({ userName, isAnonymous }: { userName: string; isAnonymous?:
             <Form method="post" action="/auth/signout">
               <button
                 type="submit"
+                aria-label="Sign out"
                 className="opacity-60 hover:opacity-100 transition-opacity"
               >
                 Leave

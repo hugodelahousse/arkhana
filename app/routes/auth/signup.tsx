@@ -66,33 +66,39 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
           </p>
         </div>
 
-        <Form method="post" className="space-y-3">
+        <Form method="post" className="space-y-3" aria-describedby={error ? "form-error" : undefined}>
           {error && (
-            <p className="text-sm text-rarity-arcane text-center">{error}</p>
+            <p id="form-error" role="alert" className="text-sm text-rarity-arcane text-center">{error}</p>
           )}
+          <label htmlFor="name" className="sr-only">Name (optional)</label>
           <input
+            id="name"
             name="name"
             type="text"
             placeholder="Name (optional)"
             autoComplete="name"
-            className="w-full bg-transparent border border-border px-4 py-3 text-sm outline-none opacity-60 focus:opacity-100 placeholder:opacity-30"
+            className="w-full bg-transparent border border-border px-4 py-3 text-sm opacity-60 focus:opacity-100 placeholder:opacity-30 focus:outline-none focus-visible:ring-1 focus-visible:ring-border"
           />
+          <label htmlFor="email" className="sr-only">Email address</label>
           <input
+            id="email"
             name="email"
             type="email"
             required
             placeholder="your@email.com"
             autoComplete="email"
-            className="w-full bg-transparent border border-border px-4 py-3 text-sm outline-none opacity-60 focus:opacity-100 placeholder:opacity-30"
+            className="w-full bg-transparent border border-border px-4 py-3 text-sm opacity-60 focus:opacity-100 placeholder:opacity-30 focus:outline-none focus-visible:ring-1 focus-visible:ring-border"
           />
+          <label htmlFor="password" className="sr-only">Password, minimum 8 characters</label>
           <input
+            id="password"
             name="password"
             type="password"
             required
             minLength={8}
             placeholder="Password (min 8 characters)"
             autoComplete="new-password"
-            className="w-full bg-transparent border border-border px-4 py-3 text-sm outline-none opacity-60 focus:opacity-100 placeholder:opacity-30"
+            className="w-full bg-transparent border border-border px-4 py-3 text-sm opacity-60 focus:opacity-100 placeholder:opacity-30 focus:outline-none focus-visible:ring-1 focus-visible:ring-border"
           />
           <button
             type="submit"

@@ -136,8 +136,10 @@ export const TarotCard = memo(function TarotCard({
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={tilt.onMouseLeave}
       onClick={() => { tilt.onTap(); if (!revealed) onReveal?.(); }}
+      onKeyDown={!revealed ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tilt.onTap(); onReveal?.(); } } : undefined}
       role={!revealed ? "button" : undefined}
-      aria-label={revealed ? card.name : "Unrevealed tarot card"}
+      tabIndex={!revealed ? 0 : undefined}
+      aria-label={revealed ? card.name : "Unrevealed tarot card, press to reveal"}
     >
       <motion.div className="card-tilt" style={tilt.style}>
         <div className="card-flipper">

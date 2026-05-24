@@ -119,10 +119,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       <p
                         className="text-xs tracking-widest uppercase"
                         style={{ color: `var(--color-rarity-${rarityLabel})` }}
+                        aria-label={[RARITY_LABELS[result.rarityScore], result.isRadiant ? "Radiant" : null, result.isReversed ? "Reversed" : null].filter(Boolean).join(", ")}
                       >
-                        {RARITY_LABELS[result.rarityScore]}
-                        {result.isRadiant && " ✦"}
-                        {result.isReversed && " · Reversed"}
+                        <span aria-hidden="true">
+                          {RARITY_LABELS[result.rarityScore]}
+                          {result.isRadiant && " ✦"}
+                          {result.isReversed && " · Reversed"}
+                        </span>
                       </p>
                       <h2
                         className="text-3xl font-light tracking-wide"
@@ -168,10 +171,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   <p
                     className="text-xs tracking-widest uppercase"
                     style={{ color: `var(--color-rarity-${RARITY_LABELS[todayPull.rarityScore]?.toLowerCase()})` }}
+                    aria-label={[RARITY_LABELS[todayPull.rarityScore], todayPull.isRadiant ? "Radiant" : null, todayPull.isReversed ? "Reversed" : null].filter(Boolean).join(", ")}
                   >
-                    {RARITY_LABELS[todayPull.rarityScore]}
-                    {todayPull.isRadiant && " ✦"}
-                    {todayPull.isReversed && " · Reversed"}
+                    <span aria-hidden="true">
+                      {RARITY_LABELS[todayPull.rarityScore]}
+                      {todayPull.isRadiant && " ✦"}
+                      {todayPull.isReversed && " · Reversed"}
+                    </span>
                   </p>
                   <p
                     className="text-xl font-light"
@@ -279,9 +285,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       <span
                         className="text-xs tracking-widest"
                         style={{ color: `var(--color-rarity-${RARITY_LABELS[pull.rarityScore]?.toLowerCase()})` }}
+                        aria-label={[RARITY_LABELS[pull.rarityScore], pull.isRadiant ? "Radiant" : null].filter(Boolean).join(", ")}
                       >
-                        {RARITY_LABELS[pull.rarityScore]}
-                        {pull.isRadiant && " ✦"}
+                        <span aria-hidden="true">
+                          {RARITY_LABELS[pull.rarityScore]}
+                          {pull.isRadiant && " ✦"}
+                        </span>
                       </span>
                     </a>
                   );

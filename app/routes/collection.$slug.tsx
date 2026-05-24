@@ -121,10 +121,13 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                       <span
                         className="text-xs tracking-widest uppercase"
                         style={{ color: `var(--color-rarity-${rarityLabel})` }}
+                        aria-label={[RARITY_LABELS[pull.rarityScore], pull.isRadiant ? "Radiant" : null, pull.isReversed ? "Reversed" : null].filter(Boolean).join(", ")}
                       >
-                        {RARITY_LABELS[pull.rarityScore]}
-                        {pull.isRadiant && " ✦"}
-                        {pull.isReversed && " · Reversed"}
+                        <span aria-hidden="true">
+                          {RARITY_LABELS[pull.rarityScore]}
+                          {pull.isRadiant && " ✦"}
+                          {pull.isReversed && " · Reversed"}
+                        </span>
                       </span>
                       <span
                         className="text-xs opacity-40"
