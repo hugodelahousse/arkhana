@@ -24,6 +24,7 @@ body {
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   color-scheme: dark;
+  scroll-behavior: smooth;
 }
 
 /* ─── View Transition timing ─── */
@@ -86,8 +87,9 @@ body {
   z-index: 100;
 }
 
-/* Reduced motion — collapse all VT animations */
+/* Reduced motion — collapse all VT animations and disable smooth scroll */
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
   ::view-transition-old(*),
   ::view-transition-new(*),
   ::view-transition-group(*) {
