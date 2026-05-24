@@ -22,17 +22,26 @@ function CardDetailOverlay({
   }, []);
 
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      onClick={onClose}
-    >
-      <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.85)" }} />
+    // Outer: fixed full-screen, scrollable so tall content doesn't clip on small phones
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      {/* Backdrop — click to close, always covers full dvh */}
       <motion.div
-        className="relative z-10 flex flex-col items-center gap-5 w-full max-w-xs"
+        className="fixed inset-0"
+        style={{ background: "rgba(0,0,0,0.85)", minHeight: "100dvh" }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+      />
+      {/* Centering wrapper — min-height: 100dvh keeps content vertically centered even on mobile */}
+      <div
+        className="relative z-10 flex flex-col items-center justify-center p-6 py-10"
+        style={{ minHeight: "100dvh" }}
+        onClick={onClose}
+      >
+      <motion.div
+        className="flex flex-col items-center gap-5 w-full max-w-xs"
         initial={{ scale: 0.92, opacity: 0, y: 12 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.92, opacity: 0, y: 12 }}
@@ -88,7 +97,8 @@ function CardDetailOverlay({
           close
         </button>
       </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
