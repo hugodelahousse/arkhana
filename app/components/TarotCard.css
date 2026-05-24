@@ -69,6 +69,8 @@
   inset: 0;
   border-radius: 8px;
   pointer-events: none;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   box-shadow:
     0 0 12px 2px var(--color-card-back-accent),
     0 0 30px 6px color-mix(in srgb, var(--color-card-back-accent) 45%, transparent),
