@@ -143,6 +143,61 @@ export async function drawSpread(
   return { status: "success", spreadId: result.spreadId, cards };
 }
 
+export async function getSpreadHistory(userId: string): Promise<
+  Array<{
+    spreadId: number;
+    spreadType: string;
+    spreadDate: string;
+    cards: SpreadCardResult[];
+  }>
+> {
+  const rows = await db
+    .select({
+      spreadId: spreads.id,
+      spreadType: spreads.spreadType,
+      spreadDate: spreads.spreadDate,
+      position: spreadCards.position,
+      positionKey: spreadCards.positionKey,
+      userCardId: userCards.id,
+      cardId: userCards.cardId,
+      rarityScore: userCards.rarityScore,
+      isRadiant: userCards.isRadiant,
+      isReversed: userCards.isReversed,
+    })
+    .from(spreads)
+    .innerJoin(spreadCards, eq(spreadCards.spreadId, spreads.id))
+    .innerJoin(userCards, eq(userCards.id, spreadCards.userCardId))
+    .where(eq(spreads.userId, userId))
+    .orderBy(spreads.spreadDate, spreadCards.position);
+
+  const grouped = new Map<
+    number,
+    { spreadId: number; spreadType: string; spreadDate: string; cards: SpreadCardResult[] }
+  >();
+  for (const row of rows) {
+    if (!grouped.has(row.spreadId)) {
+      grouped.set(row.spreadId, {
+        spreadId: row.spreadId,
+        spreadType: row.spreadType,
+        spreadDate: row.spreadDate,
+        cards: [],
+      });
+    }
+    grouped.get(row.spreadId)!.cards.push({
+      position: row.position,
+      positionKey: row.positionKey,
+      userCardId: row.userCardId,
+      cardId: row.cardId,
+      card: CARD_BY_ID[row.cardId],
+      rarityScore: row.rarityScore as Rarity,
+      isRadiant: row.isRadiant,
+      isReversed: row.isReversed,
+    });
+  }
+
+  return [...grouped.values()].reverse();
+}
+
 export async function getTodaySpread(
   userId: string,
   spreadTypeId: string,

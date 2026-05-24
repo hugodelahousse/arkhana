@@ -1,14 +1,17 @@
-import { redirect, useFetcher } from "react-router";
+import { useState, useEffect, startTransition } from "react";
+import { redirect, useFetcher, data as routeData } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
-import { startTransition } from "react";
 import { addTransitionType } from "react";
 import type { Route } from "./+types/home";
 import { Link, useNavigate } from "react-router";
 import { Nav } from "../components/layout/nav";
 import { TarotCard } from "../components/TarotCard";
+import { SpreadSummaryGrid } from "../components/SpreadSummaryGrid";
 import { getTodayPull, getRecentPulls, getUniqueCardCount, dailyPull } from "../lib/pull";
-import { getTodaySpread } from "../lib/spread-pull";
+import { getTodaySpread, drawSpread } from "../lib/spread-pull";
+import type { SpreadCardResult } from "../lib/spread-pull";
 import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity } from "../lib/cards";
+import { getSpreadType } from "../lib/spreads";
 import { useAutoReveal } from "../lib/useAutoReveal";
 import { DateTime } from "luxon";
 import { todayUTC } from "../lib/utils";
@@ -26,12 +29,15 @@ export async function loader({ context }: Route.LoaderArgs) {
       const setCookie = anonRes.headers.get("set-cookie");
       if (setCookie) throw redirect("/", { headers: { "set-cookie": setCookie } });
     }
-    // Fallback: anonymous sign-in failed (e.g. DB unavailable)
     return {
       user: null as null,
       todayPull: null as Awaited<ReturnType<typeof getTodayPull>> | null,
       recentPulls: [] as Awaited<ReturnType<typeof getRecentPulls>>,
       totalUnique: 0,
+      isSundayToday: false,
+      sundaySpread: null as SpreadCardResult[] | null,
+      spreadDef: null as { name: string; subtitle: string; description: string; positions: { index: number; label: string; contemplationPrompt: string }[] } | null,
+      todayStr: todayUTC(),
     };
   }
 
@@ -45,24 +51,48 @@ export async function loader({ context }: Route.LoaderArgs) {
     isSundayToday ? getTodaySpread(userId, "sunday-weekly", todayStr) : Promise.resolve(null),
   ]);
 
+  const spreadDef = isSundayToday ? (() => {
+    const d = getSpreadType("sunday-weekly")!;
+    return { name: d.name, subtitle: d.subtitle, description: d.description, positions: d.positions };
+  })() : null;
+
   if (isSundayToday) {
     return {
       user: context.user,
       isSundayToday: true,
       sundaySpread,
+      spreadDef,
       todayPull: null as Awaited<ReturnType<typeof getTodayPull>> | null,
       recentPulls,
       totalUnique,
+      todayStr,
     };
   }
 
   const todayPull = await getTodayPull(userId, todayStr);
-  return { user: context.user, isSundayToday: false, sundaySpread: null, todayPull, recentPulls, totalUnique };
+  return {
+    user: context.user,
+    isSundayToday: false,
+    sundaySpread: null as SpreadCardResult[] | null,
+    spreadDef: null as typeof spreadDef,
+    todayPull,
+    recentPulls,
+    totalUnique,
+    todayStr,
+  };
 }
 
-export async function action({ context }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   if (!context.user) return redirect("/");
-  if (DateTime.utc().weekday === 7) return redirect("/spread/sunday-weekly");
+  const formData = await request.formData();
+  const actionType = formData.get("_action");
+
+  if (actionType === "spread") {
+    const result = await drawSpread(context.user.id, "sunday-weekly", DateTime.utc());
+    if (result.status === "unavailable") return { _type: "spread", status: "unavailable" as const };
+    return { _type: "spread" as const, status: result.status, spreadId: result.spreadId, cards: result.cards };
+  }
+
   const result = await dailyPull(context.user.id);
   return result;
 }
@@ -71,13 +101,155 @@ export function meta() {
   return [{ title: "Arkhana" }];
 }
 
+type SundayPhase =
+  | { phase: "intro" }
+  | { phase: "drawing" }
+  | { phase: "contemplating"; position: number }
+  | { phase: "revealing"; position: number }
+  | { phase: "summary" }
+  | { phase: "done" };
+
+function SpreadRevealStep({
+  card,
+  positionLabel,
+  position,
+  totalPositions,
+  isLast,
+  nextLabel,
+  onAdvance,
+}: {
+  card: SpreadCardResult;
+  positionLabel: string;
+  position: number;
+  totalPositions: number;
+  isLast: boolean;
+  nextLabel?: string;
+  onAdvance: () => void;
+}) {
+  const [revealed, revealNow] = useAutoReveal(true, 700);
+  const rarityLabel = RARITY_LABELS[card.rarityScore]?.toLowerCase();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -16 }}
+      transition={{ duration: 0.5 }}
+      className="text-center space-y-8 pt-8 flex flex-col items-center"
+    >
+      <div className="space-y-2">
+        <p
+          className="text-xs tracking-widest uppercase opacity-30"
+          style={{ color: "var(--color-text-primary)" }}
+        >
+          {position + 1} of {totalPositions}
+        </p>
+        <h2
+          className="text-3xl font-light tracking-wide"
+          style={{ color: "var(--color-rarity-mystic)", fontFamily: "var(--font-serif)" }}
+        >
+          {positionLabel}
+        </h2>
+      </div>
+
+      <TarotCard
+        card={card.card}
+        rarityScore={card.rarityScore as Rarity}
+        isReversed={card.isReversed}
+        isRadiant={card.isRadiant}
+        revealed={revealed}
+        onReveal={revealNow}
+        size="lg"
+        showHint={!revealed}
+      />
+
+      <AnimatePresence>
+        {revealed && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="space-y-4 max-w-xs"
+          >
+            <p
+              className="text-xs tracking-widest uppercase"
+              style={{ color: `var(--color-rarity-${rarityLabel})` }}
+            >
+              {RARITY_LABELS[card.rarityScore]}
+              {card.isRadiant && " ✦"}
+              {card.isReversed && " · Reversed"}
+            </p>
+            <h3
+              className="text-2xl font-light tracking-wide"
+              style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+            >
+              {card.card.name}
+            </h3>
+            <div
+              className="w-8 h-px mx-auto"
+              style={{ background: `var(--color-rarity-${rarityLabel})`, opacity: 0.5 }}
+            />
+            <p
+              className="text-sm leading-relaxed opacity-85"
+              style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+            >
+              {getCardDescription(card.card, card.rarityScore, card.isReversed)}
+            </p>
+            <button
+              onClick={onAdvance}
+              className="mt-4 px-8 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
+              style={{
+                color: "var(--color-text-primary)",
+                borderColor: "var(--color-rarity-mystic)",
+              }}
+            >
+              {isLast ? "See your reading" : `Continue to ${nextLabel}`}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
 export default function Home({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher();
   const navigate = useNavigate();
   const isPulling = fetcher.state === "submitting";
-  const result = fetcher.data && "card" in fetcher.data ? fetcher.data : null;
-  const rarityLabel = result ? RARITY_LABELS[result.rarityScore]?.toLowerCase() : null;
-  const [revealed, revealNow] = useAutoReveal(!!result, 600);
+  const dailyResult = fetcher.data && "card" in fetcher.data ? fetcher.data : null;
+  const rarityLabel = dailyResult ? RARITY_LABELS[dailyResult.rarityScore]?.toLowerCase() : null;
+  const [revealed, revealNow] = useAutoReveal(!!dailyResult, 600);
+
+  const { isSundayToday, sundaySpread, spreadDef, todayStr } = loaderData;
+
+  const [sundayPhase, setSundayPhase] = useState<SundayPhase>(() =>
+    sundaySpread ? { phase: "done" } : { phase: "intro" }
+  );
+  const [drawnCards, setDrawnCards] = useState<SpreadCardResult[] | null>(sundaySpread ?? null);
+
+  const spreadActionData = fetcher.data && "_type" in fetcher.data && fetcher.data._type === "spread"
+    ? (fetcher.data as { _type: "spread"; status: string; spreadId?: number; cards?: SpreadCardResult[] })
+    : null;
+
+  useEffect(() => {
+    if (!spreadActionData) return;
+    if (
+      (spreadActionData.status === "success" || spreadActionData.status === "already_pulled") &&
+      spreadActionData.cards
+    ) {
+      setDrawnCards(spreadActionData.cards);
+      setSundayPhase({ phase: "contemplating", position: 0 });
+    }
+  }, [spreadActionData]);
+
+  const positions = spreadDef?.positions ?? [];
+  const lastPosition = positions.length - 1;
+  const currentCards = drawnCards ?? [];
+  const isCeremonyActive =
+    isSundayToday &&
+    (sundayPhase.phase === "drawing" ||
+      sundayPhase.phase === "contemplating" ||
+      sundayPhase.phase === "revealing");
 
   if (!loaderData.user) {
     return (
@@ -87,7 +259,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     );
   }
 
-  const { user, todayPull, recentPulls, totalUnique, isSundayToday, sundaySpread } = loaderData;
+  const { user, todayPull, recentPulls, totalUnique } = loaderData;
   const todayCard = todayPull ? CARD_BY_ID[todayPull.cardId] : null;
 
   function navigateToCard(slug: string) {
@@ -103,59 +275,375 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-2xl mx-auto px-6 py-12 space-y-12">
 
-          {isSundayToday ? (
+          {isSundayToday && spreadDef ? (
+            <section className="space-y-6">
+              <AnimatePresence mode="wait">
+
+                {/* ── Intro ──────────────────────────────────────────────── */}
+                {sundayPhase.phase === "intro" && (
+                  <motion.div
+                    key="sunday-intro"
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -16 }}
+                    transition={{ duration: 0.5 }}
+                    className="text-center space-y-8 pt-4"
+                  >
+                    <div className="space-y-3">
+                      <p
+                        className="text-xs tracking-widest uppercase opacity-40"
+                        style={{ color: "var(--color-text-primary)" }}
+                      >
+                        {spreadDef.subtitle}
+                      </p>
+                      <h2
+                        className="text-3xl font-light tracking-wide"
+                        style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                      >
+                        {spreadDef.name}
+                      </h2>
+                    </div>
+                    <div
+                      className="w-16 h-px mx-auto opacity-20"
+                      style={{ background: "var(--color-text-primary)" }}
+                    />
+                    <p
+                      className="text-sm leading-relaxed opacity-70 max-w-sm mx-auto"
+                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                    >
+                      {spreadDef.description}
+                    </p>
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+                      {positions.map((pos) => (
+                        <span
+                          key={pos.index}
+                          className="text-xs tracking-widest uppercase opacity-30 px-3 py-1 border"
+                          style={{
+                            color: "var(--color-text-primary)",
+                            borderColor: "var(--color-bg-elevated)",
+                          }}
+                        >
+                          {pos.label}
+                        </span>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSundayPhase({ phase: "drawing" });
+                        fetcher.submit({ _action: "spread" }, { method: "post" });
+                      }}
+                      className="px-8 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
+                      style={{
+                        color: "var(--color-text-primary)",
+                        borderColor: "var(--color-rarity-mystic)",
+                      }}
+                    >
+                      Begin the reading
+                    </button>
+                  </motion.div>
+                )}
+
+                {/* ── Drawing ──────────────────────────────────────────────*/}
+                {sundayPhase.phase === "drawing" && (
+                  <motion.div
+                    key="sunday-drawing"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="text-center space-y-8 pt-8"
+                  >
+                    <div className="space-y-3">
+                      <p
+                        className="text-xs tracking-widest uppercase opacity-40"
+                        style={{ color: "var(--color-text-primary)" }}
+                      >
+                        {spreadDef.subtitle}
+                      </p>
+                      <h2
+                        className="text-3xl font-light tracking-wide"
+                        style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                      >
+                        {spreadDef.name}
+                      </h2>
+                    </div>
+                    <div
+                      className="w-16 h-px mx-auto opacity-20"
+                      style={{ background: "var(--color-text-primary)" }}
+                    />
+                    <p
+                      className="text-sm opacity-50 animate-pulse"
+                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                    >
+                      The cards are gathering…
+                    </p>
+                  </motion.div>
+                )}
+
+                {/* ── Contemplating ────────────────────────────────────────*/}
+                {sundayPhase.phase === "contemplating" && (
+                  <motion.div
+                    key={`sunday-contemplating-${sundayPhase.position}`}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -16 }}
+                    transition={{ duration: 0.5 }}
+                    className="text-center space-y-8 pt-8"
+                  >
+                    <div className="space-y-2">
+                      <p
+                        className="text-xs tracking-widest uppercase opacity-30"
+                        style={{ color: "var(--color-text-primary)" }}
+                      >
+                        {sundayPhase.position + 1} of {positions.length}
+                      </p>
+                      <h2
+                        className="text-4xl font-light tracking-wide"
+                        style={{ color: "var(--color-rarity-mystic)", fontFamily: "var(--font-serif)" }}
+                      >
+                        {positions[sundayPhase.position]?.label}
+                      </h2>
+                    </div>
+                    <div
+                      className="w-16 h-px mx-auto"
+                      style={{ background: "var(--color-rarity-mystic)", opacity: 0.3 }}
+                    />
+                    <p
+                      className="text-sm leading-relaxed opacity-70 max-w-xs mx-auto italic"
+                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                    >
+                      {positions[sundayPhase.position]?.contemplationPrompt}
+                    </p>
+                    {currentCards[sundayPhase.position] && (
+                      <div className="flex justify-center py-4 pointer-events-none opacity-30">
+                        <TarotCard
+                          card={currentCards[sundayPhase.position].card}
+                          rarityScore={1}
+                          isReversed={false}
+                          isRadiant={false}
+                          revealed={false}
+                          size="md"
+                        />
+                      </div>
+                    )}
+                    <button
+                      onClick={() =>
+                        setSundayPhase({ phase: "revealing", position: sundayPhase.position })
+                      }
+                      className="px-8 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
+                      style={{
+                        color: "var(--color-text-primary)",
+                        borderColor: "var(--color-rarity-mystic)",
+                      }}
+                    >
+                      I am ready
+                    </button>
+                  </motion.div>
+                )}
+
+                {/* ── Revealing ────────────────────────────────────────────*/}
+                {sundayPhase.phase === "revealing" && currentCards[sundayPhase.position] && (
+                  <SpreadRevealStep
+                    key={`sunday-revealing-${sundayPhase.position}`}
+                    card={currentCards[sundayPhase.position]}
+                    positionLabel={positions[sundayPhase.position]?.label ?? ""}
+                    position={sundayPhase.position}
+                    totalPositions={positions.length}
+                    isLast={sundayPhase.position === lastPosition}
+                    nextLabel={positions[sundayPhase.position + 1]?.label}
+                    onAdvance={() => {
+                      if (sundayPhase.position < lastPosition) {
+                        setSundayPhase({ phase: "contemplating", position: sundayPhase.position + 1 });
+                      } else {
+                        setSundayPhase({ phase: "summary" });
+                      }
+                    }}
+                  />
+                )}
+
+                {/* ── Summary ──────────────────────────────────────────────*/}
+                {sundayPhase.phase === "summary" && (
+                  <motion.div
+                    key="sunday-summary"
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="space-y-10"
+                  >
+                    <div className="text-center space-y-3">
+                      <p
+                        className="text-xs tracking-widest uppercase opacity-40"
+                        style={{ color: "var(--color-text-primary)" }}
+                      >
+                        {spreadDef.subtitle}
+                      </p>
+                      <h2
+                        className="text-2xl font-light tracking-wide"
+                        style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                      >
+                        {spreadDef.name}
+                      </h2>
+                    </div>
+                    <SpreadSummaryGrid cards={currentCards} positions={positions} />
+                    <div className="text-center pt-2">
+                      <Link
+                        to={`/spread/sunday-weekly/${todayStr}`}
+                        className="text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity"
+                        style={{ color: "var(--color-text-primary)" }}
+                      >
+                        Save this reading →
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* ── Done (already completed today) ───────────────────────*/}
+                {sundayPhase.phase === "done" && (
+                  <motion.div
+                    key="sunday-done"
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="space-y-8"
+                  >
+                    <div className="text-center space-y-3">
+                      <h2
+                        className="text-sm tracking-widest uppercase opacity-50"
+                        style={{ color: "var(--color-text-primary)" }}
+                      >
+                        Sunday Reading
+                      </h2>
+                      <p
+                        className="text-2xl font-light"
+                        style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                      >
+                        {spreadDef.name}
+                      </p>
+                    </div>
+                    <SpreadSummaryGrid cards={currentCards} positions={positions} />
+                    <div className="text-center pt-2">
+                      <Link
+                        to={`/spread/sunday-weekly/${todayStr}`}
+                        className="text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity"
+                        style={{ color: "var(--color-text-primary)" }}
+                      >
+                        Review your reading →
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+
+              </AnimatePresence>
+            </section>
+          ) : (
             <section className="space-y-6 text-center">
               <h2
                 className="text-sm sm:text-xs tracking-widest uppercase opacity-50"
                 style={{ color: "var(--color-text-primary)" }}
               >
-                Sunday Reading
+                Today
               </h2>
-              {sundaySpread ? (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    {[...sundaySpread].sort((a, b) => a.position - b.position).map((card) => {
-                      const labels = ["Mind", "Body", "Spirit", "Action"];
-                      const rl = RARITY_LABELS[card.rarityScore]?.toLowerCase();
-                      return (
-                        <div key={card.position} className="flex flex-col items-center gap-2">
-                          <p
-                            className="text-xs tracking-widest uppercase opacity-40"
-                            style={{ color: "var(--color-text-primary)" }}
-                          >
-                            {labels[card.position]}
-                          </p>
-                          <TarotCard
-                            card={card.card}
-                            rarityScore={card.rarityScore as Rarity}
-                            isReversed={card.isReversed}
-                            isRadiant={card.isRadiant}
-                            revealed={true}
-                            size="sm"
-                          />
-                          <p
-                            className="text-xs font-light opacity-70"
-                            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                          >
-                            {card.card.name}
-                          </p>
-                          <p
-                            className="text-xs tracking-widest uppercase"
-                            style={{ color: `var(--color-rarity-${rl})` }}
-                          >
-                            {RARITY_LABELS[card.rarityScore]}{card.isRadiant && " ✦"}
-                          </p>
-                        </div>
-                      );
-                    })}
+
+              {dailyResult ? (
+                <div className="space-y-10">
+                  <div className="flex justify-center pb-4">
+                    <TarotCard
+                      card={dailyResult.card}
+                      rarityScore={dailyResult.rarityScore as Rarity}
+                      isReversed={dailyResult.isReversed}
+                      isRadiant={dailyResult.isRadiant}
+                      revealed={revealed}
+                      onReveal={revealNow}
+                      size="lg"
+                      showHint={!revealed}
+                    />
                   </div>
-                  <Link
-                    to="/spread/sunday-weekly"
-                    className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-2"
-                    style={{ color: "var(--color-text-primary)" }}
-                  >
-                    Review your reading →
-                  </Link>
+                  <AnimatePresence>
+                    {revealed && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.1 }}
+                        className="space-y-5"
+                      >
+                        <p
+                          className="text-xs tracking-widest uppercase"
+                          style={{ color: `var(--color-rarity-${rarityLabel})` }}
+                          aria-label={[RARITY_LABELS[dailyResult.rarityScore], dailyResult.isRadiant ? "Radiant" : null, dailyResult.isReversed ? "Reversed" : null].filter(Boolean).join(", ")}
+                        >
+                          <span aria-hidden="true">
+                            {RARITY_LABELS[dailyResult.rarityScore]}
+                            {dailyResult.isRadiant && " ✦"}
+                            {dailyResult.isReversed && " · Reversed"}
+                          </span>
+                        </p>
+                        <h2
+                          className="text-3xl font-light tracking-wide"
+                          style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                        >
+                          {dailyResult.card.name}
+                        </h2>
+                        <div
+                          className="w-8 h-px mx-auto"
+                          style={{ background: `var(--color-rarity-${rarityLabel})`, opacity: 0.5 }}
+                        />
+                        <p
+                          className="text-sm leading-relaxed max-w-xs mx-auto"
+                          style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)", opacity: 0.85 }}
+                        >
+                          {getCardDescription(dailyResult.card, dailyResult.rarityScore, dailyResult.isReversed)}
+                        </p>
+                        <a
+                          href={`/collection/${cardSlug(dailyResult.card)}`}
+                          onClick={(e) => { e.preventDefault(); navigateToCard(cardSlug(dailyResult.card)); }}
+                          className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-2"
+                          style={{ color: "var(--color-text-primary)" }}
+                        >
+                          Card history →
+                        </a>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : todayPull && todayCard ? (
+                <div className="space-y-6">
+                  <div className="flex justify-center">
+                    <TarotCard
+                      card={todayCard}
+                      rarityScore={todayPull.rarityScore as Rarity}
+                      isReversed={todayPull.isReversed}
+                      isRadiant={todayPull.isRadiant}
+                      revealed={true}
+                      size="lg"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <p
+                      className="text-xs tracking-widest uppercase"
+                      style={{ color: `var(--color-rarity-${RARITY_LABELS[todayPull.rarityScore]?.toLowerCase()})` }}
+                      aria-label={[RARITY_LABELS[todayPull.rarityScore], todayPull.isRadiant ? "Radiant" : null, todayPull.isReversed ? "Reversed" : null].filter(Boolean).join(", ")}
+                    >
+                      <span aria-hidden="true">
+                        {RARITY_LABELS[todayPull.rarityScore]}
+                        {todayPull.isRadiant && " ✦"}
+                        {todayPull.isReversed && " · Reversed"}
+                      </span>
+                    </p>
+                    <p
+                      className="text-xl font-light"
+                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                    >
+                      {todayCard.name}
+                    </p>
+                    <p
+                      className="text-sm leading-relaxed max-w-xs mx-auto opacity-70"
+                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                    >
+                      {getCardDescription(todayCard, todayPull.rarityScore, todayPull.isReversed)}
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -163,181 +651,44 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     className="text-lg opacity-60"
                     style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
                   >
-                    The week awaits your reading.
+                    {isPulling ? "The fates are turning…" : "The cards await your question."}
                   </p>
-                  <div
-                    className="mx-auto max-w-xs p-6 space-y-4 border"
-                    style={{ borderColor: "var(--color-rarity-mystic)", borderOpacity: 0.3 }}
-                  >
-                    <p
-                      className="text-sm opacity-60"
-                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                    >
-                      Mind · Body · Spirit · Action
-                    </p>
-                    <p
-                      className="text-xs opacity-40"
-                      style={{ color: "var(--color-text-primary)" }}
-                    >
-                      Four cards for the days ahead
-                    </p>
-                    <Link
-                      to="/spread/sunday-weekly"
-                      className="block px-6 py-2 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
-                      style={{
-                        color: "var(--color-text-primary)",
-                        borderColor: "var(--color-rarity-mystic)",
-                      }}
-                    >
-                      Begin the reading
-                    </Link>
+                  <div className={`flex justify-center ${isPulling ? "animate-pulse pointer-events-none" : ""}`}>
+                    <TarotCard
+                      card={CARD_BY_ID[0]}
+                      rarityScore={1}
+                      isReversed={false}
+                      isRadiant={false}
+                      revealed={false}
+                      onReveal={() => fetcher.submit({ _action: "pull" }, { method: "post" })}
+                      size="lg"
+                      showHint={!isPulling}
+                    />
                   </div>
                 </div>
               )}
             </section>
-          ) : (
-          <section className="space-y-6 text-center">
-            <h2
-              className="text-sm sm:text-xs tracking-widest uppercase opacity-50"
-              style={{ color: "var(--color-text-primary)" }}
-            >
-              Today
-            </h2>
-
-            {result ? (
-              <div className="space-y-10">
-                <div className="flex justify-center pb-4">
-                  <TarotCard
-                    card={result.card}
-                    rarityScore={result.rarityScore as Rarity}
-                    isReversed={result.isReversed}
-                    isRadiant={result.isRadiant}
-                    revealed={revealed}
-                    onReveal={revealNow}
-                    size="lg"
-                    showHint={!revealed}
-                  />
-                </div>
-                <AnimatePresence>
-                  {revealed && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: 0.1 }}
-                      className="space-y-5"
-                    >
-                      <p
-                        className="text-xs tracking-widest uppercase"
-                        style={{ color: `var(--color-rarity-${rarityLabel})` }}
-                        aria-label={[RARITY_LABELS[result.rarityScore], result.isRadiant ? "Radiant" : null, result.isReversed ? "Reversed" : null].filter(Boolean).join(", ")}
-                      >
-                        <span aria-hidden="true">
-                          {RARITY_LABELS[result.rarityScore]}
-                          {result.isRadiant && " ✦"}
-                          {result.isReversed && " · Reversed"}
-                        </span>
-                      </p>
-                      <h2
-                        className="text-3xl font-light tracking-wide"
-                        style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                      >
-                        {result.card.name}
-                      </h2>
-                      <div
-                        className="w-8 h-px mx-auto"
-                        style={{ background: `var(--color-rarity-${rarityLabel})`, opacity: 0.5 }}
-                      />
-                      <p
-                        className="text-sm leading-relaxed max-w-xs mx-auto"
-                        style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)", opacity: 0.85 }}
-                      >
-                        {getCardDescription(result.card, result.rarityScore, result.isReversed)}
-                      </p>
-                      <a
-                        href={`/collection/${cardSlug(result.card)}`}
-                        onClick={(e) => { e.preventDefault(); navigateToCard(cardSlug(result.card)); }}
-                        className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-2"
-                        style={{ color: "var(--color-text-primary)" }}
-                      >
-                        Card history →
-                      </a>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ) : todayPull && todayCard ? (
-              <div className="space-y-6">
-                <div className="flex justify-center">
-                  <TarotCard
-                    card={todayCard}
-                    rarityScore={todayPull.rarityScore as Rarity}
-                    isReversed={todayPull.isReversed}
-                    isRadiant={todayPull.isRadiant}
-                    revealed={true}
-                    size="lg"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <p
-                    className="text-xs tracking-widest uppercase"
-                    style={{ color: `var(--color-rarity-${RARITY_LABELS[todayPull.rarityScore]?.toLowerCase()})` }}
-                    aria-label={[RARITY_LABELS[todayPull.rarityScore], todayPull.isRadiant ? "Radiant" : null, todayPull.isReversed ? "Reversed" : null].filter(Boolean).join(", ")}
-                  >
-                    <span aria-hidden="true">
-                      {RARITY_LABELS[todayPull.rarityScore]}
-                      {todayPull.isRadiant && " ✦"}
-                      {todayPull.isReversed && " · Reversed"}
-                    </span>
-                  </p>
-                  <p
-                    className="text-xl font-light"
-                    style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                  >
-                    {todayCard.name}
-                  </p>
-                  <p
-                    className="text-sm leading-relaxed max-w-xs mx-auto opacity-70"
-                    style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                  >
-                    {getCardDescription(todayCard, todayPull.rarityScore, todayPull.isReversed)}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <p
-                  className="text-lg opacity-60"
-                  style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                >
-                  {isPulling ? "The fates are turning…" : "The cards await your question."}
-                </p>
-                <div className={`flex justify-center ${isPulling ? "animate-pulse pointer-events-none" : ""}`}>
-                  <TarotCard
-                    card={CARD_BY_ID[0]}
-                    rarityScore={1}
-                    isReversed={false}
-                    isRadiant={false}
-                    revealed={false}
-                    onReveal={() => fetcher.submit({ _action: "pull" }, { method: "post" })}
-                    size="lg"
-                    showHint={!isPulling}
-                  />
-                </div>
-              </div>
-            )}
-          </section>
           )}
 
-          {user.isAnonymous && !result && (
-            <section className="border border-border/50 px-6 py-5 space-y-4 text-center">
+          {user.isAnonymous && !dailyResult && !isCeremonyActive && (
+            <section
+              className="border px-6 py-5 space-y-4 text-center"
+              style={{ borderColor: "var(--color-rarity-mystic)", opacity: 0.85 }}
+            >
               <div className="space-y-1">
-                <p className="text-xs tracking-widest uppercase opacity-40">Your reading is ephemeral</p>
+                <p
+                  className="text-xs tracking-widest uppercase"
+                  style={{ color: "var(--color-rarity-mystic)" }}
+                >
+                  Your reading is ephemeral
+                </p>
                 <p className="text-sm opacity-60">Sign up to preserve your collection &amp; streak</p>
               </div>
               <div className="flex items-center justify-center gap-6">
                 <Link
                   to="/auth/signup"
-                  className="px-5 py-2 text-xs tracking-widest uppercase border border-border hover:opacity-90 transition-opacity"
+                  className="px-5 py-2 text-xs tracking-widest uppercase border hover:opacity-90 transition-opacity"
+                  style={{ borderColor: "var(--color-rarity-mystic)", color: "var(--color-rarity-mystic)" }}
                 >
                   Create account
                 </Link>
@@ -351,7 +702,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             </section>
           )}
 
-          {!result && (
+          {!dailyResult && !isCeremonyActive && (
             <section
               className="flex justify-center gap-12 py-6 border-t border-b"
               style={{ borderColor: "var(--color-bg-elevated)" }}
@@ -367,7 +718,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             </section>
           )}
 
-          {!result && recentPulls.length > 0 && (
+          {!dailyResult && !isCeremonyActive && recentPulls.length > 0 && (
             <section className="space-y-4">
               <h2
                 className="text-xs tracking-widest uppercase opacity-50"
@@ -408,11 +759,11 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 })}
               </div>
               <Link
-                to="/collection"
+                to="/history"
                 className="block text-center text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-2"
                 style={{ color: "var(--color-text-primary)" }}
               >
-                View all →
+                Full history →
               </Link>
             </section>
           )}
