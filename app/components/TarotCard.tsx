@@ -143,14 +143,22 @@ export const TarotCard = memo(function TarotCard({
               draggable={false}
             />
             {hasParallax && (
-              <img
-                className="card-subject"
-                src={imgSrc}
-                alt=""
-                loading="eager"
-                draggable={false}
-                aria-hidden="true"
-              />
+              <>
+                <img
+                  className="card-subject"
+                  src={imgSrc}
+                  alt=""
+                  loading="eager"
+                  draggable={false}
+                  aria-hidden="true"
+                />
+                {rarityScore >= 5 && (
+                  <>
+                    <img className="card-text-layer card-name-layer" src={imgSrc} alt="" draggable={false} aria-hidden="true" />
+                    {isMajor && <img className="card-text-layer card-top-layer" src={imgSrc} alt="" draggable={false} aria-hidden="true" />}
+                  </>
+                )}
+              </>
             )}
             <div className="card-shine" />
             {hasSubjectMask && <div className="card-name-foil" aria-hidden="true" />}
