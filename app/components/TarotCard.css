@@ -59,12 +59,29 @@
 
 .card-back {
   background:
-    radial-gradient(ellipse at 50% 60%, rgba(168,85,247,.12) 0%, transparent 70%),
+    radial-gradient(
+      ellipse at calc(var(--ratio-x, .5) * 100%) calc(var(--ratio-y, .5) * 100%),
+      rgba(168,85,247,.22) 0%, transparent 65%
+    ),
     var(--color-bg-surface);
   border: 1px solid rgba(168,85,247,.35);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Specular highlight that follows mouse / tilt */
+.card-back::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at calc(var(--ratio-x, .5) * 100%) calc(var(--ratio-y, .5) * 100%),
+    rgba(255,255,255,.07) 0%,
+    transparent 55%
+  );
 }
 
 .card-back-art {
