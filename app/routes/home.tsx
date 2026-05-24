@@ -105,29 +105,27 @@ type SundayPhase =
   | { phase: "intro" }
   | { phase: "drawing" }
   | { phase: "contemplating"; position: number }
-  | { phase: "revealing"; position: number }
   | { phase: "summary" }
   | { phase: "done" };
 
-function SpreadRevealStep({
+function SpreadContemplateReveal({
   card,
-  positionLabel,
   position,
-  totalPositions,
+  positions,
   isLast,
-  nextLabel,
   onAdvance,
 }: {
   card: SpreadCardResult;
-  positionLabel: string;
   position: number;
-  totalPositions: number;
+  positions: { index: number; label: string; contemplationPrompt: string }[];
   isLast: boolean;
-  nextLabel?: string;
   onAdvance: () => void;
 }) {
-  const [revealed, revealNow] = useAutoReveal(true, 700);
+  const [ready, setReady] = useState(false);
+  const [cardRevealed, revealNow] = useAutoReveal(ready, 700);
   const rarityLabel = RARITY_LABELS[card.rarityScore]?.toLowerCase();
+  const posLabel = positions[position]?.label ?? "";
+  const nextLabel = positions[position + 1]?.label;
 
   return (
     <motion.div
@@ -142,30 +140,53 @@ function SpreadRevealStep({
           className="text-xs tracking-widest uppercase opacity-30"
           style={{ color: "var(--color-text-primary)" }}
         >
-          {position + 1} of {totalPositions}
+          {position + 1} of {positions.length}
         </p>
         <h2
-          className="text-3xl font-light tracking-wide"
+          className="text-4xl font-light tracking-wide"
           style={{ color: "var(--color-rarity-mystic)", fontFamily: "var(--font-serif)" }}
         >
-          {positionLabel}
+          {posLabel}
         </h2>
       </div>
+
+      <AnimatePresence>
+        {!ready && (
+          <motion.div
+            key="prompt"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-4 max-w-xs w-full"
+          >
+            <div
+              className="w-16 h-px mx-auto"
+              style={{ background: "var(--color-rarity-mystic)", opacity: 0.3 }}
+            />
+            <p
+              className="text-sm leading-relaxed opacity-70 italic"
+              style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+            >
+              {positions[position]?.contemplationPrompt}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <TarotCard
         card={card.card}
         rarityScore={card.rarityScore as Rarity}
         isReversed={card.isReversed}
         isRadiant={card.isRadiant}
-        revealed={revealed}
+        revealed={cardRevealed}
         onReveal={revealNow}
         size="lg"
-        showHint={!revealed}
+        showHint={!cardRevealed}
       />
 
       <AnimatePresence>
-        {revealed && (
+        {cardRevealed && (
           <motion.div
+            key="details"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
@@ -195,18 +216,35 @@ function SpreadRevealStep({
             >
               {getCardDescription(card.card, card.rarityScore, card.isReversed)}
             </p>
-            <button
-              onClick={onAdvance}
-              className="mt-4 px-8 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
-              style={{
-                color: "var(--color-text-primary)",
-                borderColor: "var(--color-rarity-mystic)",
-              }}
-            >
-              {isLast ? "See your reading" : `Continue to ${nextLabel}`}
-            </button>
           </motion.div>
         )}
+      </AnimatePresence>
+
+      <AnimatePresence mode="wait">
+        {!ready ? (
+          <motion.button
+            key="ready-btn"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setReady(true)}
+            className="px-8 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
+            style={{ color: "var(--color-text-primary)", borderColor: "var(--color-rarity-mystic)" }}
+          >
+            I am ready
+          </motion.button>
+        ) : cardRevealed ? (
+          <motion.button
+            key="advance-btn"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+            onClick={onAdvance}
+            className="px-8 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
+            style={{ color: "var(--color-text-primary)", borderColor: "var(--color-rarity-mystic)" }}
+          >
+            {isLast ? "See your reading" : `Continue to ${nextLabel}`}
+          </motion.button>
+        ) : null}
       </AnimatePresence>
     </motion.div>
   );
@@ -247,9 +285,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const currentCards = drawnCards ?? [];
   const isCeremonyActive =
     isSundayToday &&
-    (sundayPhase.phase === "drawing" ||
-      sundayPhase.phase === "contemplating" ||
-      sundayPhase.phase === "revealing");
+    (sundayPhase.phase === "drawing" || sundayPhase.phase === "contemplating");
 
   if (!loaderData.user) {
     return (
@@ -380,77 +416,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   </motion.div>
                 )}
 
-                {/* ── Contemplating ────────────────────────────────────────*/}
-                {sundayPhase.phase === "contemplating" && (
-                  <motion.div
+                {/* ── Contemplating + reveal in place ─────────────────────*/}
+                {sundayPhase.phase === "contemplating" && currentCards[sundayPhase.position] && (
+                  <SpreadContemplateReveal
                     key={`sunday-contemplating-${sundayPhase.position}`}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -16 }}
-                    transition={{ duration: 0.5 }}
-                    className="text-center space-y-8 pt-8"
-                  >
-                    <div className="space-y-2">
-                      <p
-                        className="text-xs tracking-widest uppercase opacity-30"
-                        style={{ color: "var(--color-text-primary)" }}
-                      >
-                        {sundayPhase.position + 1} of {positions.length}
-                      </p>
-                      <h2
-                        className="text-4xl font-light tracking-wide"
-                        style={{ color: "var(--color-rarity-mystic)", fontFamily: "var(--font-serif)" }}
-                      >
-                        {positions[sundayPhase.position]?.label}
-                      </h2>
-                    </div>
-                    <div
-                      className="w-16 h-px mx-auto"
-                      style={{ background: "var(--color-rarity-mystic)", opacity: 0.3 }}
-                    />
-                    <p
-                      className="text-sm leading-relaxed opacity-70 max-w-xs mx-auto italic"
-                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                    >
-                      {positions[sundayPhase.position]?.contemplationPrompt}
-                    </p>
-                    {currentCards[sundayPhase.position] && (
-                      <div className="flex justify-center py-4 pointer-events-none opacity-30">
-                        <TarotCard
-                          card={currentCards[sundayPhase.position].card}
-                          rarityScore={1}
-                          isReversed={false}
-                          isRadiant={false}
-                          revealed={false}
-                          size="md"
-                        />
-                      </div>
-                    )}
-                    <button
-                      onClick={() =>
-                        setSundayPhase({ phase: "revealing", position: sundayPhase.position })
-                      }
-                      className="px-8 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
-                      style={{
-                        color: "var(--color-text-primary)",
-                        borderColor: "var(--color-rarity-mystic)",
-                      }}
-                    >
-                      I am ready
-                    </button>
-                  </motion.div>
-                )}
-
-                {/* ── Revealing ────────────────────────────────────────────*/}
-                {sundayPhase.phase === "revealing" && currentCards[sundayPhase.position] && (
-                  <SpreadRevealStep
-                    key={`sunday-revealing-${sundayPhase.position}`}
                     card={currentCards[sundayPhase.position]}
-                    positionLabel={positions[sundayPhase.position]?.label ?? ""}
                     position={sundayPhase.position}
-                    totalPositions={positions.length}
+                    positions={positions}
                     isLast={sundayPhase.position === lastPosition}
-                    nextLabel={positions[sundayPhase.position + 1]?.label}
                     onAdvance={() => {
                       if (sundayPhase.position < lastPosition) {
                         setSundayPhase({ phase: "contemplating", position: sundayPhase.position + 1 });
@@ -486,15 +459,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       </h2>
                     </div>
                     <SpreadSummaryGrid cards={currentCards} positions={positions} />
-                    <div className="text-center pt-2">
-                      <Link
-                        to={`/spread/sunday-weekly/${todayStr}`}
-                        className="text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity"
-                        style={{ color: "var(--color-text-primary)" }}
-                      >
-                        Save this reading →
-                      </Link>
-                    </div>
                   </motion.div>
                 )}
 
