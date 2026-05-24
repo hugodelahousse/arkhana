@@ -4,6 +4,16 @@
 
 @theme {
   --font-serif: var(--primitive-font-serif);
+  --color-muted: var(--primitive-gold-400);
+  --color-base: var(--primitive-black-950);
+  --color-surface: var(--primitive-black-900);
+  --color-elevated: var(--primitive-black-800);
+  --color-border: var(--primitive-gold-600);
+  --color-rarity-mundane: var(--primitive-rarity-1);
+  --color-rarity-wandering: var(--primitive-rarity-2);
+  --color-rarity-mystic: var(--primitive-rarity-3);
+  --color-rarity-arcane: var(--primitive-rarity-4);
+  --color-rarity-primordial: var(--primitive-rarity-5);
 }
 
 html,

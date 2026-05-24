@@ -4,28 +4,28 @@ import { ViewTransition, addTransitionType } from "react";
 import type { Route } from "./+types/collection";
 import { Nav } from "../components/layout/nav";
 import { TarotCard } from "../components/TarotCard";
-import { getUserCards } from "../lib/pull";
+import { getAllPulls } from "../lib/pull";
 import { MAJOR_ARCANA, MINOR_BY_SUIT, cardSlug } from "../lib/cards";
-import type { CardDefinition } from "../lib/cards";
+import type { CardDefinition, Rarity } from "../lib/cards";
 import { Link, useNavigate } from "react-router";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 
 interface BestPull {
-  rarityScore: 1 | 2 | 3 | 4 | 5;
+  rarityScore: Rarity;
   isRadiant: boolean;
   isReversed: boolean;
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (!context.user) return redirect("/");
-  const allPulls = await getUserCards(context.user.id);
+  const allPulls = await getAllPulls(context.user.id);
 
   const bestByCard: Record<number, BestPull> = {};
   for (const pull of allPulls) {
     const prev = bestByCard[pull.cardId];
     if (!prev || pull.rarityScore > prev.rarityScore) {
       bestByCard[pull.cardId] = {
-        rarityScore: pull.rarityScore as 1 | 2 | 3 | 4 | 5,
+        rarityScore: pull.rarityScore as Rarity,
         isRadiant: pull.isRadiant,
         isReversed: pull.isReversed,
       };
@@ -46,7 +46,7 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
   return (
     <DirectionalTransition>
       <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
-        <Nav userName={user.name} />
+        <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-4xl mx-auto px-6 py-12 space-y-12">
           <div className="text-center space-y-2">
             <h1
@@ -121,7 +121,7 @@ const CardTile = memo(function CardTile({
 
   if (!discovered) {
     return (
-      <div style={{ opacity: 0.3 }}>
+      <div className="opacity-30">
         <TarotCard
           card={card}
           rarityScore={1}

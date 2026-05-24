@@ -1,79 +1,50 @@
-import { redirect, useSubmit, Form } from "react-router";
+import { redirect, useFetcher } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
-import { useState, useEffect, startTransition } from "react";
+import { startTransition } from "react";
 import { addTransitionType } from "react";
 import type { Route } from "./+types/home";
 import { Link, useNavigate } from "react-router";
 import { Nav } from "../components/layout/nav";
 import { TarotCard } from "../components/TarotCard";
-import { getUserCards, dailyPull } from "../lib/pull";
-import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug } from "../lib/cards";
+import { getTodayPull, getRecentPulls, getUniqueCardCount, dailyPull } from "../lib/pull";
+import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity } from "../lib/cards";
 import { useAutoReveal } from "../lib/useAutoReveal";
 import { todayUTC } from "../lib/utils";
 import { config } from "../../config/index.js";
-import { cardImageUrl } from "../lib/cardImages";
-import { preload } from "react-dom";
 import { DirectionalTransition } from "../components/DirectionalTransition";
-
-type UserCard = Awaited<ReturnType<typeof getUserCards>>[number];
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (!context.user) {
+    const origin = new URL(config.betterAuthUrl).origin;
+    const anonRes = await fetch(
+      new URL("/api/auth/sign-in/anonymous", config.betterAuthUrl).toString(),
+      { method: "POST", headers: { "content-type": "application/json", origin } }
+    );
+    if (anonRes.ok) {
+      const setCookie = anonRes.headers.get("set-cookie");
+      if (setCookie) throw redirect("/", { headers: { "set-cookie": setCookie } });
+    }
+    // Fallback: anonymous sign-in failed (e.g. DB unavailable)
     return {
       user: null as null,
-      todayPull: null as UserCard | null,
-      recentPulls: [] as UserCard[],
+      todayPull: null as Awaited<ReturnType<typeof getTodayPull>> | null,
+      recentPulls: [] as Awaited<ReturnType<typeof getRecentPulls>>,
       totalUnique: 0,
     };
   }
 
   const userId = context.user.id;
   const todayStr = todayUTC();
-  const allPulls = await getUserCards(userId);
-  const todayPull = allPulls.find((p) => p.pullDate === todayStr) ?? null;
-  const recentPulls = [...allPulls].reverse().slice(0, 5);
+  const [todayPull, recentPulls, totalUnique] = await Promise.all([
+    getTodayPull(userId, todayStr),
+    getRecentPulls(userId, 5),
+    getUniqueCardCount(userId),
+  ]);
 
-  return {
-    user: context.user,
-    todayPull,
-    recentPulls,
-    totalUnique: new Set(allPulls.map((p) => p.cardId)).size,
-  };
+  return { user: context.user, todayPull, recentPulls, totalUnique };
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
-  const form = await request.formData();
-
-  if (form.get("_action") === "auth") {
-    const email = String(form.get("email") || "").trim().toLowerCase();
-    if (!email || !email.includes("@")) {
-      return { authError: "Please enter a valid email." };
-    }
-
-    const name = email.split("@")[0];
-    const password = email + "|" + config.betterAuthSecret;
-    const origin = new URL(config.betterAuthUrl).origin;
-    const headers = { "content-type": "application/json", origin };
-
-    // Try sign-up first (no-ops if user already exists), then sign-in
-    await fetch(
-      new URL("/api/auth/sign-up/email", config.betterAuthUrl).toString(),
-      { method: "POST", headers, body: JSON.stringify({ name, email, password }) }
-    );
-
-    const signInRes = await fetch(
-      new URL("/api/auth/sign-in/email", config.betterAuthUrl).toString(),
-      { method: "POST", headers, body: JSON.stringify({ email, password }) }
-    );
-
-    if (!signInRes.ok) {
-      return { authError: "Something went wrong. Please try again." };
-    }
-
-    const setCookie = signInRes.headers.get("set-cookie");
-    return redirect("/", { headers: setCookie ? { "set-cookie": setCookie } : {} });
-  }
-
+export async function action({ context }: Route.ActionArgs) {
   if (!context.user) return redirect("/");
   const result = await dailyPull(context.user.id);
   return result;
@@ -83,23 +54,23 @@ export function meta() {
   return [{ title: "Arkhana" }];
 }
 
-export default function Home({ loaderData, actionData }: Route.ComponentProps) {
-  const submit = useSubmit();
+export default function Home({ loaderData }: Route.ComponentProps) {
+  const fetcher = useFetcher();
   const navigate = useNavigate();
-  const result = actionData && "card" in actionData ? actionData : null;
+  const isPulling = fetcher.state === "submitting";
+  const result = fetcher.data && "card" in fetcher.data ? fetcher.data : null;
   const rarityLabel = result ? RARITY_LABELS[result.rarityScore]?.toLowerCase() : null;
   const [revealed, revealNow] = useAutoReveal(!!result, 600);
 
   if (!loaderData.user) {
-    const authError =
-      actionData && "authError" in actionData
-        ? (actionData as { authError: string }).authError
-        : null;
-    return <LandingPage authError={authError} />;
+    return (
+      <div className="min-h-screen bg-base flex items-center justify-center">
+        <p className="text-sm opacity-40 tracking-widest uppercase">The archive stirs…</p>
+      </div>
+    );
   }
 
   const { user, todayPull, recentPulls, totalUnique } = loaderData;
-
   const todayCard = todayPull ? CARD_BY_ID[todayPull.cardId] : null;
 
   function navigateToCard(slug: string) {
@@ -112,10 +83,9 @@ export default function Home({ loaderData, actionData }: Route.ComponentProps) {
   return (
     <DirectionalTransition>
       <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
-        <Nav userName={user.name} />
+        <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-2xl mx-auto px-6 py-12 space-y-12">
 
-          {/* Today's pull */}
           <section className="space-y-6 text-center">
             <h2
               className="text-sm sm:text-xs tracking-widest uppercase opacity-50"
@@ -125,12 +95,11 @@ export default function Home({ loaderData, actionData }: Route.ComponentProps) {
             </h2>
 
             {result ? (
-              // Just drew — show card with flip-reveal animation
               <div className="space-y-10">
-                <div className="flex justify-center" style={{ paddingBottom: "1rem" }}>
+                <div className="flex justify-center pb-4">
                   <TarotCard
                     card={result.card}
-                    rarityScore={result.rarityScore as 1 | 2 | 3 | 4 | 5}
+                    rarityScore={result.rarityScore as Rarity}
                     isReversed={result.isReversed}
                     isRadiant={result.isRadiant}
                     revealed={revealed}
@@ -184,12 +153,11 @@ export default function Home({ loaderData, actionData }: Route.ComponentProps) {
                 </AnimatePresence>
               </div>
             ) : todayPull && todayCard ? (
-              // Already pulled today (page load) — show card revealed
               <div className="space-y-6">
                 <div className="flex justify-center">
                   <TarotCard
                     card={todayCard}
-                    rarityScore={todayPull.rarityScore as 1 | 2 | 3 | 4 | 5}
+                    rarityScore={todayPull.rarityScore as Rarity}
                     isReversed={todayPull.isReversed}
                     isRadiant={todayPull.isRadiant}
                     revealed={true}
@@ -220,31 +188,52 @@ export default function Home({ loaderData, actionData }: Route.ComponentProps) {
                 </div>
               </div>
             ) : (
-              // No pull yet — show face-down card, click to draw
               <div className="space-y-6">
                 <p
                   className="text-lg opacity-60"
                   style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
                 >
-                  The cards await your question.
+                  {isPulling ? "The fates are turning…" : "The cards await your question."}
                 </p>
-                <div className="flex justify-center">
+                <div className={`flex justify-center ${isPulling ? "animate-pulse pointer-events-none" : ""}`}>
                   <TarotCard
                     card={CARD_BY_ID[0]}
                     rarityScore={1}
                     isReversed={false}
                     isRadiant={false}
                     revealed={false}
-                    onReveal={() => submit({}, { method: "post" })}
+                    onReveal={() => fetcher.submit({ _action: "pull" }, { method: "post" })}
                     size="lg"
-                    showHint={true}
+                    showHint={!isPulling}
                   />
                 </div>
               </div>
             )}
           </section>
 
-          {/* Stats */}
+          {user.isAnonymous && !result && (
+            <section className="border border-border/50 px-6 py-5 space-y-4 text-center">
+              <div className="space-y-1">
+                <p className="text-xs tracking-widest uppercase opacity-40">Your reading is ephemeral</p>
+                <p className="text-sm opacity-60">Sign up to preserve your collection &amp; streak</p>
+              </div>
+              <div className="flex items-center justify-center gap-6">
+                <Link
+                  to="/auth/signup"
+                  className="px-5 py-2 text-xs tracking-widest uppercase border border-border hover:opacity-90 transition-opacity"
+                >
+                  Create account
+                </Link>
+                <Link
+                  to="/auth/signin"
+                  className="text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
+                >
+                  Sign in
+                </Link>
+              </div>
+            </section>
+          )}
+
           {!result && (
             <section
               className="flex justify-center gap-12 py-6 border-t border-b"
@@ -261,7 +250,6 @@ export default function Home({ loaderData, actionData }: Route.ComponentProps) {
             </section>
           )}
 
-          {/* Recent pulls */}
           {!result && recentPulls.length > 0 && (
             <section className="space-y-4">
               <h2
@@ -311,128 +299,5 @@ export default function Home({ loaderData, actionData }: Route.ComponentProps) {
         </main>
       </div>
     </DirectionalTransition>
-  );
-}
-
-const SHOWCASE_CARDS = [0, 2, 9, 10, 12, 13, 15, 16, 18, 21];
-
-function randomRarity(): 1 | 2 | 3 | 4 | 5 {
-  const r = Math.random();
-  if (r < 0.3) return 1;
-  if (r < 0.55) return 2;
-  if (r < 0.8) return 3;
-  if (r < 0.93) return 4;
-  return 5;
-}
-
-function LandingPage({ authError }: { authError?: string | null }) {
-  // Preload carousel images using React's resource hint API (deduplicated, SSR-compatible)
-  SHOWCASE_CARDS.forEach((id) => preload(cardImageUrl(id), { as: "image" }));
-
-  const [cardIndex, setCardIndex] = useState(0);
-  const [revealed, setRevealed] = useState(false);
-  const [rarity, setRarity] = useState<1 | 2 | 3 | 4 | 5>(() => randomRarity());
-  const [isRadiant, setIsRadiant] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    function scheduleReveal() {
-      if (cancelled) return;
-      setTimeout(() => {
-        if (cancelled) return;
-        setRevealed(true);
-        scheduleHide();
-      }, 1000);
-    }
-
-    function scheduleHide() {
-      if (cancelled) return;
-      setTimeout(() => {
-        if (cancelled) return;
-        setRevealed(false);
-        setTimeout(() => {
-          if (cancelled) return;
-          setCardIndex((i) => (i + 1) % SHOWCASE_CARDS.length);
-          setRarity(randomRarity());
-          setIsRadiant(Math.random() < 0.15);
-          scheduleReveal();
-        }, 900);
-      }, 5000);
-    }
-
-    scheduleReveal();
-    return () => { cancelled = true; };
-  }, []);
-
-  const cardId = SHOWCASE_CARDS[cardIndex];
-
-  return (
-    <main className="min-h-[100dvh] flex flex-col items-center justify-center px-6 py-8 text-center">
-      <div className="max-w-md w-full space-y-6 sm:space-y-10">
-        <h1
-          className="text-4xl sm:text-6xl font-light tracking-widest"
-          style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-serif)" }}
-        >
-          ARKHANA
-        </h1>
-
-        <div className="flex justify-center">
-          <TarotCard
-            card={CARD_BY_ID[cardId]}
-            rarityScore={rarity}
-            isReversed={false}
-            isRadiant={isRadiant}
-            revealed={revealed}
-            size="lg"
-          />
-        </div>
-
-        <p
-          className="text-base sm:text-lg tracking-wide"
-          style={{
-            color: "var(--color-text-primary)",
-            opacity: 0.6,
-            fontFamily: "var(--font-serif)",
-            fontStyle: "italic",
-          }}
-        >
-          What will be your fate today?
-        </p>
-
-        <Form method="post" className="space-y-3">
-          <input type="hidden" name="_action" value="auth" />
-          {authError && (
-            <p className="text-sm" style={{ color: "var(--color-rarity-arcane)" }}>
-              {authError}
-            </p>
-          )}
-          <div className="flex gap-2">
-            <input
-              name="email"
-              type="email"
-              required
-              placeholder="your@email.com"
-              autoComplete="email"
-              className="flex-1 bg-transparent border px-4 py-3 text-sm outline-none opacity-60 focus:opacity-100 placeholder:opacity-30"
-              style={{
-                borderColor: "var(--color-border-default)",
-                color: "var(--color-text-primary)",
-              }}
-            />
-            <button
-              type="submit"
-              className="px-6 py-3 text-sm tracking-widest uppercase border transition-opacity hover:opacity-90"
-              style={{
-                borderColor: "var(--color-border-default)",
-                color: "var(--color-text-muted)",
-              }}
-            >
-              Enter
-            </button>
-          </div>
-        </Form>
-      </div>
-    </main>
   );
 }

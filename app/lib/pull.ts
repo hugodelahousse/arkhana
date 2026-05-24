@@ -1,7 +1,7 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { userCards } from "../../db/schema/user-cards.js";
-import { CARD_BY_ID, type CardDefinition } from "./cards.js";
+import { CARD_BY_ID, type CardDefinition, type Rarity } from "./cards.js";
 import { rollRarity, rollRadiant, rollReversed } from "./rarity.js";
 import { todayUTC } from "./utils.js";
 
@@ -9,7 +9,7 @@ export type PullResult =
   | {
       status: "already_pulled";
       card: CardDefinition;
-      rarityScore: number;
+      rarityScore: Rarity;
       isRadiant: boolean;
       isReversed: boolean;
       pullId: number;
@@ -17,7 +17,7 @@ export type PullResult =
   | {
       status: "success";
       card: CardDefinition;
-      rarityScore: number;
+      rarityScore: Rarity;
       isRadiant: boolean;
       isReversed: boolean;
       pullId: number;
@@ -37,7 +37,7 @@ export async function dailyPull(userId: string): Promise<PullResult> {
     return {
       status: "already_pulled",
       card: CARD_BY_ID[row.cardId],
-      rarityScore: row.rarityScore,
+      rarityScore: row.rarityScore as Rarity,
       isRadiant: row.isRadiant,
       isReversed: row.isReversed,
       pullId: row.id,
@@ -52,7 +52,24 @@ export async function dailyPull(userId: string): Promise<PullResult> {
   const [inserted] = await db
     .insert(userCards)
     .values({ userId, cardId, rarityScore, isRadiant, isReversed, pullDate })
+    .onConflictDoNothing()
     .returning();
+
+  if (!inserted) {
+    const [row] = await db
+      .select()
+      .from(userCards)
+      .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate)))
+      .limit(1);
+    return {
+      status: "already_pulled",
+      card: CARD_BY_ID[row.cardId],
+      rarityScore: row.rarityScore as Rarity,
+      isRadiant: row.isRadiant,
+      isReversed: row.isReversed,
+      pullId: row.id,
+    };
+  }
 
   return {
     status: "success",
@@ -64,7 +81,43 @@ export async function dailyPull(userId: string): Promise<PullResult> {
   };
 }
 
-export async function getUserCards(userId: string) {
+const pullFields = {
+  id: userCards.id,
+  cardId: userCards.cardId,
+  rarityScore: sql<Rarity>`${userCards.rarityScore}`,
+  isRadiant: userCards.isRadiant,
+  isReversed: userCards.isReversed,
+  pullDate: userCards.pullDate,
+  pulledAt: userCards.pulledAt,
+};
+
+export async function getTodayPull(userId: string, pullDate: string) {
+  const [row] = await db
+    .select(pullFields)
+    .from(userCards)
+    .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate)))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function getRecentPulls(userId: string, limit = 5) {
+  return db
+    .select(pullFields)
+    .from(userCards)
+    .where(eq(userCards.userId, userId))
+    .orderBy(desc(userCards.pulledAt))
+    .limit(limit);
+}
+
+export async function getUniqueCardCount(userId: string): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(distinct ${userCards.cardId})` })
+    .from(userCards)
+    .where(eq(userCards.userId, userId));
+  return row?.count ?? 0;
+}
+
+export async function getAllPulls(userId: string) {
   return db
     .select({
       id: userCards.id,
@@ -73,11 +126,9 @@ export async function getUserCards(userId: string) {
       isRadiant: userCards.isRadiant,
       isReversed: userCards.isReversed,
       pullDate: userCards.pullDate,
-      pulledAt: userCards.pulledAt,
     })
     .from(userCards)
-    .where(eq(userCards.userId, userId))
-    .orderBy(userCards.pulledAt);
+    .where(eq(userCards.userId, userId));
 }
 
 export async function getUserCardHistory(userId: string, cardId: number) {
@@ -86,12 +137,4 @@ export async function getUserCardHistory(userId: string, cardId: number) {
     .from(userCards)
     .where(and(eq(userCards.userId, userId), eq(userCards.cardId, cardId)))
     .orderBy(userCards.pulledAt);
-}
-
-export async function getPulledCardIds(userId: string): Promise<Set<number>> {
-  const rows = await db
-    .selectDistinct({ cardId: userCards.cardId })
-    .from(userCards)
-    .where(eq(userCards.userId, userId));
-  return new Set(rows.map((r) => r.cardId));
 }

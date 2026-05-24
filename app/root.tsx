@@ -51,14 +51,39 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
+    <main
+      className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
+      style={{ background: "var(--color-bg-base)" }}
+    >
+      <div className="max-w-md space-y-6">
+        <p
+          className="text-6xl font-light tracking-widest"
+          style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-serif)" }}
+        >
+          {message}
+        </p>
+        <p
+          className="text-sm tracking-wide opacity-60"
+          style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+        >
+          {details}
+        </p>
+        <a
+          href="/"
+          className="inline-block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-4"
+          style={{ color: "var(--color-text-primary)" }}
+        >
+          ← Return home
+        </a>
+        {stack && (
+          <pre
+            className="w-full p-4 overflow-x-auto text-left text-xs mt-8 opacity-50"
+            style={{ background: "var(--color-bg-surface)", color: "var(--color-text-primary)" }}
+          >
+            <code>{stack}</code>
+          </pre>
+        )}
+      </div>
     </main>
   );
 }

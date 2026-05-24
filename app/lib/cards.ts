@@ -14,7 +14,7 @@ export function cardImageSlug(cardId: number, pack = "default"): string {
 
 export function getCardDescription(
   card: CardDefinition,
-  rarityScore: number,
+  rarityScore: Rarity,
   isReversed: boolean
 ): string {
   return (isReversed ? card.reversedDescriptions : card.descriptions)[
@@ -1657,7 +1657,9 @@ export const CARD_BY_SLUG: Record<string, CardDefinition> = Object.fromEntries(
   CARDS.map((c) => [cardSlug(c), c])
 );
 
-export const RARITY_LABELS: Record<number, string> = {
+export type Rarity = 1 | 2 | 3 | 4 | 5;
+
+export const RARITY_LABELS: Record<Rarity, string> = {
   1: "Mundane",
   2: "Wandering",
   3: "Mystic",

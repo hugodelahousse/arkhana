@@ -9,6 +9,7 @@ import {
   CARD_BY_SLUG,
   RARITY_LABELS,
   getCardDescription,
+  type Rarity,
 } from "../lib/cards";
 import { useNavigate } from "react-router";
 import { DirectionalTransition } from "../components/DirectionalTransition";
@@ -48,7 +49,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
   return (
     <DirectionalTransition>
       <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
-        <Nav userName={user.name} />
+        <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-2xl mx-auto px-6 py-12 space-y-10">
           <div className="space-y-2 text-center">
             <a
@@ -78,7 +79,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
               <TarotCard
                 key={activePull}
                 card={card}
-                rarityScore={(displayPull.rarityScore as 1 | 2 | 3 | 4 | 5)}
+                rarityScore={(displayPull.rarityScore as Rarity)}
                 isReversed={displayPull.isReversed}
                 isRadiant={displayPull.isRadiant}
                 revealed={true}
