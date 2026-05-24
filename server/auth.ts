@@ -23,7 +23,7 @@ export const auth = betterAuth({
       },
     }),
     username({
-      minUsernameLength: 3,
+      minUsernameLength: 1,
       maxUsernameLength: 30,
     }),
   ],

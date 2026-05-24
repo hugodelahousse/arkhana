@@ -19,8 +19,8 @@ export async function action({ request }: Route.ActionArgs) {
 
   if (!email.includes("@")) return data({ error: "Please enter a valid email address." }, { status: 400 });
   if (password.length < 8) return data({ error: "Password must be at least 8 characters." }, { status: 400 });
-  if (rawUsername && (rawUsername.length < 3 || rawUsername.length > 30 || !/^[a-z0-9_-]+$/i.test(rawUsername))) {
-    return data({ error: "Username must be 3–30 characters: letters, numbers, hyphens, underscores." }, { status: 400 });
+  if (rawUsername && (rawUsername.length < 1 || rawUsername.length > 30 || !/^[a-z0-9_-]+$/i.test(rawUsername))) {
+    return data({ error: "Username must be 1–30 characters: letters, numbers, hyphens, underscores." }, { status: 400 });
   }
 
   const origin = new URL(config.betterAuthUrl).origin;
@@ -93,7 +93,7 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             type="text"
             placeholder="Username (optional)"
             autoComplete="username"
-            minLength={3}
+            minLength={1}
             maxLength={30}
             pattern="[a-zA-Z0-9_-]*"
             className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"

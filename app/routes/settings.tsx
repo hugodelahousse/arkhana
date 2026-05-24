@@ -21,8 +21,8 @@ export async function action({ request, context }: Route.ActionArgs) {
   const form = await request.formData();
   const raw = String(form.get("username") ?? "").trim();
 
-  if (raw.length < 3)
-    return data({ error: "Username must be at least 3 characters." }, { status: 400 });
+  if (raw.length < 1)
+    return data({ error: "Username must be at least 1 character." }, { status: 400 });
   if (raw.length > 30)
     return data({ error: "Username must be 30 characters or less." }, { status: 400 });
   if (!/^[a-z0-9_-]+$/i.test(raw))
@@ -134,7 +134,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                 name="username"
                 type="text"
                 defaultValue={loaderData.username}
-                minLength={3}
+                minLength={1}
                 maxLength={30}
                 pattern="[a-zA-Z0-9_-]+"
                 placeholder="your-username"
