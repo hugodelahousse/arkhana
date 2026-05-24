@@ -60,14 +60,15 @@
 .card-scene[data-revealed] { cursor: default; }
 
 /* ─── Hold-to-reveal glow ─── */
-/* Soft halo that fades in with --hold-progress (0–1), driven by RAF in useHoldReveal */
-.card-scene::before {
+/* Lives on card-back::after so it rotates inside the 3D flipper context —
+   the glow compresses edge-on with the card during the flip, then disappears
+   naturally when backface-visibility:hidden kicks in at 90°. */
+.card-back::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: 8px;
   pointer-events: none;
-  z-index: -1;
   box-shadow:
     0 0 12px 2px var(--color-card-back-accent),
     0 0 30px 6px color-mix(in srgb, var(--color-card-back-accent) 45%, transparent),
@@ -76,7 +77,7 @@
 }
 
 /* On reveal, flash the rarity color and fade out */
-.card-scene[data-revealed]::before {
+.card-scene[data-revealed] .card-back::after {
   box-shadow:
     0 0 15px 3px var(--rarity-color, var(--color-card-back-accent)),
     0 0 35px 8px color-mix(in srgb, var(--rarity-color, var(--color-card-back-accent)) 45%, transparent),
