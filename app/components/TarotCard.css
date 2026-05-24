@@ -60,17 +60,14 @@
 .card-scene[data-revealed] { cursor: default; }
 
 /* ─── Hold-to-reveal glow ─── */
-/* Lives on card-back::after so it rotates inside the 3D flipper context —
-   the glow compresses edge-on with the card during the flip, then disappears
-   naturally when backface-visibility:hidden kicks in at 90°. */
-.card-back::after {
+/* Soft halo that fades in with --hold-progress (0–1), driven by RAF in useHoldReveal */
+.card-scene::before {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: 8px;
   pointer-events: none;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+  z-index: -1;
   box-shadow:
     0 0 12px 2px var(--color-card-back-accent),
     0 0 30px 6px color-mix(in srgb, var(--color-card-back-accent) 45%, transparent),
@@ -78,8 +75,8 @@
   opacity: var(--hold-progress, 0);
 }
 
-/* On reveal (user-triggered only), flash the rarity color and fade out */
-.card-scene[data-just-revealed] .card-back::after {
+/* On reveal, flash the rarity color and fade out */
+.card-scene[data-revealed]::before {
   box-shadow:
     0 0 15px 3px var(--rarity-color, var(--color-card-back-accent)),
     0 0 35px 8px color-mix(in srgb, var(--rarity-color, var(--color-card-back-accent)) 45%, transparent),
@@ -327,6 +324,10 @@
   animation: holo-rotate 6s linear infinite;
 }
 
+/* Idle shimmer on Mystic (even without hover) */
+.card-scene[data-rarity="3"][data-revealed] .card-shine {
+  opacity: .15;
+}
 .card-scene[data-rarity="3"][data-revealed]:hover .card-shine {
   opacity: calc(.25 + var(--pointer-from-center, 0) * .55);
 }
@@ -393,6 +394,9 @@
           contrast(1.4) saturate(2.25);
 }
 
+.card-scene[data-rarity="4"][data-revealed] .card-shine {
+  opacity: .1;
+}
 .card-scene[data-rarity="4"][data-revealed]:hover .card-shine {
   opacity: calc(.25 + var(--pointer-from-center, 0) * .5);
 }
@@ -469,6 +473,10 @@
   animation: cosmos-drift 5s linear infinite;
 }
 
+/* Idle glow — Primordial cards pulse even without interaction */
+.card-scene[data-rarity="5"][data-revealed] .card-shine {
+  opacity: .3;
+}
 .card-scene[data-rarity="5"][data-revealed]:hover .card-shine {
   opacity: calc(.45 + var(--pointer-from-center, 0) * .45);
 }
@@ -562,28 +570,12 @@
   100% { transform: scale(1); }
 }
 
-.card-scene[data-just-revealed] .card-front {
+.card-scene[data-revealed] .card-front {
   animation: reveal-glow 1.2s ease-out 0.35s both;
 }
 
-.card-scene[data-just-revealed] {
+.card-scene[data-revealed] {
   animation: reveal-pop 0.25s ease-out both;
-}
-
-/* Persistent rarity aura for all revealed non-mundane cards */
-.card-scene[data-rarity="2"][data-revealed] .card-front,
-.card-scene[data-rarity="3"][data-revealed] .card-front,
-.card-scene[data-rarity="4"][data-revealed] .card-front,
-.card-scene[data-rarity="5"][data-revealed] .card-front {
-  box-shadow: 0 0 18px color-mix(in srgb, var(--rarity-color) 40%, transparent);
-}
-
-/* On touch devices, `:hover` never fires at rest — show a hint of foil at idle.
-   Kept very low so color-dodge doesn't create rainbow on the card's white border. */
-@media (hover: none) {
-  .card-scene[data-rarity="3"][data-revealed] .card-shine { opacity: .05; }
-  .card-scene[data-rarity="4"][data-revealed] .card-shine { opacity: .04; }
-  .card-scene[data-rarity="5"][data-revealed] .card-shine { opacity: .08; }
 }
 
 /* ─── Reveal hint ─── */
@@ -622,4 +614,6 @@
   .card-scene[data-revealed] .card-flipper {
     transform: rotateY(180deg) !important;
   }
+  .card-scene[data-rarity="5"][data-revealed] .card-shine { opacity: .25; }
+  .card-scene[data-rarity="3"][data-revealed] .card-shine { opacity: .15; }
 }
