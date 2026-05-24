@@ -1,8 +1,32 @@
-/* ─── Registered property for animatable gradient angle ─── */
+/* ─── Registered properties for CSS-native animation ─── */
 @property --shine-angle {
   syntax: "<angle>";
   inherits: false;
   initial-value: 0deg;
+}
+
+/* Foil shift — driven by tilt/mouse, animated via CSS transition */
+@property --ratio-x {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+@property --ratio-y {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+
+/* Card-back glow position — world-space light projected per card */
+@property --glow-x {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+@property --glow-y {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
 }
 
 /* ─── Scene (perspective context) ─── */
@@ -10,6 +34,11 @@
   display: inline-block;
   perspective: 1200px;
   cursor: pointer;
+  transition:
+    --ratio-x 350ms ease-out,
+    --ratio-y 350ms ease-out,
+    --glow-x  500ms ease-out,
+    --glow-y  500ms ease-out;
 
   /* Sunpillar palette — the classic holographic color spectrum */
   --sp1: hsl(2,   100%, 73%);
@@ -58,33 +87,54 @@
 }
 
 .card-back {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-default);
+  background:
+    radial-gradient(
+      ellipse at calc(var(--glow-x, .5) * 100%) calc(var(--glow-y, .5) * 100%),
+      color-mix(in srgb, var(--color-card-back-accent) 22%, transparent) 0%,
+      transparent 65%
+    ),
+    var(--color-bg-surface);
+  border: 1px solid color-mix(in srgb, var(--color-card-back-accent) 35%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* Specular highlight that follows mouse / tilt */
+.card-back::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at calc(var(--glow-x, .5) * 100%) calc(var(--glow-y, .5) * 100%),
+    rgba(255,255,255,.07) 0%,
+    transparent 55%
+  );
+}
+
 .card-back-art {
   position: absolute;
   inset: 10px;
-  border: 1px solid var(--color-border-default);
-  opacity: 0.4;
+  border: 1px solid color-mix(in srgb, var(--color-card-back-accent) 25%, transparent);
+  opacity: 0.6;
   background:
     repeating-linear-gradient(
        45deg, transparent 0px, transparent 10px,
-      rgba(201,147,58,.08) 10px, rgba(201,147,58,.08) 11px
+      color-mix(in srgb, var(--color-card-back-accent) 10%, transparent) 10px,
+      color-mix(in srgb, var(--color-card-back-accent) 10%, transparent) 11px
     ),
     repeating-linear-gradient(
       -45deg, transparent 0px, transparent 10px,
-      rgba(201,147,58,.08) 10px, rgba(201,147,58,.08) 11px
+      color-mix(in srgb, var(--color-card-back-accent) 10%, transparent) 10px,
+      color-mix(in srgb, var(--color-card-back-accent) 10%, transparent) 11px
     );
 }
 
 .card-back-sigil {
   font-size: 2.5rem;
-  color: var(--color-border-default);
-  opacity: 0.5;
+  color: color-mix(in srgb, var(--color-card-back-accent) 70%, transparent);
   user-select: none;
 }
 
@@ -142,7 +192,7 @@
   transition: opacity 0.3s ease;
   background-image: radial-gradient(
     farthest-corner circle
-      at calc(var(--ratio-x, .5) * 100%) calc(var(--ratio-y, .5) * 100%),
+      at calc(var(--glow-x, .5) * 100%) calc(var(--glow-y, .5) * 100%),
     hsla(0,0%,100%,.8)  10%,
     hsla(0,0%,100%,.65) 20%,
     hsla(0,0%,0%,.5)    90%
@@ -446,7 +496,12 @@
   inset: -3px;
   border-radius: 10px;
   background: conic-gradient(
-    from 0deg, #eab308, #f97316, #a855f7, #60a5fa, #eab308
+    from 0deg,
+    var(--color-rarity-primordial),
+    var(--color-rarity-arcane),
+    var(--color-rarity-mystic),
+    var(--color-rarity-wandering),
+    var(--color-rarity-primordial)
   );
   background-size: 200% 200%;
   animation: radiant-shimmer 3s linear infinite;
