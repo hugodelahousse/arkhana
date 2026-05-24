@@ -7,6 +7,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
+import { useHandler } from "./useHandler";
 
 type Handler = (nx: number, ny: number) => void;
 
@@ -58,12 +59,6 @@ export function useOrientation() {
 /** Subscribe to orientation updates for the lifetime of the calling component. */
 export function useOrientationEffect(handler: Handler) {
   const { subscribe } = useOrientation();
-  // Keep a ref so the subscription never needs to be re-established when the
-  // handler closure changes (e.g. captures new spring references each render).
-  const handlerRef = useRef(handler);
-  handlerRef.current = handler;
-
-  useEffect(() => {
-    return subscribe((nx, ny) => handlerRef.current(nx, ny));
-  }, [subscribe]);
+  const stable = useHandler(handler);
+  useEffect(() => subscribe(stable), [subscribe, stable]);
 }
