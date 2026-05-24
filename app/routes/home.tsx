@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router";
 import { Nav } from "../components/layout/nav";
 import { TarotCard } from "../components/TarotCard";
 import { getTodayPull, getRecentPulls, getUniqueCardCount, dailyPull } from "../lib/pull";
+import { getTodaySpread } from "../lib/spread-pull";
 import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity } from "../lib/cards";
 import { useAutoReveal } from "../lib/useAutoReveal";
 import { todayUTC } from "../lib/utils";
@@ -35,17 +36,33 @@ export async function loader({ context }: Route.LoaderArgs) {
 
   const userId = context.user.id;
   const todayStr = todayUTC();
-  const [todayPull, recentPulls, totalUnique] = await Promise.all([
-    getTodayPull(userId, todayStr),
+  const now = new Date();
+  const isSundayToday = now.getUTCDay() === 0;
+
+  const [recentPulls, totalUnique, sundaySpread] = await Promise.all([
     getRecentPulls(userId, 5),
     getUniqueCardCount(userId),
+    isSundayToday ? getTodaySpread(userId, "sunday-weekly", todayStr) : Promise.resolve(null),
   ]);
 
-  return { user: context.user, todayPull, recentPulls, totalUnique };
+  if (isSundayToday) {
+    return {
+      user: context.user,
+      isSundayToday: true,
+      sundaySpread,
+      todayPull: null as Awaited<ReturnType<typeof getTodayPull>> | null,
+      recentPulls,
+      totalUnique,
+    };
+  }
+
+  const todayPull = await getTodayPull(userId, todayStr);
+  return { user: context.user, isSundayToday: false, sundaySpread: null, todayPull, recentPulls, totalUnique };
 }
 
 export async function action({ context }: Route.ActionArgs) {
   if (!context.user) return redirect("/");
+  if (new Date().getUTCDay() === 0) return redirect("/spread/sunday-weekly");
   const result = await dailyPull(context.user.id);
   return result;
 }
@@ -70,7 +87,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     );
   }
 
-  const { user, todayPull, recentPulls, totalUnique } = loaderData;
+  const { user, todayPull, recentPulls, totalUnique, isSundayToday, sundaySpread } = loaderData;
   const todayCard = todayPull ? CARD_BY_ID[todayPull.cardId] : null;
 
   function navigateToCard(slug: string) {
@@ -86,6 +103,99 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-2xl mx-auto px-6 py-12 space-y-12">
 
+          {isSundayToday ? (
+            <section className="space-y-6 text-center">
+              <h2
+                className="text-sm sm:text-xs tracking-widest uppercase opacity-50"
+                style={{ color: "var(--color-text-primary)" }}
+              >
+                Sunday Reading
+              </h2>
+              {sundaySpread ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    {[...sundaySpread].sort((a, b) => a.position - b.position).map((card) => {
+                      const labels = ["Mind", "Body", "Spirit", "Action"];
+                      const rl = RARITY_LABELS[card.rarityScore]?.toLowerCase();
+                      return (
+                        <div key={card.position} className="flex flex-col items-center gap-2">
+                          <p
+                            className="text-xs tracking-widest uppercase opacity-40"
+                            style={{ color: "var(--color-text-primary)" }}
+                          >
+                            {labels[card.position]}
+                          </p>
+                          <TarotCard
+                            card={card.card}
+                            rarityScore={card.rarityScore as Rarity}
+                            isReversed={card.isReversed}
+                            isRadiant={card.isRadiant}
+                            revealed={true}
+                            size="sm"
+                          />
+                          <p
+                            className="text-xs font-light opacity-70"
+                            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                          >
+                            {card.card.name}
+                          </p>
+                          <p
+                            className="text-xs tracking-widest uppercase"
+                            style={{ color: `var(--color-rarity-${rl})` }}
+                          >
+                            {RARITY_LABELS[card.rarityScore]}{card.isRadiant && " ✦"}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <Link
+                    to="/spread/sunday-weekly"
+                    className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-2"
+                    style={{ color: "var(--color-text-primary)" }}
+                  >
+                    Review your reading →
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <p
+                    className="text-lg opacity-60"
+                    style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                  >
+                    The week awaits your reading.
+                  </p>
+                  <div
+                    className="mx-auto max-w-xs p-6 space-y-4 border"
+                    style={{ borderColor: "var(--color-rarity-mystic)", borderOpacity: 0.3 }}
+                  >
+                    <p
+                      className="text-sm opacity-60"
+                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                    >
+                      Mind · Body · Spirit · Action
+                    </p>
+                    <p
+                      className="text-xs opacity-40"
+                      style={{ color: "var(--color-text-primary)" }}
+                    >
+                      Four cards for the days ahead
+                    </p>
+                    <Link
+                      to="/spread/sunday-weekly"
+                      className="block px-6 py-2 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
+                      style={{
+                        color: "var(--color-text-primary)",
+                        borderColor: "var(--color-rarity-mystic)",
+                      }}
+                    >
+                      Begin the reading
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </section>
+          ) : (
           <section className="space-y-6 text-center">
             <h2
               className="text-sm sm:text-xs tracking-widest uppercase opacity-50"
@@ -216,6 +326,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               </div>
             )}
           </section>
+          )}
 
           {user.isAnonymous && !result && (
             <section className="border border-border/50 px-6 py-5 space-y-4 text-center">
