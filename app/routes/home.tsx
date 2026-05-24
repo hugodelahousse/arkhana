@@ -9,7 +9,7 @@ import { TarotCard } from "../components/TarotCard";
 import { getTodayPull, getRecentPulls, getUniqueCardCount, dailyPull } from "../lib/pull";
 import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity } from "../lib/cards";
 import { useAutoReveal } from "../lib/useAutoReveal";
-import { todayUTC } from "../lib/utils";
+import { todayUTC, getOrigin } from "../lib/utils";
 import { config } from "../../config/index.js";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
@@ -31,7 +31,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       todayPull: null as Awaited<ReturnType<typeof getTodayPull>> | null,
       recentPulls: [] as Awaited<ReturnType<typeof getRecentPulls>>,
       totalUnique: 0,
-      origin: new URL(request.url).origin,
+      origin: getOrigin(request),
     };
   }
 
@@ -43,8 +43,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     getUniqueCardCount(userId),
   ]);
 
-  const requestOrigin = new URL(request.url).origin;
-  return { user: context.user, todayPull, recentPulls, totalUnique, origin: requestOrigin };
+  return { user: context.user, todayPull, recentPulls, totalUnique, origin: getOrigin(request) };
 }
 
 export async function action({ context }: Route.ActionArgs) {

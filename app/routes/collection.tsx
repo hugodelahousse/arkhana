@@ -10,6 +10,7 @@ import { MAJOR_ARCANA, MINOR_BY_SUIT, cardSlug } from "../lib/cards";
 import type { CardDefinition, Rarity } from "../lib/cards";
 import { Link, useNavigate } from "react-router";
 import { DirectionalTransition } from "../components/DirectionalTransition";
+import { getOrigin } from "../lib/utils";
 
 interface BestPull {
   rarityScore: Rarity;
@@ -33,7 +34,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     }
   }
 
-  return { user: context.user, bestByCard, origin: new URL(request.url).origin };
+  return { user: context.user, bestByCard, origin: getOrigin(request) };
 }
 
 export function meta({ data }: Route.MetaArgs) {

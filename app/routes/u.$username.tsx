@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { getUserPublicStats } from "../lib/pull";
 import { CARD_BY_ID, RARITY_LABELS, type Rarity } from "../lib/cards";
 import { ShareButton } from "../components/ShareButton";
+import { getOrigin } from "../lib/utils";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   const username = params.username.toLowerCase();
@@ -25,7 +26,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   if (!profile) throw data("Not found", { status: 404 });
 
   const stats = await getUserPublicStats(profile.id);
-  return { profile, stats, origin: new URL(request.url).origin };
+  return { profile, stats, origin: getOrigin(request) };
 }
 
 export function meta({ data: loaderData, params }: Route.MetaArgs) {

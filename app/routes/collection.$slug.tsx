@@ -15,6 +15,7 @@ import {
 import { Link, useNavigate } from "react-router";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
+import { getOrigin } from "../lib/utils";
 
 export async function loader({ context, params, request }: Route.LoaderArgs) {
   const card = CARD_BY_SLUG[params.slug];
@@ -23,7 +24,7 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
   const history =
     context.user ? await getUserCardHistory(context.user.id, card.id) : [];
 
-  return { user: context.user ?? null, card, history, origin: new URL(request.url).origin };
+  return { user: context.user ?? null, card, history, origin: getOrigin(request) };
 }
 
 export function meta({ data: loaderData }: Route.MetaArgs) {

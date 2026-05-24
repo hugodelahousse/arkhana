@@ -14,6 +14,7 @@ import { user } from "../../db/schema/auth.js";
 import { eq } from "drizzle-orm";
 import { TarotCard } from "../components/TarotCard";
 import { ShareButton } from "../components/ShareButton";
+import { getOrigin } from "../lib/utils";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   const pullId = parseInt(params.pullId, 10);
@@ -33,7 +34,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
   const handle = profile?.displayUsername ?? profile?.username ?? null;
 
-  return { pull, card, handle, origin: new URL(request.url).origin };
+  return { pull, card, handle, origin: getOrigin(request) };
 }
 
 export function meta({ data: loaderData }: Route.MetaArgs) {
