@@ -470,20 +470,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       </h2>
                     </div>
                     <SpreadSummaryGrid cards={currentCards} positions={positions} />
-                    <div className="flex flex-col items-center gap-3 pt-2">
+                    <div className="flex justify-center pt-2">
                       <ShareButton
                         title={`${spreadDef.name} — Arkhana`}
                         url={`/spread/sunday-weekly/${todayStr}`}
                         text={`${spreadDef.name}: ${spreadDef.subtitle}`}
                         label="Share reading"
                       />
-                      <Link
-                        to={`/spread/sunday-weekly/${todayStr}`}
-                        className="text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity"
-                        style={{ color: "var(--color-text-primary)" }}
-                      >
-                        Review your reading →
-                      </Link>
                     </div>
                   </motion.div>
                 )}
@@ -513,20 +506,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       </p>
                     </div>
                     <SpreadSummaryGrid cards={currentCards} positions={positions} />
-                    <div className="flex flex-col items-center gap-3 pt-2">
+                    <div className="flex justify-center pt-2">
                       <ShareButton
                         title={`${spreadDef.name} — Arkhana`}
                         url={`/spread/sunday-weekly/${todayStr}`}
                         text={`${spreadDef.name}: ${spreadDef.subtitle}`}
                         label="Share reading"
                       />
-                      <Link
-                        to={`/spread/sunday-weekly/${todayStr}`}
-                        className="text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity"
-                        style={{ color: "var(--color-text-primary)" }}
-                      >
-                        Review your reading →
-                      </Link>
                     </div>
                   </motion.div>
                 )}
