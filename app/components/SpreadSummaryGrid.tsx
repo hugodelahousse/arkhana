@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { TarotCard } from "./TarotCard";
 import { RARITY_LABELS, getCardDescription, type Rarity } from "../lib/cards";
@@ -14,6 +14,13 @@ function CardDetailOverlay({
   onClose: () => void;
 }) {
   const rarityLabel = RARITY_LABELS[card.rarityScore]?.toLowerCase();
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   return (
     <motion.div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6"
@@ -39,16 +46,14 @@ function CardDetailOverlay({
           {posLabel}
         </p>
 
-        <div className="w-44 sm:w-52">
-          <TarotCard
-            card={card.card}
-            rarityScore={card.rarityScore as Rarity}
-            isReversed={card.isReversed}
-            isRadiant={card.isRadiant}
-            revealed={true}
-            size="md"
-          />
-        </div>
+        <TarotCard
+          card={card.card}
+          rarityScore={card.rarityScore as Rarity}
+          isReversed={card.isReversed}
+          isRadiant={card.isRadiant}
+          revealed={true}
+          size="md"
+        />
 
         <div className="text-center space-y-2">
           <p
