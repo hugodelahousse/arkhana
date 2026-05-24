@@ -1,4 +1,4 @@
-import { redirect, Form, useNavigation, Link } from "react-router";
+import { redirect, data, Form, useNavigation, Link } from "react-router";
 import type { Route } from "./+types/signup";
 import { config } from "../../../config/index.js";
 
@@ -13,8 +13,8 @@ export async function action({ request }: Route.ActionArgs) {
   const password = String(form.get("password") || "");
   const name = String(form.get("name") || "").trim() || email.split("@")[0];
 
-  if (!email.includes("@")) return { error: "Please enter a valid email address." };
-  if (password.length < 8) return { error: "Password must be at least 8 characters." };
+  if (!email.includes("@")) return data({ error: "Please enter a valid email address." }, { status: 400 });
+  if (password.length < 8) return data({ error: "Password must be at least 8 characters." }, { status: 400 });
 
   const origin = new URL(config.betterAuthUrl).origin;
   const headers = {
@@ -30,7 +30,7 @@ export async function action({ request }: Route.ActionArgs) {
 
   if (!signUpRes.ok) {
     const body = await signUpRes.json().catch(() => ({})) as Record<string, unknown>;
-    return { error: String(body.message ?? "Sign-up failed. That email may already be in use.") };
+    return data({ error: String(body.message ?? "Sign-up failed. That email may already be in use.") }, { status: 400 });
   }
 
   // Sign in to get the session cookie (sign-up response doesn't set one in some configs)
@@ -39,7 +39,7 @@ export async function action({ request }: Route.ActionArgs) {
     { method: "POST", headers, body: JSON.stringify({ email, password }) }
   );
 
-  if (!signInRes.ok) return { error: "Account created. Please sign in." };
+  if (!signInRes.ok) return data({ error: "Account created. Please sign in." }, { status: 500 });
 
   const setCookie = signInRes.headers.get("set-cookie");
   return redirect("/", { headers: setCookie ? { "set-cookie": setCookie } : {} });

@@ -1,4 +1,4 @@
-import { redirect, Form, useNavigation, Link } from "react-router";
+import { redirect, data, Form, useNavigation, Link } from "react-router";
 import type { Route } from "./+types/signin";
 import { config } from "../../../config/index.js";
 
@@ -12,8 +12,8 @@ export async function action({ request }: Route.ActionArgs) {
   const email = String(form.get("email") || "").trim().toLowerCase();
   const password = String(form.get("password") || "");
 
-  if (!email.includes("@")) return { error: "Please enter a valid email address." };
-  if (!password) return { error: "Please enter your password." };
+  if (!email.includes("@")) return data({ error: "Please enter a valid email address." }, { status: 400 });
+  if (!password) return data({ error: "Please enter your password." }, { status: 400 });
 
   const origin = new URL(config.betterAuthUrl).origin;
   const headers = {
@@ -27,7 +27,7 @@ export async function action({ request }: Route.ActionArgs) {
     { method: "POST", headers, body: JSON.stringify({ email, password }) }
   );
 
-  if (!signInRes.ok) return { error: "Invalid email or password." };
+  if (!signInRes.ok) return data({ error: "Invalid email or password." }, { status: 401 });
 
   const setCookie = signInRes.headers.get("set-cookie");
   return redirect("/", { headers: setCookie ? { "set-cookie": setCookie } : {} });
