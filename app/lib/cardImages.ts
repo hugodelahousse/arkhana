@@ -9,9 +9,24 @@ const SUIT_PREFIX: Record<string, string> = {
   pentacles: "p",
 };
 
-export function cardImageUrl(cardId: number): string {
+export function cardImageSlugCdn(cardId: number): string {
   const card = CARD_BY_ID[cardId];
   const prefix = card.arcana === "major" ? "m" : SUIT_PREFIX[card.suit!];
-  const num = String(card.number).padStart(2, "0");
-  return `${CDN}/${prefix}${num}.jpg`;
+  return `${prefix}${String(card.number).padStart(2, "0")}`;
+}
+
+export function cardImageUrl(cardId: number): string {
+  return `${CDN}/${cardImageSlugCdn(cardId)}.jpg`;
+}
+
+export function cardMaskUrl(cardId: number): string {
+  return `/cards/masks/${cardImageSlugCdn(cardId)}.png`;
+}
+
+export function cardNameMaskUrl(cardId: number): string {
+  return `/cards/masks/${cardImageSlugCdn(cardId)}_name.png`;
+}
+
+export function cardTopMaskUrl(cardId: number): string {
+  return `/cards/masks/${cardImageSlugCdn(cardId)}_top.png`;
 }
