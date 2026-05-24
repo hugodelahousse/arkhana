@@ -57,9 +57,7 @@ export function Nav({ userName, isAnonymous }: { userName: string; isAnonymous?:
           className="flex items-center justify-between gap-4 px-4 sm:px-6 py-2 border-b text-xs tracking-widest"
           style={{ borderColor: "var(--color-border-default)", background: "var(--color-bg-surface)" }}
         >
-          <p className="uppercase" style={{ color: "var(--color-accent)" }}>
-            Your reading is ephemeral
-          </p>
+          <p className="uppercase opacity-40">Your reading is ephemeral</p>
           <div className="flex items-center gap-4 shrink-0">
             <Link to="/auth/signup" className={buttonClass("sm")}>
               Create account
