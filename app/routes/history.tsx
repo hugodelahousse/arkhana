@@ -7,7 +7,7 @@ import { Nav } from "../components/layout/nav";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { TarotCard } from "../components/TarotCard";
 import { SpreadSummaryGrid } from "../components/SpreadSummaryGrid";
-import { CARD_BY_ID, RARITY_LABELS, cardSlug, type Rarity } from "../lib/cards";
+import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity } from "../lib/cards";
 import { getSpreadType } from "../lib/spreads";
 import { getDailyPullHistory } from "../lib/pull";
 import { getSpreadHistory } from "../lib/spread-pull";
@@ -127,7 +127,7 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="space-y-4"
+        className="space-y-5"
       >
         <p
           className="text-xs tracking-widest uppercase opacity-40"
@@ -135,8 +135,8 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
         >
           {date}
         </p>
-        <Link to={`/collection/${slug}`} className="flex items-center gap-6 group">
-          <div className="flex-shrink-0 w-20">
+        <div className="flex flex-col items-center gap-4">
+          <Link to={`/collection/${slug}`} className="block w-28">
             <TarotCard
               card={card}
               rarityScore={entry.rarityScore as Rarity}
@@ -145,26 +145,30 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
               revealed={true}
               size="sm"
             />
-          </div>
-          <div className="space-y-1">
+          </Link>
+          <div className="space-y-2 text-center">
             <p
               className="text-xs tracking-widest uppercase"
               style={{ color: `var(--color-rarity-${rarityLabel})` }}
             >
               {RARITY_LABELS[entry.rarityScore]}
               {entry.isRadiant && " ✦"}
+              {entry.isReversed && " · Reversed"}
             </p>
             <p
-              className="text-lg font-light group-hover:opacity-80 transition-opacity"
+              className="text-lg font-light"
               style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
             >
               {card.name}
-              {entry.isReversed && (
-                <span className="ml-2 text-xs opacity-50">(reversed)</span>
-              )}
+            </p>
+            <p
+              className="text-sm leading-relaxed opacity-70 max-w-xs mx-auto"
+              style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+            >
+              {getCardDescription(card, entry.rarityScore as Rarity, entry.isReversed)}
             </p>
           </div>
-        </Link>
+        </div>
       </motion.div>
     );
   }
