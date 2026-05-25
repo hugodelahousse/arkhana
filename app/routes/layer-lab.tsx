@@ -53,15 +53,10 @@ function useHover(ref: React.RefObject<HTMLDivElement | null>) {
   return { onMouseMove, onMouseLeave };
 }
 
-function cardCdnSlug(card: CardDefinition): string {
-  const prefix = card.arcana === "major" ? "m" : { wands: "w", cups: "c", swords: "s", pentacles: "p" }[card.suit!]!;
-  return `${prefix}${String(card.number).padStart(2, "0")}`;
-}
-
 const LayeredCard = memo(function LayeredCard({
   card,
   config,
-  centroids,
+  centroids: _centroids,
   size,
   onClick,
 }: {

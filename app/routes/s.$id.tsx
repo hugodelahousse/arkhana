@@ -1,5 +1,6 @@
 import { data } from "react-router";
 import { Link } from "react-router";
+import type { SpreadPosition } from "../lib/spreads";
 import { ArrowRight } from "@phosphor-icons/react";
 import type { Route } from "./+types/s.$id";
 import { getSpreadById } from "../lib/spread-pull";
@@ -46,7 +47,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 export function meta({ data: loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "Arkhana" }];
   const { name, subtitle, positions, cards, handle, origin } = loaderData;
-  const positionLabels = positions.map((p: any) => p.label).join(",");
+  const positionLabels = positions.map((p: SpreadPosition) => p.label).join(",");
   const cardIds = cards.map((c: SpreadCardResult) => c.cardId).join(",");
   const rarities = cards.map((c: SpreadCardResult) => c.rarityScore).join(",");
   const reversals = cards.map((c: SpreadCardResult) => c.isReversed).join(",");

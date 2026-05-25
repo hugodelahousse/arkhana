@@ -1,0 +1,25 @@
+{
+  "plugins": ["stylelint-no-unsupported-browser-features"],
+  "rules": {
+    "plugin/no-unsupported-browser-features": [
+      true,
+      {
+        "severity": "warning",
+        "ignore": [
+          "css-transitions",
+          "css-animation",
+          "css-transforms",
+          "css-gradients",
+          "css-filters",
+          "multicolumn",
+          "pointer-events",
+          "css-hyphens",
+          "outline",
+          "css-writing-mode",
+          "css-containment"
+        ],
+        "ignorePartialSupport": true
+      }
+    ]
+  }
+}

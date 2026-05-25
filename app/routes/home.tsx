@@ -1,5 +1,5 @@
 import { useState, useEffect, startTransition } from "react";
-import { redirect, useFetcher, data as routeData } from "react-router";
+import { redirect, useFetcher } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { addTransitionType } from "react";
 import type { Route } from "./+types/home";
@@ -266,6 +266,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       (spreadActionData.status === "success" || spreadActionData.status === "already_pulled") &&
       spreadActionData.cards
     ) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDrawnCards(spreadActionData.cards);
       if (spreadActionData.spreadId) setActiveSpreadId(spreadActionData.spreadId);
       setSundayPhase({ phase: "contemplating", position: 0 });

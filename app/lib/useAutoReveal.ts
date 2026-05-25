@@ -9,6 +9,7 @@ export function useAutoReveal(trigger: boolean, delay = 600): [boolean, () => vo
 
   useEffect(() => {
     if (!trigger) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRevealed(false);
       return;
     }

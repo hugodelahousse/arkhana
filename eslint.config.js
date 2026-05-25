@@ -28,8 +28,14 @@ export default [
       ...tsPlugin.configs.recommended.rules,
       ...reactHooksPlugin.configs.recommended.rules,
       "func-style": ["error", "declaration", { allowArrowFunctions: true }],
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       "no-undef": "off",
+    },
+  },
+  {
+    files: ["scripts/**/*.mjs", "server.js"],
+    languageOptions: {
+      globals: { Buffer: "readonly", process: "readonly", console: "readonly" },
     },
   },
   prettierConfig,

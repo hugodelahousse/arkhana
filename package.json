@@ -13,7 +13,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx db/seed/run.ts",
-    "lint": "eslint .",
+    "lint": "eslint . && stylelint \"app/**/*.css\"",
     "format": "prettier --write .",
     "test": "vitest run"
   },
@@ -68,6 +68,8 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "prettier": "^3.8.3",
+    "stylelint": "^17.12.0",
+    "stylelint-no-unsupported-browser-features": "^8.1.1",
     "tailwindcss": "^4.2.2",
     "typescript": "^6.0.3",
     "vite": "^8.0.3",

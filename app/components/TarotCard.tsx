@@ -1,6 +1,6 @@
 import { memo, useRef } from "react";
 import { motion } from "motion/react";
-import { cardImageUrl, cardMaskUrl, cardNameMaskUrl, cardTopMaskUrl } from "../lib/cardImages";
+import { cardImageUrl, cardMaskUrl, cardNameMaskUrl, cardTopMaskUrl, hasTopMask } from "../lib/cardImages";
 import { RARITY_LABELS } from "../lib/cards";
 import type { CardDefinition, Rarity } from "../lib/cards";
 import { useCardMotion, DEFAULT_MOTION_CONFIG } from "../lib/useCardMotion";
@@ -43,6 +43,7 @@ export const TarotCard = memo(function TarotCard({
   const hasSubjectMask = rarityScore >= 3;
   const hasParallax = rarityScore >= 4;
   const isMajor = card.arcana === "major";
+  const cardHasTopMask = isMajor && hasTopMask(card.id);
   const imgSrc = cardImageUrl(card.id);
 
   return (
@@ -59,7 +60,7 @@ export const TarotCard = memo(function TarotCard({
         ...(hasSubjectMask ? {
           "--mask-url": `url(${cardMaskUrl(card.id)})`,
           "--name-mask-url": `url(${cardNameMaskUrl(card.id)})`,
-          "--top-mask-url": isMajor ? `url(${cardTopMaskUrl(card.id)})` : "none",
+          ...(cardHasTopMask ? { "--top-mask-url": `url(${cardTopMaskUrl(card.id)})` } : {}),
         } : {}),
       } as React.CSSProperties}
       onMouseMove={tilt.onMouseMove}
@@ -110,18 +111,29 @@ export const TarotCard = memo(function TarotCard({
                   loading="eager"
                   draggable={false}
                   aria-hidden="true"
+                  style={{ maskImage: `url(${cardMaskUrl(card.id)})`, WebkitMaskImage: `url(${cardMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
                 />
                 {rarityScore >= 5 && (
                   <>
-                    <img className="card-text-layer card-name-layer" src={imgSrc} alt="" draggable={false} aria-hidden="true" />
-                    {isMajor && <img className="card-text-layer card-top-layer" src={imgSrc} alt="" draggable={false} aria-hidden="true" />}
+                    <img
+                      className="card-text-layer card-name-layer"
+                      src={imgSrc} alt="" draggable={false} aria-hidden="true"
+                      style={{ maskImage: `url(${cardNameMaskUrl(card.id)})`, WebkitMaskImage: `url(${cardNameMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
+                    />
+                    {cardHasTopMask && (
+                      <img
+                        className="card-text-layer card-top-layer"
+                        src={imgSrc} alt="" draggable={false} aria-hidden="true"
+                        style={{ maskImage: `url(${cardTopMaskUrl(card.id)})`, WebkitMaskImage: `url(${cardTopMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
+                      />
+                    )}
                   </>
                 )}
               </>
             )}
             <div className="card-shine" />
             {hasSubjectMask && <div className="card-name-foil" aria-hidden="true" />}
-            {hasSubjectMask && isMajor && <div className="card-top-foil" aria-hidden="true" />}
+            {hasSubjectMask && cardHasTopMask && <div className="card-top-foil" aria-hidden="true" />}
             <div className="card-glare" />
             {isRadiant && <div className="card-radiant-border" aria-hidden="true" />}
           </div>

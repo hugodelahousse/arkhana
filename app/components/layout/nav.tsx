@@ -9,7 +9,7 @@ const TABS = [
   { to: "/settings", label: "Settings", Icon: Gear },
 ] as const;
 
-export function Nav({ userName, isAnonymous }: { userName: string; isAnonymous?: boolean }) {
+export function Nav({ userName: _userName, isAnonymous }: { userName: string; isAnonymous?: boolean }) {
   const location = useLocation();
 
   const isActive = (path: string) => {

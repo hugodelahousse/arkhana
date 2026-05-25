@@ -584,12 +584,6 @@
   display: block;
   z-index: 1;
   pointer-events: none;
-  mask-image: var(--mask-url, none);
-  mask-size: cover;
-  mask-mode: luminance;
-  -webkit-mask-image: var(--mask-url, none);
-  -webkit-mask-size: cover;
-  -webkit-mask-mode: luminance;
   filter: drop-shadow(0 2px 8px rgba(0,0,0,.45));
 }
 
@@ -604,20 +598,15 @@
   display: block;
   z-index: 1;
   pointer-events: none;
-  mask-size: cover;
-  mask-mode: luminance;
-  -webkit-mask-size: cover;
-  -webkit-mask-mode: luminance;
+  translate: 0 0 0.001px;
 }
 
 .card-name-layer {
-  mask-image: var(--name-mask-url, none);
-  -webkit-mask-image: var(--name-mask-url, none);
+  /* mask applied via inline style to avoid Safari var() resolution bug in preserve-3d */
 }
 
 .card-top-layer {
-  mask-image: var(--top-mask-url, none);
-  -webkit-mask-image: var(--top-mask-url, none);
+  /* mask applied via inline style to avoid Safari var() resolution bug in preserve-3d */
 }
 
 .card-scene[data-rarity="5"] .card-text-layer {
@@ -670,12 +659,11 @@
 .card-scene[data-rarity="3"] .card-shine,
 .card-scene[data-rarity="4"] .card-shine,
 .card-scene[data-rarity="5"] .card-shine {
-  mask-image: var(--mask-url, none);
-  mask-size: cover;
-  mask-mode: luminance;
   -webkit-mask-image: var(--mask-url, none);
   -webkit-mask-size: cover;
-  -webkit-mask-mode: luminance;
+  mask-image: var(--mask-url, none);
+  mask-size: cover;
+  mask-mode: alpha;
 }
 
 /* Parallax the shine with the subject for rarity 4+ */
@@ -722,21 +710,19 @@
 }
 
 .card-name-foil {
-  mask-image: var(--name-mask-url, none);
-  mask-size: cover;
-  mask-mode: luminance;
   -webkit-mask-image: var(--name-mask-url, none);
   -webkit-mask-size: cover;
-  -webkit-mask-mode: luminance;
+  mask-image: var(--name-mask-url, none);
+  mask-size: cover;
+  mask-mode: alpha;
 }
 
 .card-top-foil {
-  mask-image: var(--top-mask-url, none);
-  mask-size: cover;
-  mask-mode: luminance;
   -webkit-mask-image: var(--top-mask-url, none);
   -webkit-mask-size: cover;
-  -webkit-mask-mode: luminance;
+  mask-image: var(--top-mask-url, none);
+  mask-size: cover;
+  mask-mode: alpha;
 }
 
 /* Rarity 3 — Mystic: subtle text foil */

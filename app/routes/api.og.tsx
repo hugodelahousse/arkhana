@@ -449,7 +449,6 @@ function SpreadOG({
   const CARD_H = 480;
   const gap = 12;
   const cardW = Math.floor((PANEL_W - gap * (count + 1)) / count);
-  const cardTop = (630 - CARD_H) / 2;
 
   return (
     <div
@@ -618,7 +617,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     // cardIds, rarities, reversed are comma-separated; positions is comma-separated labels
     const cardIds = (url.searchParams.get("cardIds") ?? "").split(",").map(Number).filter((n) => !isNaN(n));
     const rarityList = (url.searchParams.get("rarities") ?? "").split(",").map(Number);
-    const reversedList = (url.searchParams.get("reversals") ?? "").split(",").map((v) => v === "true");
+    const _reversedList = (url.searchParams.get("reversals") ?? "").split(",").map((v) => v === "true");
     const positionLabels = (url.searchParams.get("positions") ?? "").split(",").filter(Boolean);
     const spreadName = url.searchParams.get("spreadName") ?? "Reading";
     const spreadSubtitle = url.searchParams.get("spreadSubtitle") ?? "";
