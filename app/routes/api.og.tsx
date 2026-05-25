@@ -596,7 +596,8 @@ function SpreadOG({
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const type = url.searchParams.get("type") ?? "app";
-  const cardId = parseInt(url.searchParams.get("cardId") ?? "0", 10);
+  const rawCardId = parseInt(url.searchParams.get("cardId") ?? "0", 10);
+  const cardId = Number.isNaN(rawCardId) || rawCardId < 0 || rawCardId > 77 ? 0 : rawCardId;
   const rarity = (parseInt(url.searchParams.get("rarity") ?? "1", 10) || 1) as Rarity;
   const isReversed = url.searchParams.get("reversed") === "true";
   const isRadiant = url.searchParams.get("radiant") === "true";
