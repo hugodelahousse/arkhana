@@ -615,7 +615,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     element = <CollectionOG username={username} discovered={discovered} total={78} />;
   } else if (type === "spread") {
     // cardIds, rarities, reversed are comma-separated; positions is comma-separated labels
-    const cardIds = (url.searchParams.get("cardIds") ?? "").split(",").map(Number).filter(Boolean);
+    const cardIds = (url.searchParams.get("cardIds") ?? "").split(",").map(Number).filter((n) => !isNaN(n));
     const rarityList = (url.searchParams.get("rarities") ?? "").split(",").map(Number);
     const reversedList = (url.searchParams.get("reversals") ?? "").split(",").map((v) => v === "true");
     const positionLabels = (url.searchParams.get("positions") ?? "").split(",").filter(Boolean);

@@ -468,14 +468,16 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       </h2>
                     </div>
                     <SpreadSummaryGrid cards={currentCards} positions={positions} />
-                    <div className="flex justify-center pt-2">
-                      <ShareButton
-                        title={`${spreadDef.name} — Arkhana`}
-                        url={spreadShareUrl!}
-                        text=""
-                        label="Share reading"
-                      />
-                    </div>
+                    {spreadShareUrl && (
+                      <div className="flex justify-center pt-2">
+                        <ShareButton
+                          title={`${spreadDef.name} — Arkhana`}
+                          url={spreadShareUrl}
+                          text=""
+                          label="Share reading"
+                        />
+                      </div>
+                    )}
                   </motion.div>
                 )}
 
@@ -504,14 +506,16 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       </p>
                     </div>
                     <SpreadSummaryGrid cards={currentCards} positions={positions} />
-                    <div className="flex justify-center pt-2">
-                      <ShareButton
-                        title={`${spreadDef.name} — Arkhana`}
-                        url={spreadShareUrl!}
-                        text=""
-                        label="Share reading"
-                      />
-                    </div>
+                    {spreadShareUrl && (
+                      <div className="flex justify-center pt-2">
+                        <ShareButton
+                          title={`${spreadDef.name} — Arkhana`}
+                          url={spreadShareUrl}
+                          text=""
+                          label="Share reading"
+                        />
+                      </div>
+                    )}
                   </motion.div>
                 )}
 
