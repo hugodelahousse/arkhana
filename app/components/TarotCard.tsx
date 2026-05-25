@@ -35,7 +35,7 @@ export const TarotCard = memo(function TarotCard({
   motionConfig,
 }: TarotCardProps) {
   const sceneRef = useRef<HTMLDivElement>(null);
-  const config = { ...DEFAULT_MOTION_CONFIG, ...motionConfig };
+  const config = { ...DEFAULT_MOTION_CONFIG, ...motionConfig, maxRotateYDeg: revealed ? undefined : 89 };
   const hold = useHoldReveal(!revealed ? onReveal : undefined, sceneRef);
   const tilt = useCardMotion(sceneRef, config, !revealed ? hold.cancel : undefined);
 

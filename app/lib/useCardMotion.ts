@@ -10,6 +10,7 @@ export interface CardMotionConfig {
   spinFriction: number;   // velocity decay per frame at 60 fps (0 = no friction, 1 = instant stop)
   springStiffness: number;
   springDamping: number;
+  maxRotateYDeg?: number; // when set, clamps rotateY to ±this value (prevents front face from showing)
 }
 
 export const DEFAULT_MOTION_CONFIG: CardMotionConfig = {
@@ -106,6 +107,14 @@ export function useCardMotion(
   // drops to a threshold, then spring-snap to the nearest front-facing angle.
   const startDeceleration = useCallback(() => {
     if (decelRafRef.current !== null) cancelAnimationFrame(decelRafRef.current);
+
+    // Clamped mode (unrevealed cards): spring back to 0 rather than spinning freely
+    if (cfgRef.current.maxRotateYDeg !== undefined) {
+      const { springStiffness: stiffness, springDamping: damping } = cfgRef.current;
+      snapAnimRef.current = animate(rotateY, 0, { type: "spring", stiffness, damping });
+      return;
+    }
+
     isDeceleratingRef.current = true;
 
     let lastTime = performance.now();
@@ -175,10 +184,16 @@ export function useCardMotion(
     const t = e.touches[0];
     touchStartRef.current = { x: t.clientX, y: t.clientY };
 
-    // Normalise and record base so gestures start from current visual position
-    const normalised = normalise360(rotateY.get());
-    rotateY.set(normalised);
-    baseRotYRef.current = normalised;
+    // Normalise and record base so gestures start from current visual position.
+    // In clamped mode (unrevealed cards) keep the signed value; for free-spin
+    // mode normalise to 0–360 so the spin accumulator stays in that range.
+    if (cfgRef.current.maxRotateYDeg !== undefined) {
+      baseRotYRef.current = rotateY.get();
+    } else {
+      const normalised = normalise360(rotateY.get());
+      rotateY.set(normalised);
+      baseRotYRef.current = normalised;
+    }
 
     if (ref.current) cardWidthRef.current = ref.current.getBoundingClientRect().width;
     lastXRef.current    = t.clientX;
@@ -206,11 +221,12 @@ export function useCardMotion(
     }
     if (!isDraggingRef.current) return;
 
-    const { touchHScale, touchVMax } = cfgRef.current;
+    const { touchHScale, touchVMax, maxRotateYDeg } = cfgRef.current;
     const degsPerPx = touchHScale / cardWidthRef.current;
 
-    // Horizontal: unclamped accumulation from gesture base
-    rotateY.set(baseRotYRef.current + dx * degsPerPx);
+    // Horizontal: accumulation from gesture base, clamped if maxRotateYDeg is set
+    const rawY = baseRotYRef.current + dx * degsPerPx;
+    rotateY.set(maxRotateYDeg !== undefined ? Math.max(-maxRotateYDeg, Math.min(maxRotateYDeg, rawY)) : rawY);
 
     // Vertical: clamped give
     const { height } = ref.current.getBoundingClientRect();
