@@ -74,23 +74,15 @@ export default function SharePull({ loaderData }: Route.ComponentProps) {
   const description = getCardDescription(card, rarity, pull.isReversed);
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
-      <header
-        className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b"
-        style={{ borderColor: "var(--color-border-default)", opacity: 0.8 }}
-      >
-        <Link
-          to="/"
-          className="text-lg sm:text-xl tracking-widest font-serif"
-          style={{ color: "var(--color-text-muted)" }}
-        >
+    <div className="min-h-screen bg-base">
+      <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border opacity-80">
+        <Link to="/" className="text-lg sm:text-xl tracking-widest font-serif text-primary">
           ARKHANA
         </Link>
         <div className="flex items-center gap-3 sm:gap-6 text-xs tracking-widest uppercase">
           <Link
             to="/auth/signup"
-            className="opacity-60 hover:opacity-100 transition-opacity"
-            style={{ color: "var(--color-text-primary)" }}
+            className="opacity-60 hover:opacity-100 transition-opacity text-secondary"
           >
             Sign up
           </Link>
@@ -99,10 +91,7 @@ export default function SharePull({ loaderData }: Route.ComponentProps) {
 
       <main className="max-w-2xl mx-auto px-6 py-16 space-y-10 text-center">
         {handle && (
-          <p
-            className="text-xs tracking-widest uppercase opacity-40"
-            style={{ color: "var(--color-text-primary)" }}
-          >
+          <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
             @{handle} drew
           </p>
         )}
@@ -121,15 +110,9 @@ export default function SharePull({ loaderData }: Route.ComponentProps) {
         <div className="space-y-4">
           <p
             className="text-xs tracking-widest uppercase"
-            style={{
-              color: `var(--color-rarity-${rarityLabel?.toLowerCase()})`,
-            }}
+            style={{ color: `var(--color-rarity-${rarityLabel?.toLowerCase()})` }}
             aria-label={
-              [
-                rarityLabel,
-                pull.isRadiant ? "Radiant" : null,
-                pull.isReversed ? "Reversed" : null,
-              ]
+              [rarityLabel, pull.isRadiant ? "Radiant" : null, pull.isReversed ? "Reversed" : null]
                 .filter(Boolean)
                 .join(", ") || undefined
             }
@@ -140,29 +123,14 @@ export default function SharePull({ loaderData }: Route.ComponentProps) {
               {pull.isReversed && " · Reversed"}
             </span>
           </p>
-          <h1
-            className="text-4xl font-light"
-            style={{
-              color: "var(--color-text-muted)",
-              fontFamily: "var(--font-serif)",
-            }}
-          >
+          <h1 className="text-4xl font-light text-primary font-serif">
             {card.name}
           </h1>
           <div
-            className="w-8 h-px mx-auto"
-            style={{
-              background: `var(--color-rarity-${rarityLabel?.toLowerCase()})`,
-              opacity: 0.5,
-            }}
+            className="w-8 h-px mx-auto opacity-50"
+            style={{ background: `var(--color-rarity-${rarityLabel?.toLowerCase()})` }}
           />
-          <p
-            className="text-sm leading-relaxed max-w-xs mx-auto opacity-80"
-            style={{
-              color: "var(--color-text-primary)",
-              fontFamily: "var(--font-serif)",
-            }}
-          >
+          <p className="text-sm leading-relaxed max-w-xs mx-auto opacity-80 text-secondary font-serif">
             {description}
           </p>
         </div>
@@ -176,33 +144,19 @@ export default function SharePull({ loaderData }: Route.ComponentProps) {
           />
           <Link
             to={`/collection/${cardSlug(card)}`}
-            className="text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity"
-            style={{ color: "var(--color-text-primary)" }}
+            className="text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity text-secondary"
           >
             View card →
           </Link>
         </div>
 
-        <div
-          className="py-8 space-y-4 border-t"
-          style={{ borderColor: "var(--color-border-default)" }}
-        >
-          <p
-            className="text-sm opacity-50"
-            style={{
-              color: "var(--color-text-primary)",
-              fontFamily: "var(--font-serif)",
-            }}
-          >
+        <div className="py-8 space-y-4 border-t border-border">
+          <p className="text-sm opacity-50 text-secondary font-serif">
             The cards await your question.
           </p>
           <Link
             to="/auth/signup"
-            className="inline-block px-6 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
-            style={{
-              borderColor: "var(--color-text-primary)",
-              color: "var(--color-text-primary)",
-            }}
+            className="inline-block px-6 py-3 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80"
           >
             Start your journey →
           </Link>

@@ -61,46 +61,25 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
   const success = actionData && "success" in actionData ? actionData.success : false;
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
+    <div className="min-h-screen bg-base">
       <Nav userName={loaderData.user.name} isAnonymous={false} />
       <main className="max-w-lg mx-auto px-6 py-16 space-y-10">
         <div className="space-y-2">
-          <h1
-            className="text-2xl font-light tracking-wide"
-            style={{
-              color: "var(--color-text-muted)",
-              fontFamily: "var(--font-serif)",
-            }}
-          >
+          <h1 className="text-2xl font-light tracking-wide text-primary font-serif">
             Settings
           </h1>
-          <p
-            className="text-xs tracking-widest uppercase opacity-40"
-            style={{ color: "var(--color-text-primary)" }}
-          >
+          <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
             {loaderData.user.email}
           </p>
         </div>
 
-        <section
-          className="p-6 space-y-6 border"
-          style={{
-            borderColor: "var(--color-border-default)",
-            background: "var(--color-bg-surface)",
-          }}
-        >
-          <h2
-            className="text-xs tracking-widest uppercase opacity-50"
-            style={{ color: "var(--color-text-primary)" }}
-          >
+        <section className="p-6 space-y-6 border border-border bg-surface">
+          <h2 className="text-xs tracking-widest uppercase opacity-50 text-secondary">
             Username
           </h2>
-          <p
-            className="text-xs opacity-50 leading-relaxed"
-            style={{ color: "var(--color-text-primary)" }}
-          >
+          <p className="text-xs opacity-50 leading-relaxed text-secondary">
             Your username appears on your public profile at{" "}
-            <span style={{ color: "var(--color-text-muted)" }}>
+            <span className="text-primary">
               arkhana.app/u/
               {loaderData.username || "username"}
             </span>
@@ -108,20 +87,12 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
           </p>
           <Form method="post" className="space-y-3">
             {error && (
-              <p
-                className="text-sm"
-                role="alert"
-                style={{ color: "var(--color-rarity-arcane)" }}
-              >
+              <p className="text-sm text-rarity-arcane" role="alert">
                 {error}
               </p>
             )}
             {success && (
-              <p
-                className="text-sm"
-                role="status"
-                style={{ color: "var(--color-rarity-wandering)" }}
-              >
+              <p className="text-sm text-rarity-wandering" role="status">
                 Username updated.
               </p>
             )}
@@ -139,20 +110,12 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                 pattern="[a-zA-Z0-9_-]+"
                 placeholder="your-username"
                 autoComplete="username"
-                className="flex-1 bg-transparent border px-4 py-2 text-base sm:text-sm placeholder:opacity-40 focus:outline-none focus-visible:ring-1 transition-colors"
-                style={{
-                  borderColor: "var(--color-border-default)",
-                  color: "var(--color-text-primary)",
-                }}
+                className="flex-1 bg-transparent border border-border px-4 py-2 text-base sm:text-sm placeholder:opacity-40 focus:outline-none focus-visible:ring-1 transition-colors text-secondary"
               />
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-4 py-2 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80 disabled:opacity-40"
-                style={{
-                  borderColor: "var(--color-text-primary)",
-                  color: "var(--color-text-primary)",
-                }}
+                className="px-4 py-2 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80 disabled:opacity-40"
               >
                 {isSubmitting ? "…" : "Save"}
               </button>

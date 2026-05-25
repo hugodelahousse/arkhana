@@ -176,7 +176,7 @@ export default function SpreadLab() {
         <div className="space-y-1">
           <h1
             className="text-2xl font-light tracking-widest"
-            style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-serif)" }}
+            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
           >
             Spread Lab
           </h1>
@@ -196,7 +196,7 @@ export default function SpreadLab() {
           <div className="flex flex-wrap gap-5 items-end">
             <label
               className="flex flex-col gap-1 text-[0.65rem] tracking-[0.12em] uppercase"
-              style={{ color: "var(--color-text-muted)" }}
+              style={{ color: "var(--color-text-primary)" }}
             >
               Spread type
               <select
@@ -253,7 +253,7 @@ export default function SpreadLab() {
                   </span>
                   <label
                     className="flex flex-col gap-1 text-[0.65rem] tracking-[0.12em] uppercase"
-                    style={{ color: "var(--color-text-muted)" }}
+                    style={{ color: "var(--color-text-primary)" }}
                   >
                     Card
                     <select
@@ -276,7 +276,7 @@ export default function SpreadLab() {
                   </label>
                   <label
                     className="flex flex-col gap-1 text-[0.65rem] tracking-[0.12em] uppercase"
-                    style={{ color: "var(--color-text-muted)" }}
+                    style={{ color: "var(--color-text-primary)" }}
                   >
                     Rarity
                     <select
@@ -297,7 +297,7 @@ export default function SpreadLab() {
                   </label>
                   <label
                     className="flex flex-row items-center gap-2 text-[0.65rem] tracking-[0.12em] uppercase cursor-pointer"
-                    style={{ color: "var(--color-text-muted)" }}
+                    style={{ color: "var(--color-text-primary)" }}
                   >
                     <input
                       type="checkbox"
@@ -310,7 +310,7 @@ export default function SpreadLab() {
                   </label>
                   <label
                     className="flex flex-row items-center gap-2 text-[0.65rem] tracking-[0.12em] uppercase cursor-pointer"
-                    style={{ color: "var(--color-text-muted)" }}
+                    style={{ color: "var(--color-text-primary)" }}
                   >
                     <input
                       type="checkbox"

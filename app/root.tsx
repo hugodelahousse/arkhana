@@ -62,35 +62,22 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main
-      className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
-      style={{ background: "var(--color-bg-base)" }}
-    >
+    <main className="min-h-screen bg-base flex flex-col items-center justify-center px-6 text-center">
       <div className="max-w-md space-y-6">
-        <p
-          className="text-6xl font-light tracking-widest"
-          style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-serif)" }}
-        >
+        <p className="text-6xl font-light tracking-widest text-primary font-serif">
           {message}
         </p>
-        <p
-          className="text-sm tracking-wide opacity-60"
-          style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-        >
+        <p className="text-sm tracking-wide opacity-60 text-secondary font-serif">
           {details}
         </p>
         <a
           href="/"
-          className="inline-block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-4"
-          style={{ color: "var(--color-text-primary)" }}
+          className="inline-block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-4 text-secondary"
         >
           ← Return home
         </a>
         {stack && (
-          <pre
-            className="w-full p-4 overflow-x-auto text-left text-xs mt-8 opacity-50"
-            style={{ background: "var(--color-bg-surface)", color: "var(--color-text-primary)" }}
-          >
+          <pre className="w-full p-4 overflow-x-auto text-left text-xs mt-8 opacity-50 bg-surface text-secondary">
             <code>{stack}</code>
           </pre>
         )}

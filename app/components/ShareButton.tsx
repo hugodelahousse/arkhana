@@ -42,7 +42,6 @@ export function ShareButton({
       type="button"
       onClick={handleShare}
       className={buttonClass(size)}
-      style={{ borderColor: "var(--color-text-primary)", color: "var(--color-text-primary)" }}
       aria-label={copied ? "Link copied!" : label}
     >
       {copied ? "Copied!" : label}

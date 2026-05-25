@@ -17,7 +17,6 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
   const spreadDef = getSpreadType(params.type);
   if (!spreadDef) throw data("Spread not found", { status: 404 });
 
-  // Validate date param
   const date = DateTime.fromISO(params.date, { zone: "utc" });
   if (!date.isValid) throw data("Invalid date", { status: 404 });
   const spreadDate = date.toISODate()!;
@@ -68,7 +67,7 @@ export default function SpreadDateRoute({ loaderData, params }: Route.ComponentP
 
   return (
     <DirectionalTransition>
-      <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
+      <div className="min-h-screen bg-base">
         <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-lg mx-auto px-6 py-12">
           <motion.div
@@ -78,23 +77,14 @@ export default function SpreadDateRoute({ loaderData, params }: Route.ComponentP
             className="space-y-10"
           >
             <div className="text-center space-y-3">
-              <p
-                className="text-xs tracking-widest uppercase opacity-40"
-                style={{ color: "var(--color-text-primary)" }}
-              >
+              <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
                 {isToday ? subtitle : formattedDate}
               </p>
-              <h1
-                className="text-2xl font-light tracking-wide"
-                style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-              >
+              <h1 className="text-2xl font-light tracking-wide text-secondary font-serif">
                 {name}
               </h1>
               {!isToday && (
-                <p
-                  className="text-xs opacity-30 tracking-widest uppercase"
-                  style={{ color: "var(--color-text-primary)" }}
-                >
+                <p className="text-xs opacity-30 tracking-widest uppercase text-secondary">
                   {subtitle}
                 </p>
               )}
@@ -111,8 +101,7 @@ export default function SpreadDateRoute({ loaderData, params }: Route.ComponentP
               />
               <Link
                 to="/history"
-                className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity"
-                style={{ color: "var(--color-text-primary)" }}
+                className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity text-secondary"
               >
                 ← All readings
               </Link>

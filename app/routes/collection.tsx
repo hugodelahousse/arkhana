@@ -38,7 +38,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta({ data }: Route.MetaArgs) {
-  // data may be undefined if loader redirected
   const d = data as { user: { username?: string | null } | null; bestByCard: Record<number, unknown>; origin: string } | undefined;
   const discovered = d ? Object.keys(d.bestByCard ?? {}).length : 0;
   const username = d?.user?.username;
@@ -76,21 +75,15 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
 
   return (
     <DirectionalTransition>
-      <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
+      <div className="min-h-screen bg-base">
         <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-4xl mx-auto px-6 py-12 space-y-12">
 
           <div className="text-center space-y-3">
-            <h1
-              className="text-2xl font-light tracking-widest"
-              style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-serif)" }}
-            >
+            <h1 className="text-2xl font-light tracking-widest text-primary font-serif">
               Collection
             </h1>
-            <p
-              className="text-xs tracking-widest uppercase opacity-40 whitespace-nowrap"
-              style={{ color: "var(--color-text-primary)" }}
-            >
+            <p className="text-xs tracking-widest uppercase opacity-40 whitespace-nowrap text-secondary">
               {discoveredCount}/78 discovered
             </p>
             <Button size="sm" onClick={() => setHideUndiscovered((v) => !v)}>
@@ -102,17 +95,13 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
           <nav className="flex flex-wrap justify-center gap-6 sm:gap-10">
             {(!hideUndiscovered || majorDiscovered > 0) && (
               <a href="#major-arcana" className="flex flex-col items-center gap-2 group text-center">
-                <span
-                  className="text-3xl opacity-50 group-hover:opacity-90 transition-opacity"
-                  style={{ fontFamily: "var(--font-serif)" }}
-                >
+                <span className="text-3xl opacity-50 group-hover:opacity-90 transition-opacity font-serif">
                   ✦
                 </span>
-                <p className="text-xs tracking-widest uppercase opacity-40 group-hover:opacity-70 transition-opacity"
-                  style={{ color: "var(--color-text-primary)" }}>
+                <p className="text-xs tracking-widest uppercase opacity-40 group-hover:opacity-70 transition-opacity text-secondary">
                   Major Arcana
                 </p>
-                <p className="text-xs opacity-30" style={{ color: "var(--color-text-primary)" }}>
+                <p className="text-xs opacity-30 text-secondary">
                   {majorDiscovered}/{MAJOR_ARCANA.length}
                 </p>
               </a>
@@ -122,19 +111,13 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
               if (hideUndiscovered && discovered === 0) return null;
               return (
                 <a key={suit} href={`#${suit}`} className="flex flex-col items-center gap-2 group text-center">
-                  <span
-                    className="text-3xl opacity-50 group-hover:opacity-90 transition-opacity"
-                    style={{ fontFamily: "var(--font-serif)" }}
-                  >
+                  <span className="text-3xl opacity-50 group-hover:opacity-90 transition-opacity font-serif">
                     {SUIT_ICONS[suit]}
                   </span>
-                  <p
-                    className="text-xs tracking-widest uppercase opacity-40 capitalize group-hover:opacity-70 transition-opacity"
-                    style={{ color: "var(--color-text-primary)" }}
-                  >
+                  <p className="text-xs tracking-widest uppercase opacity-40 capitalize group-hover:opacity-70 transition-opacity text-secondary">
                     {suit}
                   </p>
-                  <p className="text-xs opacity-30" style={{ color: "var(--color-text-primary)" }}>
+                  <p className="text-xs opacity-30 text-secondary">
                     {discovered}/{cards.length}
                   </p>
                 </a>
@@ -144,16 +127,14 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
 
           {(!hideUndiscovered || majorDiscovered > 0) && (
             <section id="major-arcana" className="space-y-4">
-              <h2
-                className="text-xs tracking-widest uppercase opacity-50 flex items-baseline gap-2"
-                style={{ color: "var(--color-text-primary)" }}
-              >
+              <h2 className="text-xs tracking-widest uppercase opacity-50 flex items-baseline gap-2 text-secondary">
                 Major Arcana
                 <span className="opacity-60">
                   {majorDiscovered}/{MAJOR_ARCANA.length}
                 </span>
               </h2>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+              {/* 22 = 2 × 11 — exactly 2 rows on desktop */}
+              <div className="grid grid-cols-4 sm:grid-cols-7 md:grid-cols-11 gap-4">
                 {MAJOR_ARCANA.filter((c) => !hideUndiscovered || bestByCard[c.id]).map((card) => (
                   <CardTile key={card.id} card={card} best={bestByCard[card.id]} />
                 ))}
@@ -165,10 +146,7 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
             const suitDiscovered = cards.filter((c) => bestByCard[c.id]).length;
             return (
               <section key={suit} id={suit} className="space-y-4">
-                <h2
-                  className="text-xs tracking-widest uppercase opacity-50 capitalize flex items-baseline gap-2"
-                  style={{ color: "var(--color-text-primary)" }}
-                >
+                <h2 className="text-xs tracking-widest uppercase opacity-50 capitalize flex items-baseline gap-2 text-secondary">
                   {suit}
                   <span className="opacity-60">
                     {suitDiscovered}/{cards.length}

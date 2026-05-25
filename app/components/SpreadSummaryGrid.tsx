@@ -25,8 +25,7 @@ function CardDetailOverlay({
   return createPortal(
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <motion.div
-        className="fixed inset-0"
-        style={{ background: "rgba(0,0,0,0.85)" }}
+        className="fixed inset-0 bg-black/85"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -34,9 +33,8 @@ function CardDetailOverlay({
         onClick={onClose}
       />
       <div
-        className="relative z-10 flex flex-col items-center justify-center px-6"
+        className="relative z-10 flex flex-col items-center justify-center px-6 min-h-dvh"
         style={{
-          minHeight: "100dvh",
           paddingTop: "max(2.5rem, env(safe-area-inset-top))",
           paddingBottom: "max(2.5rem, env(safe-area-inset-bottom))",
         }}
@@ -51,8 +49,7 @@ function CardDetailOverlay({
           animate={{ opacity: 0.4 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3, delay: 0.15 }}
-          className="text-xs tracking-widest uppercase"
-          style={{ color: "var(--color-text-primary)" }}
+          className="text-xs tracking-widest uppercase text-secondary"
         >
           {posLabel}
         </motion.p>
@@ -82,19 +79,13 @@ function CardDetailOverlay({
             {RARITY_LABELS[card.rarityScore]}
             {card.isRadiant && " ✦"}
           </p>
-          <p
-            className="text-lg font-light"
-            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-          >
+          <p className="text-lg font-light text-secondary font-serif">
             {card.card.name}
             {card.isReversed && (
               <span className="ml-2 text-sm opacity-50">(reversed)</span>
             )}
           </p>
-          <p
-            className="text-sm leading-relaxed opacity-70 max-w-[260px]"
-            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-          >
+          <p className="text-sm leading-relaxed opacity-70 max-w-[260px] text-secondary font-serif">
             {getCardDescription(card.card, card.rarityScore, card.isReversed)}
           </p>
         </motion.div>
@@ -105,8 +96,7 @@ function CardDetailOverlay({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
           onClick={onClose}
-          className="mt-2 text-xs tracking-widest uppercase hover:opacity-70 transition-opacity"
-          style={{ color: "var(--color-text-primary)" }}
+          className="mt-2 text-xs tracking-widest uppercase hover:opacity-70 transition-opacity text-secondary"
         >
           close
         </motion.button>
@@ -129,10 +119,7 @@ function SpreadCardCell({
   const rarityLabel = RARITY_LABELS[card.rarityScore]?.toLowerCase();
   return (
     <div className="flex flex-col items-center gap-3">
-      <p
-        className="text-xs tracking-widest uppercase opacity-40"
-        style={{ color: "var(--color-text-primary)" }}
-      >
+      <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
         {posLabel}
       </p>
       <motion.div
@@ -158,10 +145,7 @@ function SpreadCardCell({
           {RARITY_LABELS[card.rarityScore]}
           {card.isRadiant && " ✦"}
         </p>
-        <p
-          className="text-sm font-light"
-          style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-        >
+        <p className="text-sm font-light text-secondary font-serif">
           {card.card.name}
           {card.isReversed && (
             <span className="ml-1 text-xs opacity-50">(reversed)</span>

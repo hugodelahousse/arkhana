@@ -43,10 +43,10 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
   const error = actionData && "error" in actionData ? actionData.error : null;
 
   return (
-    <main className="min-h-[100dvh] flex flex-col items-center justify-center px-6 py-8">
+    <main className="min-h-dvh flex flex-col items-center justify-center px-6 py-8">
       <div className="max-w-sm w-full space-y-8">
         <div className="text-center space-y-2">
-          <Link to="/" className="text-2xl tracking-widest text-muted font-serif block">
+          <Link to="/" className="text-2xl tracking-widest text-primary font-serif block">
             ARKHANA
           </Link>
           <p className="text-xs tracking-widest uppercase opacity-60">
@@ -66,8 +66,7 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
             required
             placeholder="your@email.com"
             autoComplete="email"
-            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
-            style={{ color: "var(--color-text-primary)" }}
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-secondary"
           />
           <label htmlFor="password" className="sr-only">Password</label>
           <input
@@ -77,13 +76,12 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
             required
             placeholder="Password"
             autoComplete="current-password"
-            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
-            style={{ color: "var(--color-text-primary)" }}
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-secondary"
           />
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-muted hover:opacity-80 disabled:opacity-40 transition-opacity"
+            className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-primary hover:opacity-80 disabled:opacity-40 transition-opacity"
           >
             {isSubmitting ? "…" : "Enter"}
           </button>

@@ -16,6 +16,7 @@ import { Link, useNavigate } from "react-router";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
 import { getOrigin } from "../lib/utils";
+import { DateTime } from "luxon";
 
 export async function loader({ context, params, request }: Route.LoaderArgs) {
   const card = CARD_BY_SLUG[params.slug];
@@ -71,25 +72,20 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
 
   return (
     <DirectionalTransition>
-      <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
+      <div className="min-h-screen bg-base">
         {user ? (
           <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         ) : (
-          <header
-            className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b"
-            style={{ borderColor: "var(--color-border-default)", opacity: 0.8 }}
-          >
+          <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border opacity-80">
             <Link
               to="/"
-              className="text-lg sm:text-xl tracking-widest font-serif"
-              style={{ color: "var(--color-text-muted)" }}
+              className="text-lg sm:text-xl tracking-widest font-serif text-primary"
             >
               ARKHANA
             </Link>
             <Link
               to="/auth/signup"
-              className="text-xs tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity"
-              style={{ color: "var(--color-text-primary)" }}
+              className="text-xs tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity text-secondary"
             >
               Sign up
             </Link>
@@ -100,26 +96,16 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
             <a
               href={user ? "/collection" : "/"}
               onClick={goBack}
-              className="inline-block text-xs tracking-widest uppercase opacity-30 hover:opacity-60 transition-opacity mb-4"
-              style={{ color: "var(--color-text-primary)" }}
+              className="inline-block text-xs tracking-widest uppercase opacity-30 hover:opacity-60 transition-opacity mb-4 text-secondary"
             >
               ← {user ? "Collection" : "Home"}
             </a>
-            <p
-              className="text-xs tracking-widest uppercase opacity-50"
-              style={{ color: "var(--color-text-primary)" }}
-            >
+            <p className="text-xs tracking-widest uppercase opacity-50 text-secondary">
               {card.arcana === "major"
                 ? "Major Arcana"
                 : `${card.suit} · Minor Arcana`}
             </p>
-            <h1
-              className="text-4xl font-light"
-              style={{
-                color: "var(--color-text-muted)",
-                fontFamily: "var(--font-serif)",
-              }}
-            >
+            <h1 className="text-4xl font-light text-primary font-serif">
               {card.name}
             </h1>
           </div>
@@ -138,7 +124,6 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
             </ViewTransition>
           </div>
 
-          {/* Share button */}
           <div className="flex justify-center">
             <ShareButton
               title={`${card.name} — Arkhana`}
@@ -148,14 +133,10 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
             />
           </div>
 
-          {/* Personal pull history — only for authenticated users who have pulled this card */}
           {user && history.length > 0 ? (
             <section className="space-y-6">
-              <h2
-                className="text-xs tracking-widest uppercase opacity-50"
-                style={{ color: "var(--color-text-primary)" }}
-              >
-                Your pulls
+              <h2 className="text-xs tracking-widest uppercase opacity-50 text-secondary">
+                Your pulls ({history.length})
               </h2>
               <div className="space-y-4">
                 {[...history].reverse().map((pull) => {
@@ -168,15 +149,15 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
                     pull.rarityScore as Rarity,
                     pull.isReversed,
                   );
+                  const formattedDate = DateTime.fromISO(pull.pullDate, { zone: "utc" }).toFormat("LLLL d, yyyy");
                   return (
                     <button
                       key={pull.id}
                       type="button"
                       onClick={() => setActivePull(pull.id)}
-                      className="w-full text-left p-6 border space-y-3 transition-opacity"
+                      className="w-full text-left p-6 border space-y-3 transition-opacity bg-surface"
                       style={{
                         borderColor: `var(--color-rarity-${rarityLabel})`,
-                        background: "var(--color-bg-surface)",
                         opacity: isActive ? 1 : 0.5,
                       }}
                     >
@@ -200,21 +181,11 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
                             {pull.isReversed && " · Reversed"}
                           </span>
                         </span>
-                        <span
-                          className="text-xs opacity-40"
-                          style={{ color: "var(--color-text-primary)" }}
-                        >
-                          {pull.pullDate}
+                        <span className="text-xs opacity-40 text-secondary">
+                          {formattedDate}
                         </span>
                       </div>
-                      <p
-                        className="text-sm leading-relaxed"
-                        style={{
-                          color: "var(--color-text-primary)",
-                          fontFamily: "var(--font-serif)",
-                          opacity: 0.85,
-                        }}
-                      >
+                      <p className="text-sm leading-relaxed opacity-85 text-secondary font-serif">
                         {description}
                       </p>
                     </button>
@@ -223,53 +194,25 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
               </div>
             </section>
           ) : user ? (
-            /* Auth'd but hasn't drawn this card yet */
-            <section
-              className="p-6 text-center space-y-3 border"
-              style={{
-                borderColor: "var(--color-border-default)",
-                background: "var(--color-bg-surface)",
-              }}
-            >
-              <p
-                className="text-sm opacity-50"
-                style={{
-                  color: "var(--color-text-primary)",
-                  fontFamily: "var(--font-serif)",
-                }}
-              >
+            <section className="p-6 text-center space-y-3 border border-border bg-surface">
+              <p className="text-sm opacity-50 text-secondary font-serif">
                 You haven't drawn this card yet.
               </p>
               <Link
                 to="/"
-                className="text-xs tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity"
-                style={{ color: "var(--color-text-primary)" }}
+                className="text-xs tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity text-secondary"
               >
                 Pull today's card →
               </Link>
             </section>
           ) : (
-            /* Public view — teaser only, no descriptions */
-            <div
-              className="text-center pt-4 space-y-4 border-t"
-              style={{ borderColor: "var(--color-border-default)" }}
-            >
-              <p
-                className="text-sm opacity-50"
-                style={{
-                  color: "var(--color-text-primary)",
-                  fontFamily: "var(--font-serif)",
-                }}
-              >
+            <div className="text-center pt-4 space-y-4 border-t border-border">
+              <p className="text-sm opacity-50 text-secondary font-serif">
                 Pull your own card to reveal its meaning.
               </p>
               <Link
                 to="/"
-                className="inline-block px-6 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
-                style={{
-                  borderColor: "var(--color-text-primary)",
-                  color: "var(--color-text-primary)",
-                }}
+                className="inline-block px-6 py-3 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80"
               >
                 Draw today's card →
               </Link>

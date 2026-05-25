@@ -800,7 +800,7 @@
   font-size: .65rem;
   letter-spacing: .15em;
   text-transform: uppercase;
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary);
   opacity: .35;
   pointer-events: none;
   animation: hint-pulse 2s ease-in-out infinite;

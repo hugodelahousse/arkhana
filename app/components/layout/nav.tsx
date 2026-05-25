@@ -5,12 +5,12 @@ export function Nav({ userName, isAnonymous }: { userName: string; isAnonymous?:
   return (
     <>
       <nav
-        className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b"
-        style={{ viewTransitionName: "site-nav", borderColor: "var(--color-border-default)", opacity: 0.8 } as React.CSSProperties}
+        className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border opacity-80"
+        style={{ viewTransitionName: "site-nav" } as React.CSSProperties}
       >
         <Link
           to="/"
-          className="text-lg sm:text-xl tracking-widest text-muted font-serif"
+          className="text-lg sm:text-xl tracking-widest text-primary font-serif"
         >
           ARKHANA
         </Link>
@@ -48,7 +48,7 @@ export function Nav({ userName, isAnonymous }: { userName: string; isAnonymous?:
                   aria-label="Sign out"
                   className="opacity-60 hover:opacity-100 transition-opacity"
                 >
-                  Leave
+                  Sign out
                 </button>
               </Form>
             </>
@@ -56,11 +56,8 @@ export function Nav({ userName, isAnonymous }: { userName: string; isAnonymous?:
         </div>
       </nav>
       {isAnonymous && (
-        <div
-          className="flex items-center justify-between gap-4 px-4 sm:px-6 py-2 border-b text-xs tracking-widest"
-          style={{ borderColor: "var(--color-border-default)", background: "var(--color-bg-surface)" }}
-        >
-          <p className="uppercase opacity-40">Your reading is ephemeral</p>
+        <div className="flex items-center justify-between gap-4 px-4 sm:px-6 py-2 border-b border-border bg-surface text-xs tracking-widest">
+          <p className="uppercase opacity-40">Your reading is ephemeral — create an account to save it</p>
           <div className="flex items-center gap-4 shrink-0">
             <Link to="/auth/signup" className={buttonClass("sm")}>
               Create account
