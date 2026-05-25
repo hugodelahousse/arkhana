@@ -2,6 +2,7 @@ import { clientsClaim } from "workbox-core";
 import {
   precacheAndRoute,
   cleanupOutdatedCaches,
+  matchPrecache,
 } from "workbox-precaching";
 import { registerRoute, setCatchHandler } from "workbox-routing";
 import {
@@ -59,7 +60,7 @@ registerRoute(
 // Serve offline fallback for any navigation that fails both network and cache
 setCatchHandler(async ({ request }) => {
   if (request.destination === "document") {
-    const cached = await caches.match("/offline.html");
+    const cached = await matchPrecache("/offline.html");
     return cached ?? Response.error();
   }
   return Response.error();
