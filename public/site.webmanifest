@@ -2,8 +2,11 @@
   "name": "Arkhana",
   "short_name": "Arkhana",
   "description": "Daily Tarot · One card. Every day.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#0a0a0f",
   "theme_color": "#0a0a0f",
   "icons": [
