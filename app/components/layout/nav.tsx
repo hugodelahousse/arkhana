@@ -1,11 +1,12 @@
 import { Link, Form, useLocation } from "react-router";
-import { Cards, ClockCounterClockwise, GridFour, Gear } from "@phosphor-icons/react";
+import { Cards, ClockCounterClockwise, GridFour, Gear, Moon } from "@phosphor-icons/react";
 import { buttonClass } from "../Button";
 
 const TABS = [
   { to: "/", label: "Today", Icon: Cards },
-  { to: "/history", label: "History", Icon: ClockCounterClockwise },
+  { to: "/streak", label: "Moon", Icon: Moon },
   { to: "/collection", label: "Cards", Icon: GridFour },
+  { to: "/history", label: "History", Icon: ClockCounterClockwise },
   { to: "/settings", label: "Settings", Icon: Gear },
 ] as const;
 
@@ -33,6 +34,12 @@ export function Nav({ userName: _userName, isAnonymous }: { userName: string; is
             </Link>
           ) : (
             <>
+              <Link
+                to="/streak"
+                className="hidden sm:inline opacity-60 hover:opacity-100 transition-opacity"
+              >
+                Moon Cycle
+              </Link>
               <Link
                 to="/history"
                 className="hidden sm:inline opacity-60 hover:opacity-100 transition-opacity"
@@ -97,8 +104,8 @@ export function Nav({ userName: _userName, isAnonymous }: { userName: string; is
                   isActive(to) ? "opacity-100 text-primary" : "opacity-30"
                 }`}
               >
-                <Icon weight="light" size={22} aria-hidden />
-                <span className="text-[9px] tracking-widest uppercase">{label}</span>
+                <Icon weight="light" size={20} aria-hidden />
+                <span className="text-[8px] tracking-widest uppercase">{label}</span>
               </Link>
             ))}
           </div>

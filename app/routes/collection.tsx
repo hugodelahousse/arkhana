@@ -188,15 +188,40 @@ const CardTile = memo(function CardTile({
 
   if (!discovered) {
     return (
-      <div className="opacity-30">
-        <TarotCard
-          card={card}
-          rarityScore={1}
-          isReversed={false}
-          isRadiant={false}
-          revealed={false}
-          size="sm"
-        />
+      <div
+        style={{
+          width: "100%",
+          aspectRatio: "350 / 600",
+          background: "var(--color-bg-elevated)",
+          border: "1px solid var(--color-border-default)",
+          borderRadius: "6px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          padding: "0.4rem",
+          opacity: 0.35,
+        }}
+        aria-label={`${card.name} — not yet discovered`}
+      >
+        <span
+          style={{
+            fontSize: "0.5rem",
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: "var(--color-text-secondary)",
+            opacity: 0.4,
+            textAlign: "center",
+            lineHeight: 1.2,
+            overflow: "hidden",
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+          }}
+          aria-hidden="true"
+        >
+          {card.name}
+        </span>
       </div>
     );
   }

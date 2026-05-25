@@ -12,6 +12,7 @@ export default [
   route("api/og.png", "routes/api.og.tsx"),
   route("spread/:type/:date", "routes/spread.$type.$date.tsx"),
   route("spread/:type", "routes/spread.$type.tsx"),
+  route("streak", "routes/streak.tsx"),
   route("history", "routes/history.tsx"),
   route("auth/signin", "routes/auth/signin.tsx"),
   route("auth/signup", "routes/auth/signup.tsx"),
