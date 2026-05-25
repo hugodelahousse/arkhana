@@ -659,9 +659,11 @@
 .card-scene[data-rarity="3"] .card-shine,
 .card-scene[data-rarity="4"] .card-shine,
 .card-scene[data-rarity="5"] .card-shine {
+  -webkit-mask-image: var(--mask-url, none);
+  -webkit-mask-size: cover;
   mask-image: var(--mask-url, none);
   mask-size: cover;
-  mask-mode: luminance;
+  mask-mode: alpha;
 }
 
 /* Parallax the shine with the subject for rarity 4+ */
@@ -708,15 +710,19 @@
 }
 
 .card-name-foil {
+  -webkit-mask-image: var(--name-mask-url, none);
+  -webkit-mask-size: cover;
   mask-image: var(--name-mask-url, none);
   mask-size: cover;
-  mask-mode: luminance;
+  mask-mode: alpha;
 }
 
 .card-top-foil {
+  -webkit-mask-image: var(--top-mask-url, none);
+  -webkit-mask-size: cover;
   mask-image: var(--top-mask-url, none);
   mask-size: cover;
-  mask-mode: luminance;
+  mask-mode: alpha;
 }
 
 /* Rarity 3 — Mystic: subtle text foil */

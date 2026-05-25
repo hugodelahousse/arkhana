@@ -111,20 +111,20 @@ export const TarotCard = memo(function TarotCard({
                   loading="eager"
                   draggable={false}
                   aria-hidden="true"
-                  style={{ maskImage: `url(${cardMaskUrl(card.id)})`, maskSize: "cover", maskMode: "luminance" } as React.CSSProperties}
+                  style={{ maskImage: `url(${cardMaskUrl(card.id)})`, WebkitMaskImage: `url(${cardMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
                 />
                 {rarityScore >= 5 && (
                   <>
                     <img
                       className="card-text-layer card-name-layer"
                       src={imgSrc} alt="" draggable={false} aria-hidden="true"
-                      style={{ maskImage: `url(${cardNameMaskUrl(card.id)})`, maskSize: "cover", maskMode: "luminance" } as React.CSSProperties}
+                      style={{ maskImage: `url(${cardNameMaskUrl(card.id)})`, WebkitMaskImage: `url(${cardNameMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
                     />
                     {cardHasTopMask && (
                       <img
                         className="card-text-layer card-top-layer"
                         src={imgSrc} alt="" draggable={false} aria-hidden="true"
-                        style={{ maskImage: `url(${cardTopMaskUrl(card.id)})`, maskSize: "cover", maskMode: "luminance" } as React.CSSProperties}
+                        style={{ maskImage: `url(${cardTopMaskUrl(card.id)})`, WebkitMaskImage: `url(${cardTopMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
                       />
                     )}
                   </>
