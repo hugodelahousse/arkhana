@@ -71,7 +71,7 @@ export default function CardLab() {
   const [idleAmplitude, setIdleAmplitude] = useState(DEFAULT_MOTION_CONFIG.idleAmplitude);
   const [idleSpeed, setIdleSpeed]         = useState(DEFAULT_MOTION_CONFIG.idleSpeed);
   const [touchHScale, setTouchHScale]     = useState(DEFAULT_MOTION_CONFIG.touchHScale);
-  const [touchVGive, setTouchVGive]       = useState(DEFAULT_MOTION_CONFIG.touchVGive);
+  const [touchVMax, setTouchVMax]         = useState(DEFAULT_MOTION_CONFIG.touchVMax);
   const [springStiffness, setSpringStiffness] = useState(DEFAULT_MOTION_CONFIG.springStiffness);
   const [springDamping, setSpringDamping]     = useState(DEFAULT_MOTION_CONFIG.springDamping);
 
@@ -84,7 +84,7 @@ export default function CardLab() {
     idleAmplitude,
     idleSpeed,
     touchHScale,
-    touchVGive,
+    touchVMax,
     springStiffness: debouncedStiffness,
     springDamping: debouncedDamping,
   };
@@ -251,14 +251,14 @@ export default function CardLab() {
             <SliderControl
               label="Touch H Scale"
               value={touchHScale}
-              min={5} max={60} step={1} unit="°"
+              min={90} max={1440} step={30} unit="°"
               onChange={setTouchHScale}
             />
             <SliderControl
-              label="Touch V Give"
-              value={touchVGive}
-              min={0} max={1} step={0.05}
-              onChange={setTouchVGive}
+              label="Touch V Max"
+              value={touchVMax}
+              min={0} max={30} step={1} unit="°"
+              onChange={setTouchVMax}
             />
           </div>
 
