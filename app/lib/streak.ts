@@ -14,6 +14,54 @@ export interface StreakState {
 export type Milestone = 7 | 28 | 100;
 const MILESTONES: Milestone[] = [7, 28, 100];
 
+/**
+ * Compute and persist a streak record from a sorted list of pull dates.
+ * Used when a user has existing pulls but no streak row (e.g. after
+ * anonymous→registered migration or first load after the feature deployed).
+ * No-ops if a streak record already exists.
+ */
+export async function initStreakFromHistory(
+  userId: string,
+  pullDates: string[] // any order — will be sorted internally
+): Promise<void> {
+  const existing = await db
+    .select({ id: streaks.id })
+    .from(streaks)
+    .where(eq(streaks.userId, userId))
+    .limit(1);
+  if (existing.length > 0) return;
+
+  if (pullDates.length === 0) return;
+
+  const sorted = [...pullDates].sort(); // ascending YYYY-MM-DD
+  const mostRecent = sorted[sorted.length - 1];
+
+  // Walk backward from the most recent pull counting consecutive days
+  let currentStreak = 1;
+  let longestStreak = 1;
+  for (let i = sorted.length - 2; i >= 0; i--) {
+    const prev = DateTime.fromISO(sorted[i + 1], { zone: "utc" });
+    const curr = DateTime.fromISO(sorted[i], { zone: "utc" });
+    if (prev.diff(curr, "days").days === 1) {
+      currentStreak++;
+      if (currentStreak > longestStreak) longestStreak = currentStreak;
+    } else {
+      break;
+    }
+  }
+
+  const cycleStart = sorted[sorted.length - currentStreak];
+
+  await db.insert(streaks).values({
+    userId,
+    currentStreak,
+    longestStreak,
+    lastPullDate: mostRecent,
+    cycleStartDate: cycleStart,
+    graceNightsUsed: 0,
+  });
+}
+
 export async function getStreak(userId: string): Promise<StreakState | null> {
   const [row] = await db
     .select()

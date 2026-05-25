@@ -10,7 +10,7 @@ import { SpreadSummaryGrid } from "../components/SpreadSummaryGrid";
 import { MoonCycle } from "../components/MoonCycle";
 import { StreakMilestone } from "../components/StreakMilestone";
 import { getTodayPull, getRecentPulls, getUniqueCardCount, dailyPull } from "../lib/pull";
-import { getStreak } from "../lib/streak";
+import { getStreak, initStreakFromHistory } from "../lib/streak";
 import { getTodaySpread, drawSpread, getSpreadId } from "../lib/spread-pull";
 import type { SpreadCardResult } from "../lib/spread-pull";
 import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity, type CardDefinition } from "../lib/cards";
@@ -82,8 +82,16 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     return { name: d.name, subtitle: d.subtitle, description: d.description, positions: d.positions };
   })() : null;
 
-  const streak = streakState
-    ? { currentStreak: streakState.currentStreak, longestStreak: streakState.longestStreak, cycleStartDate: streakState.cycleStartDate }
+  // Lazy-backfill: if the user has pulled before but has no streak record yet
+  // (e.g. pulled before the streak system was deployed, or just after account migration).
+  let resolvedStreakState = streakState;
+  if (!resolvedStreakState && recentPulls.length > 0) {
+    await initStreakFromHistory(userId, recentPulls.map((p) => p.pullDate));
+    resolvedStreakState = await getStreak(userId);
+  }
+
+  const streak = resolvedStreakState
+    ? { currentStreak: resolvedStreakState.currentStreak, longestStreak: resolvedStreakState.longestStreak, cycleStartDate: resolvedStreakState.cycleStartDate }
     : null;
 
   if (isSundayToday) {
@@ -590,6 +598,11 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   const hasPulledToday = !!dailyResult || !!todayPull;
 
+  // After a fresh pull the loader streak may lag behind — use action result when available
+  const liveStreakDay =
+    dailyResult && "streakDay" in dailyResult ? (dailyResult.streakDay as number) : null;
+  const displayStreakCount = liveStreakDay ?? streak?.currentStreak ?? 0;
+
   return (
     <DirectionalTransition>
       <div className="min-h-screen">
@@ -857,18 +870,18 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               <Link
                 to="/streak"
                 className="flex items-center justify-between group hover:opacity-80 transition-opacity"
-                aria-label={`Moon cycle: ${streak?.currentStreak ?? 0} day streak. View moon calendar.`}
+                aria-label={`Moon cycle: ${displayStreakCount} day streak. View moon calendar.`}
               >
                 <div className="space-y-0.5">
                   <p className="text-xs tracking-widest uppercase opacity-30 text-secondary">
                     Moon Cycle
                   </p>
-                  {streak && streak.currentStreak > 0 ? (
+                  {displayStreakCount > 0 ? (
                     <p className="text-sm font-serif text-secondary opacity-70">
-                      Day {((streak.currentStreak - 1) % 28) + 1} of 28
-                      {streak.currentStreak >= 7 && (
+                      Day {((displayStreakCount - 1) % 28) + 1} of 28
+                      {displayStreakCount >= 7 && (
                         <span className="ml-2 opacity-40">
-                          · {streak.currentStreak} day{streak.currentStreak !== 1 ? "s" : ""}
+                          · {displayStreakCount} day{displayStreakCount !== 1 ? "s" : ""}
                         </span>
                       )}
                     </p>
@@ -879,7 +892,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   )}
                 </div>
                 <MoonCycle
-                  currentStreak={streak?.currentStreak ?? 0}
+                  currentStreak={displayStreakCount}
                   size="md"
                 />
               </Link>
