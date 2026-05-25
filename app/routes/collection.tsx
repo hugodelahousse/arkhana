@@ -11,6 +11,8 @@ import type { CardDefinition, Rarity } from "../lib/cards";
 import { Link, useNavigate } from "react-router";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { getOrigin } from "../lib/utils";
+import { Moon, Lightning, Drop, Sword, Coin } from "@phosphor-icons/react";
+import type { Icon } from "@phosphor-icons/react";
 
 interface BestPull {
   rarityScore: Rarity;
@@ -59,11 +61,11 @@ export function meta({ data }: Route.MetaArgs) {
   ];
 }
 
-const SUIT_ICONS: Record<string, string> = {
-  wands: "⚡",
-  cups: "♦",
-  swords: "†",
-  pentacles: "✧",
+const SUIT_ICONS: Record<string, Icon> = {
+  wands: Lightning,
+  cups: Drop,
+  swords: Sword,
+  pentacles: Coin,
 };
 
 export default function Collection({ loaderData }: Route.ComponentProps) {
@@ -95,9 +97,7 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
           <nav className="flex flex-wrap justify-center gap-6 sm:gap-10">
             {(!hideUndiscovered || majorDiscovered > 0) && (
               <a href="#major-arcana" className="flex flex-col items-center gap-2 group text-center">
-                <span className="text-3xl opacity-50 group-hover:opacity-90 transition-opacity font-serif">
-                  ✦
-                </span>
+                <Moon weight="light" size={28} className="opacity-50 group-hover:opacity-90 transition-opacity" />
                 <p className="text-xs tracking-widest uppercase opacity-40 group-hover:opacity-70 transition-opacity text-secondary">
                   Major Arcana
                 </p>
@@ -109,11 +109,10 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
             {MINOR_BY_SUIT.map(({ suit, cards }) => {
               const discovered = cards.filter((c) => bestByCard[c.id]).length;
               if (hideUndiscovered && discovered === 0) return null;
+              const Icon = SUIT_ICONS[suit];
               return (
                 <a key={suit} href={`#${suit}`} className="flex flex-col items-center gap-2 group text-center">
-                  <span className="text-3xl opacity-50 group-hover:opacity-90 transition-opacity font-serif">
-                    {SUIT_ICONS[suit]}
-                  </span>
+                  <Icon weight="light" size={28} className="opacity-50 group-hover:opacity-90 transition-opacity" />
                   <p className="text-xs tracking-widest uppercase opacity-40 capitalize group-hover:opacity-70 transition-opacity text-secondary">
                     {suit}
                   </p>
