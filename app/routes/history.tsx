@@ -136,7 +136,7 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
           {date}
         </p>
         <Link to={`/collection/${slug}`} className="flex items-center gap-6 group">
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 w-20">
             <TarotCard
               card={card}
               rarityScore={entry.rarityScore as Rarity}
