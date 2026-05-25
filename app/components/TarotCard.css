@@ -602,16 +602,18 @@
   z-index: 1;
   pointer-events: none;
   translate: 0 0 0.001px;
-  mask-size: cover;
-  mask-mode: luminance;
 }
 
 .card-name-layer {
   mask-image: var(--name-mask-url, none);
+  mask-size: cover;
+  mask-mode: luminance;
 }
 
 .card-top-layer {
   mask-image: var(--top-mask-url, none);
+  mask-size: cover;
+  mask-mode: luminance;
 }
 
 .card-scene[data-rarity="5"] .card-text-layer {
