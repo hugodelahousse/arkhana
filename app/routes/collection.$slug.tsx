@@ -72,7 +72,7 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
 
   return (
     <DirectionalTransition>
-      <div className="min-h-screen bg-base">
+      <div className="min-h-screen">
         {user ? (
           <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         ) : (

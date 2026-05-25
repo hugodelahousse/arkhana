@@ -280,7 +280,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   if (!loaderData.user) {
     return (
-      <div className="min-h-screen bg-base flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <p className="text-sm opacity-40 tracking-widest uppercase text-secondary">The arkhive stirs…</p>
       </div>
     );
@@ -301,7 +301,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   return (
     <DirectionalTransition>
-      <div className="min-h-screen bg-base">
+      <div className="min-h-screen">
         <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-2xl mx-auto px-6 py-6 sm:py-12 space-y-8 sm:space-y-12">
 

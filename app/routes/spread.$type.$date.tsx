@@ -67,7 +67,7 @@ export default function SpreadDateRoute({ loaderData, params }: Route.ComponentP
 
   return (
     <DirectionalTransition>
-      <div className="min-h-screen bg-base">
+      <div className="min-h-screen">
         <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-lg mx-auto px-6 py-12">
           <motion.div

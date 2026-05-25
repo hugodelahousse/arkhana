@@ -71,7 +71,7 @@ export default function SpreadByIdRoute({ loaderData }: Route.ComponentProps) {
   const shareUrl = username ? `/u/${username}/pull/${spreadDate}` : `/s/${spreadId}`;
 
   return (
-    <div className="min-h-screen bg-base">
+    <div className="min-h-screen">
       <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border opacity-80">
         <Link to="/" className="text-lg sm:text-xl tracking-widest font-serif text-primary">
           ARKHANA

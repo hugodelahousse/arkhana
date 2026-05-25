@@ -61,7 +61,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
   const success = actionData && "success" in actionData ? actionData.success : false;
 
   return (
-    <div className="min-h-screen bg-base">
+    <div className="min-h-screen">
       <Nav userName={loaderData.user.name} isAnonymous={false} />
       <main className="max-w-lg mx-auto px-6 py-16 space-y-10">
         <div className="space-y-2">

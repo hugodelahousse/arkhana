@@ -77,7 +77,7 @@ export default function History({ loaderData }: Route.ComponentProps) {
 
   return (
     <DirectionalTransition>
-      <div className="min-h-screen bg-base">
+      <div className="min-h-screen">
         <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-2xl mx-auto px-6 py-12 space-y-12">
           <div className="space-y-1">
