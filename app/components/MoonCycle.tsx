@@ -1,4 +1,5 @@
 import { memo, useId } from "react";
+import { moonIlluminatedPath, SYNODIC_MONTH_DAYS } from "../lib/moonphase";
 
 interface MoonCycleProps {
   currentStreak: number;
@@ -130,6 +131,33 @@ export const MoonCycle = memo(function MoonCycle({
             opacity={opacity}
             filter={filter}
           />
+        );
+      })}
+
+      {/* Cardinal moon phase markers — new/quarter/full/quarter — only on lg */}
+      {size === "lg" && ([
+        { frac: 0,    age: 0 },
+        { frac: 0.25, age: SYNODIC_MONTH_DAYS * 0.25 },
+        { frac: 0.5,  age: SYNODIC_MONTH_DAYS * 0.5 },
+        { frac: 0.75, age: SYNODIC_MONTH_DAYS * 0.75 },
+      ] as const).map(({ frac, age }) => {
+        const deg = frac * 360 - 90;
+        const markerR = outerR + 18;
+        const pos = polarToCartesian(cx, cy, markerR, deg);
+        const glyphPx = 13;
+        const scale = glyphPx / 100;
+        const path = moonIlluminatedPath(age);
+        return (
+          <g
+            key={frac}
+            transform={`translate(${pos.x - glyphPx / 2}, ${pos.y - glyphPx / 2}) scale(${scale})`}
+            color="var(--color-text-secondary)"
+            opacity={0.28}
+          >
+            <circle cx={50} cy={50} r={45} fill="none" stroke="currentColor" strokeWidth={3} />
+            {path === "full" && <circle cx={50} cy={50} r={45} fill="currentColor" />}
+            {path !== "new" && path !== "full" && <path d={path} fill="currentColor" />}
+          </g>
         );
       })}
 

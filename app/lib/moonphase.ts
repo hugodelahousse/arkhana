@@ -87,6 +87,37 @@ export function getLunarMonthInfo(today: Date, pullDates: string[]): LunarMonthI
   return { todayLunarIndex, lunarMonthLength, pulledDayIndices };
 }
 
+/**
+ * SVG path for the illuminated portion of the moon at a given lunar age.
+ * Rendered in a 100×100 viewBox. Returns "new", "full", or an SVG path string.
+ */
+export function moonIlluminatedPath(age: number): "new" | "full" | string {
+  const theta = (2 * Math.PI * age) / SYNODIC_MONTH_DAYS;
+  const illum = (1 - Math.cos(theta)) / 2;
+
+  if (illum < 0.02) return "new";
+  if (illum > 0.98) return "full";
+
+  const R = 45;
+  const cx = 50;
+  const cy = 50;
+
+  const tx = R * Math.cos(theta);
+  const atx = Math.abs(tx);
+  const isWaxing = age < SYNODIC_MONTH_DAYS / 2;
+
+  const top = `${cx} ${cy - R}`;
+  const bot = `${cx} ${cy + R}`;
+
+  if (isWaxing) {
+    const tSweep = tx >= 0 ? 1 : 0;
+    return `M ${top} A ${R} ${R} 0 0 1 ${bot} A ${atx} ${R} 0 0 ${tSweep} ${top} Z`;
+  } else {
+    const tSweep = tx <= 0 ? 1 : 0;
+    return `M ${top} A ${R} ${R} 0 0 0 ${bot} A ${atx} ${R} 0 0 ${tSweep} ${top} Z`;
+  }
+}
+
 export function getUpcomingCelestialEvents(fromDate: Date, days: number): CelestialEvent[] {
   const events: CelestialEvent[] = [];
   const toTime = fromDate.getTime() + days * MS_PER_DAY;

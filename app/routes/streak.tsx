@@ -1,9 +1,10 @@
 import { redirect } from "react-router";
-import { startTransition } from "react";
+import { startTransition, useState } from "react";
 import { addTransitionType } from "react";
 import type { Route } from "./+types/streak";
 import { Link, useNavigate } from "react-router";
-import { Moon, MoonStars, Sparkle } from "@phosphor-icons/react";
+import { Moon, MoonStars, Sparkle, CaretLeft, CaretRight } from "@phosphor-icons/react";
+import { motion, AnimatePresence } from "motion/react";
 import { Nav } from "../components/layout/nav";
 import { MoonCycle } from "../components/MoonCycle";
 import { DirectionalTransition } from "../components/DirectionalTransition";
@@ -12,6 +13,7 @@ import { getDailyPullHistory } from "../lib/pull";
 import {
   getMoonAge,
   getLunarMonthInfo,
+  moonIlluminatedPath,
   SYNODIC_MONTH_DAYS,
   MS_PER_DAY,
 } from "../lib/moonphase";
@@ -105,40 +107,6 @@ function formatLunarMonthLabel(newMoonDate: string, days: LunarDay[]): string {
 }
 
 // ─── SVG Moon Phase Glyph ─────────────────────────────────────────────────────
-// Renders the actual illuminated portion of the moon for a given lunar age.
-// Uses a 100×100 viewBox that scales to any container size.
-
-function moonIlluminatedPath(age: number): "new" | "full" | string {
-  const theta = (2 * Math.PI * age) / SYNODIC_MONTH_DAYS;
-  const illum = (1 - Math.cos(theta)) / 2;
-
-  if (illum < 0.02) return "new";
-  if (illum > 0.98) return "full";
-
-  const R = 45;
-  const cx = 50;
-  const cy = 50;
-
-  // tx is the horizontal semi-axis of the terminator ellipse.
-  // Positive = terminator sits on the lit side (crescent)
-  // Negative = terminator crosses center to unlit side (gibbous)
-  const tx = R * Math.cos(theta);
-  const atx = Math.abs(tx);
-  const isWaxing = age < SYNODIC_MONTH_DAYS / 2;
-
-  const top = `${cx} ${cy - R}`;
-  const bot = `${cx} ${cy + R}`;
-
-  if (isWaxing) {
-    // Right half lit; terminator CW for crescent, CCW for gibbous
-    const tSweep = tx >= 0 ? 1 : 0;
-    return `M ${top} A ${R} ${R} 0 0 1 ${bot} A ${atx} ${R} 0 0 ${tSweep} ${top} Z`;
-  } else {
-    // Left half lit; terminator CW for gibbous, CCW for crescent
-    const tSweep = tx <= 0 ? 1 : 0;
-    return `M ${top} A ${R} ${R} 0 0 0 ${bot} A ${atx} ${R} 0 0 ${tSweep} ${top} Z`;
-  }
-}
 
 function MoonGlyph({ age }: { age: number }) {
   const path = moonIlluminatedPath(age);
@@ -211,6 +179,22 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
   const pullDateSet = new Set(pullDates);
   const calendarMonths = buildLunarCalendar(today, pullDateSet, 6);
   const totalPulls = pullDates.length;
+
+  const [activeMonth, setActiveMonth] = useState(0);
+  const [slideDir, setSlideDir] = useState(0);
+
+  const slideVariants = {
+    enter: (dir: number) => ({ x: dir > 0 ? 40 : -40, opacity: 0 }),
+    center: { x: 0, opacity: 1, transition: { duration: 0.32, ease: [0.16, 1, 0.3, 1] } },
+    exit: (dir: number) => ({ x: dir > 0 ? -40 : 40, opacity: 0, transition: { duration: 0.16 } }),
+  };
+
+  function goNewer() {
+    if (activeMonth > 0) { setSlideDir(1); setActiveMonth((m) => m - 1); }
+  }
+  function goOlder() {
+    if (activeMonth < calendarMonths.length - 1) { setSlideDir(-1); setActiveMonth((m) => m + 1); }
+  }
 
   function goBack() {
     startTransition(() => {
@@ -325,18 +309,72 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
           )}
 
           {/* Lunar calendar */}
-          {calendarMonths.length > 0 && (
-            <section className="space-y-6">
-              <h2 className="text-xs tracking-widest uppercase opacity-30 text-secondary">
-                Practice history
-              </h2>
-              <div className="space-y-6">
-                {calendarMonths.map((month) => (
-                  <LunarMonthRow key={month.newMoonDate} month={month} today={today} />
-                ))}
-              </div>
-            </section>
-          )}
+          {calendarMonths.length > 0 && (() => {
+            const month = calendarMonths[activeMonth];
+            const pulledCount = month.days.filter((d) => !d.isFuture && d.pulled).length;
+            const totalPast = month.days.filter((d) => !d.isFuture).length;
+            return (
+              <section className="space-y-4">
+                <h2 className="text-xs tracking-widest uppercase opacity-30 text-secondary">
+                  Practice history
+                </h2>
+
+                {/* Navigation row */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={goOlder}
+                    disabled={activeMonth >= calendarMonths.length - 1}
+                    className="opacity-40 hover:opacity-80 disabled:opacity-10 transition-opacity"
+                    aria-label="Previous month"
+                  >
+                    <CaretLeft weight="thin" size={16} />
+                  </button>
+                  <div className="flex-1 flex items-baseline justify-between min-w-0">
+                    <p className="text-xs opacity-30 text-secondary font-serif truncate">
+                      {formatLunarMonthLabel(month.newMoonDate, month.days)}
+                    </p>
+                    <p className="text-xs opacity-20 text-secondary tabular-nums ml-3 shrink-0">
+                      {pulledCount}/{totalPast}
+                    </p>
+                  </div>
+                  <button
+                    onClick={goNewer}
+                    disabled={activeMonth === 0}
+                    className="opacity-40 hover:opacity-80 disabled:opacity-10 transition-opacity"
+                    aria-label="Next month"
+                  >
+                    <CaretRight weight="thin" size={16} />
+                  </button>
+                </div>
+
+                {/* Animated grid */}
+                <div className="overflow-hidden">
+                  <AnimatePresence custom={slideDir} mode="wait" initial={false}>
+                    <motion.div
+                      key={month.newMoonDate}
+                      custom={slideDir}
+                      variants={slideVariants}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                    >
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: `repeat(${month.days.length}, 1fr)`,
+                          gap: "2px",
+                        }}
+                      >
+                        {month.days.map((day) => (
+                          <LunarDayCell key={day.date} day={day} />
+                        ))}
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              </section>
+            );
+          })()}
 
           {currentStreak === 0 && (
             <div className="text-center py-8 space-y-4">
@@ -359,36 +397,7 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// ─── Calendar row ─────────────────────────────────────────────────────────────
-
-function LunarMonthRow({ month }: { month: LunarMonth }) {
-  const label = formatLunarMonthLabel(month.newMoonDate, month.days);
-  const pulledCount = month.days.filter((d) => !d.isFuture && d.pulled).length;
-  const totalPast = month.days.filter((d) => !d.isFuture).length;
-
-  return (
-    <div className="space-y-2.5">
-      <div className="flex items-baseline justify-between">
-        <p className="text-xs opacity-30 text-secondary font-serif">{label}</p>
-        <p className="text-xs opacity-20 text-secondary tabular-nums">
-          {pulledCount}/{totalPast}
-        </p>
-      </div>
-      {/* Fluid grid — each cell fills its column, 29 or 30 per row */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${month.days.length}, 1fr)`,
-          gap: "2px",
-        }}
-      >
-        {month.days.map((day) => (
-          <LunarDayCell key={day.date} day={day} />
-        ))}
-      </div>
-    </div>
-  );
-}
+// ─── Calendar cell ────────────────────────────────────────────────────────────
 
 function LunarDayCell({ day }: { day: LunarDay }) {
   const isToday = day.isToday;
