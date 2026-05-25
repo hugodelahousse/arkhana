@@ -197,7 +197,7 @@ export async function getUserCardHistory(userId: string, cardId: number) {
   return db
     .select()
     .from(userCards)
-    .where(and(eq(userCards.userId, userId), eq(userCards.cardId, cardId), eq(userCards.pullType, "daily")))
+    .where(and(eq(userCards.userId, userId), eq(userCards.cardId, cardId)))
     .orderBy(userCards.pulledAt);
 }
 
