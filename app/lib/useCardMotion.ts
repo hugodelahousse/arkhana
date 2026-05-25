@@ -220,12 +220,15 @@ export function useCardMotion(
   }, [ref, rotateX, rotateY, setCSSVars]);
 
   const onTouchEnd = useCallback(() => {
+    const wasDragging = isDraggingRef.current;
     isDraggingRef.current = false;
     touchStartRef.current = null;
     rotateX.set(0);
     resetCSSVars();
 
-    // Convert swipe velocity to angular velocity, then let physics take over
+    // Only spin if the finger actually moved — a tap should do nothing
+    if (!wasDragging) return;
+
     const { touchHScale } = cfgRef.current;
     const degsPerPx = touchHScale / cardWidthRef.current;
     omegaRef.current = velocityRef.current * degsPerPx * 1000; // px/ms → deg/s
