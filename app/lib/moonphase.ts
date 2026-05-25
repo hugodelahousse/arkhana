@@ -1,7 +1,7 @@
 // Synodic month and a known reference new moon (Jan 11 2024 11:57 UTC)
 const KNOWN_NEW_MOON_MS = new Date("2024-01-11T11:57:00Z").getTime();
-const SYNODIC_MONTH_DAYS = 29.53059;
-const MS_PER_DAY = 86_400_000;
+export const SYNODIC_MONTH_DAYS = 29.53059;
+export const MS_PER_DAY = 86_400_000;
 
 export type LunarEvent = "new-moon" | "full-moon";
 
@@ -17,7 +17,13 @@ export interface MoonPhaseInfo {
   age: number; // days into current cycle (0–29.5)
 }
 
-function getMoonAge(date: Date): number {
+export interface LunarMonthInfo {
+  todayLunarIndex: number;    // 0-based calendar day in current lunar month
+  lunarMonthLength: number;   // 29 or 30 calendar days
+  pulledDayIndices: number[]; // 0-based indices where user pulled this month
+}
+
+export function getMoonAge(date: Date): number {
   const elapsed = (date.getTime() - KNOWN_NEW_MOON_MS) / MS_PER_DAY;
   return ((elapsed % SYNODIC_MONTH_DAYS) + SYNODIC_MONTH_DAYS) % SYNODIC_MONTH_DAYS;
 }
@@ -39,6 +45,46 @@ export function getCurrentMoonPhase(date = new Date()): MoonPhaseInfo {
   else { phase = "Waning Crescent"; emoji = "🌘"; }
 
   return { phase, emoji, age };
+}
+
+/**
+ * Compute which calendar day of the current lunar month today falls on,
+ * how long this lunar month is, and which days in this month had pulls.
+ */
+export function getLunarMonthInfo(today: Date, pullDates: string[]): LunarMonthInfo {
+  const age = getMoonAge(today);
+
+  // Approximate start of current lunar month (last new moon)
+  const lastNewMoonMs = today.getTime() - age * MS_PER_DAY;
+  const nextNewMoonMs = lastNewMoonMs + SYNODIC_MONTH_DAYS * MS_PER_DAY;
+
+  // Snap to UTC calendar day boundaries
+  const lnm = new Date(lastNewMoonMs);
+  const nnm = new Date(nextNewMoonMs);
+  const startDayMs = Date.UTC(lnm.getUTCFullYear(), lnm.getUTCMonth(), lnm.getUTCDate());
+  const endDayMs = Date.UTC(nnm.getUTCFullYear(), nnm.getUTCMonth(), nnm.getUTCDate());
+
+  const lunarMonthLength = Math.max(29, Math.min(30, Math.round((endDayMs - startDayMs) / MS_PER_DAY)));
+
+  // Today's 0-based index = calendar days elapsed since new moon day
+  const todayDayMs = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+  const todayLunarIndex = Math.min(
+    Math.round((todayDayMs - startDayMs) / MS_PER_DAY),
+    lunarMonthLength - 1
+  );
+
+  // Which pull dates fall within this lunar month
+  const pulledDayIndices: number[] = [];
+  for (const dateStr of pullDates) {
+    const d = new Date(dateStr + "T00:00:00Z");
+    const dayMs = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+    const idx = Math.round((dayMs - startDayMs) / MS_PER_DAY);
+    if (idx >= 0 && idx < lunarMonthLength) {
+      pulledDayIndices.push(idx);
+    }
+  }
+
+  return { todayLunarIndex, lunarMonthLength, pulledDayIndices };
 }
 
 export function getUpcomingCelestialEvents(fromDate: Date, days: number): CelestialEvent[] {

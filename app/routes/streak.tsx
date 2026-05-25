@@ -9,82 +9,167 @@ import { MoonCycle } from "../components/MoonCycle";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { getStreak } from "../lib/streak";
 import { getDailyPullHistory } from "../lib/pull";
-import { getCurrentMoonPhase } from "../lib/moonphase";
+import {
+  getMoonAge,
+  getLunarMonthInfo,
+  SYNODIC_MONTH_DAYS,
+  MS_PER_DAY,
+} from "../lib/moonphase";
 import { todayUTC } from "../lib/utils";
 import { DateTime } from "luxon";
 
-const CYCLES_TO_SHOW = 6;
-const CYCLE_DAYS = 28;
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-interface DayCell {
+interface LunarDay {
   date: string;
+  lunarAge: number; // 0–29.5, used to render the moon phase glyph
   pulled: boolean;
   isToday: boolean;
   isFuture: boolean;
-  moonEmoji: string | null; // only at key lunar moments
 }
 
-interface CycleRow {
-  cycleNumber: number;
-  startDate: string;
-  days: DayCell[];
+interface LunarMonth {
+  newMoonDate: string; // ISO date the new moon fell on
+  days: LunarDay[];
 }
 
-function buildCalendar(
-  cycleStartDate: string,
-  currentStreak: number,
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function buildLunarCalendar(
+  today: string,
   pullDateSet: Set<string>,
-  today: string
-): CycleRow[] {
-  const cycles: CycleRow[] = [];
-  const anchor = DateTime.fromISO(cycleStartDate, { zone: "utc" });
+  count: number
+): LunarMonth[] {
+  const todayDate = new Date(today + "T12:00:00Z");
+  const age = getMoonAge(todayDate);
+  const currentNewMoonMs = todayDate.getTime() - age * MS_PER_DAY;
 
-  for (let c = 0; c < CYCLES_TO_SHOW; c++) {
-    const cycleStart = anchor.minus({ days: c * CYCLE_DAYS });
-    const cycleNumber = Math.ceil(currentStreak / CYCLE_DAYS) - c;
-    const days: DayCell[] = [];
+  const months: LunarMonth[] = [];
 
-    for (let d = 0; d < CYCLE_DAYS; d++) {
-      const dt = cycleStart.plus({ days: d });
-      const date = dt.toISODate()!;
-      const jsDate = dt.toJSDate();
+  for (let i = 0; i < count; i++) {
+    const newMoonMs = currentNewMoonMs - i * SYNODIC_MONTH_DAYS * MS_PER_DAY;
+    const nextNewMoonMs = newMoonMs + SYNODIC_MONTH_DAYS * MS_PER_DAY;
 
-      const { phase } = getCurrentMoonPhase(jsDate);
-      let moonEmoji: string | null = null;
-      if (phase === "New Moon") moonEmoji = "🌑";
-      else if (phase === "Full Moon") moonEmoji = "🌕";
+    const nmDate = new Date(newMoonMs);
+    const startDt = DateTime.utc(
+      nmDate.getUTCFullYear(),
+      nmDate.getUTCMonth() + 1,
+      nmDate.getUTCDate()
+    );
+
+    const nnmDate = new Date(nextNewMoonMs);
+    const endDt = DateTime.utc(
+      nnmDate.getUTCFullYear(),
+      nnmDate.getUTCMonth() + 1,
+      nnmDate.getUTCDate()
+    );
+
+    const daysInMonth = Math.max(29, Math.min(30, Math.round(endDt.diff(startDt, "days").days)));
+    const newMoonDateStr = startDt.toISODate()!;
+
+    // Skip months that haven't started yet
+    if (newMoonDateStr > today) continue;
+
+    const days: LunarDay[] = [];
+    for (let d = 0; d < daysInMonth; d++) {
+      const dt = startDt.plus({ days: d });
+      const dateStr = dt.toISODate()!;
+      const lunarAge = getMoonAge(dt.toJSDate());
 
       days.push({
-        date,
-        pulled: pullDateSet.has(date),
-        isToday: date === today,
-        isFuture: date > today,
-        moonEmoji,
+        date: dateStr,
+        lunarAge,
+        pulled: pullDateSet.has(dateStr),
+        isToday: dateStr === today,
+        isFuture: dateStr > today,
       });
     }
 
-    if (cycleNumber > 0) {
-      cycles.push({ cycleNumber, startDate: cycleStart.toISODate()!, days });
-    }
+    months.push({ newMoonDate: newMoonDateStr, days });
   }
 
-  return cycles;
+  return months;
 }
 
-function formatCycleLabel(startDate: string): string {
-  const start = DateTime.fromISO(startDate, { zone: "utc" });
-  const end = start.plus({ days: CYCLE_DAYS - 1 });
-  if (start.month === end.month) {
+function formatLunarMonthLabel(newMoonDate: string, days: LunarDay[]): string {
+  const last = days[days.length - 1];
+  const start = DateTime.fromISO(newMoonDate, { zone: "utc" });
+  const end = DateTime.fromISO(last.date, { zone: "utc" });
+  if (start.year === end.year && start.month === end.month) {
     return `${start.toFormat("MMM d")}–${end.toFormat("d, yyyy")}`;
   }
-  return `${start.toFormat("MMM d")} – ${end.toFormat("MMM d, yyyy")}`;
+  if (start.year === end.year) {
+    return `${start.toFormat("MMM d")} – ${end.toFormat("MMM d, yyyy")}`;
+  }
+  return `${start.toFormat("MMM d, yyyy")} – ${end.toFormat("MMM d, yyyy")}`;
 }
+
+// ─── SVG Moon Phase Glyph ─────────────────────────────────────────────────────
+// Renders the actual illuminated portion of the moon for a given lunar age.
+// Uses a 100×100 viewBox that scales to any container size.
+
+function moonIlluminatedPath(age: number): "new" | "full" | string {
+  const theta = (2 * Math.PI * age) / SYNODIC_MONTH_DAYS;
+  const illum = (1 - Math.cos(theta)) / 2;
+
+  if (illum < 0.02) return "new";
+  if (illum > 0.98) return "full";
+
+  const R = 45;
+  const cx = 50;
+  const cy = 50;
+
+  // tx is the horizontal semi-axis of the terminator ellipse.
+  // Positive = terminator sits on the lit side (crescent)
+  // Negative = terminator crosses center to unlit side (gibbous)
+  const tx = R * Math.cos(theta);
+  const atx = Math.abs(tx);
+  const isWaxing = age < SYNODIC_MONTH_DAYS / 2;
+
+  const top = `${cx} ${cy - R}`;
+  const bot = `${cx} ${cy + R}`;
+
+  if (isWaxing) {
+    // Right half lit; terminator CW for crescent, CCW for gibbous
+    const tSweep = tx >= 0 ? 1 : 0;
+    return `M ${top} A ${R} ${R} 0 0 1 ${bot} A ${atx} ${R} 0 0 ${tSweep} ${top} Z`;
+  } else {
+    // Left half lit; terminator CW for gibbous, CCW for crescent
+    const tSweep = tx <= 0 ? 1 : 0;
+    return `M ${top} A ${R} ${R} 0 0 0 ${bot} A ${atx} ${R} 0 0 ${tSweep} ${top} Z`;
+  }
+}
+
+function MoonGlyph({ age }: { age: number }) {
+  const path = moonIlluminatedPath(age);
+
+  return (
+    <svg
+      width="100%"
+      height="100%"
+      viewBox="0 0 100 100"
+      aria-hidden
+      style={{ display: "block" }}
+    >
+      {/* Disc outline — always present, faint */}
+      <circle cx={50} cy={50} r={45} fill="none" stroke="currentColor" strokeWidth={1.5} opacity={0.25} />
+      {path === "new" ? null : path === "full" ? (
+        <circle cx={50} cy={50} r={45} fill="currentColor" />
+      ) : (
+        <path d={path} fill="currentColor" />
+      )}
+    </svg>
+  );
+}
+
+// ─── Loader ───────────────────────────────────────────────────────────────────
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (!context.user) return redirect("/");
 
   const userId = context.user.id;
   const today = todayUTC();
+  const todayDate = new Date(today + "T12:00:00Z");
 
   const [streakState, pullHistory] = await Promise.all([
     getStreak(userId),
@@ -92,6 +177,7 @@ export async function loader({ context }: Route.LoaderArgs) {
   ]);
 
   const pullDates = pullHistory.map((p) => p.pullDate);
+  const lunarMonthInfo = getLunarMonthInfo(todayDate, pullDates);
 
   return {
     user: context.user,
@@ -103,6 +189,7 @@ export async function loader({ context }: Route.LoaderArgs) {
       graceNightsUsed: 0,
     },
     pullDates,
+    lunarMonthInfo,
     today,
   };
 }
@@ -111,20 +198,18 @@ export function meta() {
   return [{ title: "Moon Cycle — Arkhana" }];
 }
 
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function StreakPage({ loaderData }: Route.ComponentProps) {
-  const { user, streakState, pullDates, today } = loaderData;
+  const { user, streakState, pullDates, lunarMonthInfo, today } = loaderData;
   const navigate = useNavigate();
 
-  const { currentStreak, longestStreak, graceNightsUsed, cycleStartDate } = streakState;
-  const cyclePos = currentStreak === 0 ? 0 : ((currentStreak - 1) % 28) + 1;
+  const { currentStreak, longestStreak, graceNightsUsed } = streakState;
+  const { todayLunarIndex, lunarMonthLength, pulledDayIndices } = lunarMonthInfo;
   const graceRemaining = 2 - graceNightsUsed;
 
   const pullDateSet = new Set(pullDates);
-
-  // Determine anchor: use cycleStartDate if it exists, otherwise today
-  const anchor = cycleStartDate ?? today;
-  const calendarCycles = currentStreak > 0 ? buildCalendar(anchor, currentStreak, pullDateSet, today) : [];
-
+  const calendarMonths = buildLunarCalendar(today, pullDateSet, 6);
   const totalPulls = pullDates.length;
 
   function goBack() {
@@ -150,16 +235,21 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
             </h1>
           </div>
 
-          {/* Big wheel */}
+          {/* Lunar ring */}
           <div className="flex flex-col items-center gap-6">
-            <MoonCycle currentStreak={currentStreak} size="lg" />
+            <MoonCycle
+              currentStreak={currentStreak}
+              todayLunarIndex={todayLunarIndex}
+              lunarMonthLength={lunarMonthLength}
+              pulledDayIndices={pulledDayIndices}
+              size="lg"
+            />
 
             <div className="text-center space-y-1">
               {currentStreak > 0 ? (
                 <>
                   <p className="text-sm opacity-60 text-secondary font-serif">
-                    Day {cyclePos} of 28
-                    {cyclePos === 28 ? " · Cycle complete" : ""}
+                    Day {todayLunarIndex + 1} of the moon · {currentStreak} day streak
                   </p>
                   {graceRemaining > 0 && (
                     <p className="text-xs opacity-25 text-secondary">
@@ -178,9 +268,9 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-px bg-elevated rounded-sm overflow-hidden">
             {[
-              { label: "Current", value: currentStreak },
+              { label: "Streak", value: currentStreak },
               { label: "Longest", value: longestStreak },
-              { label: "Total pulls", value: totalPulls },
+              { label: "Total", value: totalPulls },
             ].map(({ label, value }) => (
               <div key={label} className="bg-surface px-4 py-5 text-center space-y-1">
                 <p
@@ -204,21 +294,23 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
               </h2>
               <div className="flex gap-3">
                 {([
-                  { days: 7,   Icon: Moon,       label: "Seven days" },
-                  { days: 28,  Icon: MoonStars,  label: "Full cycle" },
-                  { days: 100, Icon: Sparkle,    label: "Hundred days" },
-                ] as const).map(({ days, Icon, label }) => {
+                  { days: 7,   Icon: Moon,      label: "Seven days" },
+                  { days: 28,  Icon: MoonStars, label: "Full cycle" },
+                  { days: 100, Icon: Sparkle,   label: "Hundred days" },
+                ] as const).map(({ days, Icon, label: _label }) => {
                   const reached = longestStreak >= days;
                   return (
                     <div
                       key={days}
-                      className="flex flex-col items-center gap-2.5 flex-1 py-5 border rounded-sm transition-opacity"
+                      className="flex flex-col items-center gap-2.5 flex-1 py-5 border rounded-sm"
                       style={{
                         borderColor: reached
                           ? "var(--color-rarity-mystic)"
                           : "var(--color-border-default)",
                         opacity: reached ? 1 : 0.3,
-                        color: reached ? "var(--color-rarity-mystic)" : "var(--color-text-secondary)",
+                        color: reached
+                          ? "var(--color-rarity-mystic)"
+                          : "var(--color-text-secondary)",
                       }}
                     >
                       <Icon weight="thin" size={22} aria-hidden />
@@ -232,15 +324,15 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
             </section>
           )}
 
-          {/* Calendar grid */}
-          {calendarCycles.length > 0 && (
+          {/* Lunar calendar */}
+          {calendarMonths.length > 0 && (
             <section className="space-y-6">
               <h2 className="text-xs tracking-widest uppercase opacity-30 text-secondary">
                 Practice history
               </h2>
-              <div className="space-y-5">
-                {calendarCycles.map((cycle) => (
-                  <CycleRow key={cycle.cycleNumber} cycle={cycle} today={today} />
+              <div className="space-y-6">
+                {calendarMonths.map((month) => (
+                  <LunarMonthRow key={month.newMoonDate} month={month} today={today} />
                 ))}
               </div>
             </section>
@@ -267,81 +359,71 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
   );
 }
 
-function CycleRow({ cycle, today }: { cycle: CycleRow; today: string }) {
-  const label = formatCycleLabel(cycle.startDate);
-  const pulledInCycle = cycle.days.filter((d) => d.pulled).length;
-  const isCurrentCycle = cycle.days.some((d) => d.isToday);
+// ─── Calendar row ─────────────────────────────────────────────────────────────
+
+function LunarMonthRow({ month, today }: { month: LunarMonth; today: string }) {
+  const label = formatLunarMonthLabel(month.newMoonDate, month.days);
+  const pulledCount = month.days.filter((d) => !d.isFuture && d.pulled).length;
+  const totalPast = month.days.filter((d) => !d.isFuture).length;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       <div className="flex items-baseline justify-between">
         <p className="text-xs opacity-30 text-secondary font-serif">{label}</p>
         <p className="text-xs opacity-20 text-secondary tabular-nums">
-          {pulledInCycle}/{cycle.days.filter((d) => !d.isFuture).length}
+          {pulledCount}/{totalPast}
         </p>
       </div>
-      {/* 7-column grid: 4 rows of 7 days — avoids flex-wrap hanging on mobile */}
-      <div className="grid grid-cols-7 gap-[3px]">
-        {cycle.days.map((day) => (
-          <DayDot key={day.date} day={day} isCurrentCycle={isCurrentCycle} />
+      {/* Fluid grid — each cell fills its column, 29 or 30 per row */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${month.days.length}, 1fr)`,
+          gap: "2px",
+        }}
+      >
+        {month.days.map((day) => (
+          <LunarDayCell key={day.date} day={day} />
         ))}
       </div>
     </div>
   );
 }
 
-function DayDot({ day, isCurrentCycle }: { day: DayCell; isCurrentCycle: boolean }) {
-  let fill: string;
-  let opacity: number;
-  let ring = false;
+function LunarDayCell({ day }: { day: LunarDay }) {
+  const isToday = day.isToday;
+  const isFuture = day.isFuture;
 
-  if (day.isToday) {
-    fill = day.pulled ? "var(--color-rarity-mystic)" : "transparent";
+  let color: string;
+  let opacity: number;
+  let filter: string | undefined;
+
+  if (isToday && day.pulled) {
+    color = "var(--color-rarity-mystic)";
     opacity = 1;
-    ring = true;
-  } else if (day.isFuture) {
-    fill = "transparent";
-    opacity = 0.12;
-    ring = true;
+    filter = "drop-shadow(0 0 3px var(--color-rarity-mystic))";
+  } else if (isToday) {
+    color = "var(--color-text-secondary)";
+    opacity = 0.6;
+    filter = "drop-shadow(0 0 2px var(--color-text-secondary))";
+  } else if (isFuture) {
+    color = "var(--color-text-secondary)";
+    opacity = 0.08;
   } else if (day.pulled) {
-    fill = "var(--color-text-secondary)";
-    opacity = isCurrentCycle ? 0.75 : 0.45;
+    color = "var(--color-text-secondary)";
+    opacity = 0.75;
   } else {
-    fill = "var(--color-bg-elevated)";
-    opacity = isCurrentCycle ? 0.4 : 0.2;
+    color = "var(--color-text-secondary)";
+    opacity = 0.15;
   }
 
-  // Square cell, circle fills ~60% of the cell width
   return (
-    <span
-      title={day.date + (day.moonEmoji ? ` ${day.moonEmoji}` : "")}
-      className="relative flex items-center justify-center aspect-square"
+    <div
+      title={day.date}
+      className="aspect-square"
+      style={{ color, opacity, filter }}
     >
-      <svg
-        width="100%"
-        height="100%"
-        viewBox="0 0 10 10"
-        aria-hidden
-      >
-        <circle
-          cx={5}
-          cy={5}
-          r={ring ? 3 : 3.5}
-          fill={fill}
-          stroke={ring ? (day.isToday ? "var(--color-rarity-mystic)" : "var(--color-text-secondary)") : "none"}
-          strokeWidth={ring ? 1 : 0}
-          opacity={opacity}
-        />
-      </svg>
-      {day.moonEmoji && (
-        <span
-          className="absolute -top-2 left-1/2 -translate-x-1/2 pointer-events-none"
-          style={{ fontSize: 7, opacity: 0.5, lineHeight: 1 }}
-          aria-hidden
-        >
-          {day.moonEmoji}
-        </span>
-      )}
-    </span>
+      <MoonGlyph age={day.lunarAge} />
+    </div>
   );
 }

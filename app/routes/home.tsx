@@ -9,8 +9,9 @@ import { TarotCard } from "../components/TarotCard";
 import { SpreadSummaryGrid } from "../components/SpreadSummaryGrid";
 import { MoonCycle } from "../components/MoonCycle";
 import { StreakMilestone } from "../components/StreakMilestone";
-import { getTodayPull, getRecentPulls, getUniqueCardCount, dailyPull } from "../lib/pull";
+import { getTodayPull, getRecentPulls, getUniqueCardCount, dailyPull, getDailyPullHistory } from "../lib/pull";
 import { getStreak, initStreakFromHistory } from "../lib/streak";
+import { getLunarMonthInfo } from "../lib/moonphase";
 import { getTodaySpread, drawSpread, getSpreadId } from "../lib/spread-pull";
 import type { SpreadCardResult } from "../lib/spread-pull";
 import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity, type CardDefinition } from "../lib/cards";
@@ -61,6 +62,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       todayStr: todayUTC(),
       origin: getOrigin(request),
       streak: null as { currentStreak: number; longestStreak: number; cycleStartDate: string | null } | null,
+      lunarMonthInfo: getLunarMonthInfo(new Date(), []),
       previousPullDate: null as string | null,
     };
   }
@@ -69,13 +71,16 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const todayStr = todayUTC();
   const isSundayToday = DateTime.utc().weekday === 7;
 
-  const [recentPulls, totalUnique, sundaySpread, sundaySpreadId, streakState] = await Promise.all([
+  const [recentPulls, totalUnique, sundaySpread, sundaySpreadId, streakState, allPullHistory] = await Promise.all([
     getRecentPulls(userId, 5),
     getUniqueCardCount(userId),
     isSundayToday ? getTodaySpread(userId, "sunday-weekly", todayStr) : Promise.resolve(null),
     isSundayToday ? getSpreadId(userId, "sunday-weekly", todayStr) : Promise.resolve(null),
     getStreak(userId),
+    getDailyPullHistory(userId),
   ]);
+
+  const lunarMonthInfo = getLunarMonthInfo(new Date(todayStr + "T12:00:00Z"), allPullHistory.map((p) => p.pullDate));
 
   const spreadDef = isSundayToday ? (() => {
     const d = getSpreadType("sunday-weekly")!;
@@ -107,6 +112,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       todayStr,
       origin: getOrigin(request),
       streak,
+      lunarMonthInfo,
       previousPullDate: null as string | null,
     };
   }
@@ -125,6 +131,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     todayStr,
     origin: getOrigin(request),
     streak,
+    lunarMonthInfo,
     previousPullDate: null as string | null,
   };
 }
@@ -583,7 +590,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     );
   }
 
-  const { user, todayPull, recentPulls, totalUnique, streak } = loaderData;
+  const { user, todayPull, recentPulls, totalUnique, streak, lunarMonthInfo } = loaderData;
   const todayCard = todayPull ? CARD_BY_ID[todayPull.cardId] : null;
   const spreadShareUrl = user.username
     ? `/u/${user.username}/pull/${todayStr}`
@@ -870,7 +877,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               <Link
                 to="/streak"
                 className="flex items-center justify-between group hover:opacity-80 transition-opacity"
-                aria-label={`Moon cycle: ${displayStreakCount} day streak. View moon calendar.`}
+                aria-label={`Moon cycle: day ${lunarMonthInfo.todayLunarIndex + 1}, ${displayStreakCount} day streak.`}
               >
                 <div className="space-y-0.5">
                   <p className="text-xs tracking-widest uppercase opacity-30 text-secondary">
@@ -878,12 +885,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   </p>
                   {displayStreakCount > 0 ? (
                     <p className="text-sm font-serif text-secondary opacity-70">
-                      Day {((displayStreakCount - 1) % 28) + 1} of 28
-                      {displayStreakCount >= 7 && (
-                        <span className="ml-2 opacity-40">
-                          · {displayStreakCount} day{displayStreakCount !== 1 ? "s" : ""}
-                        </span>
-                      )}
+                      Day {lunarMonthInfo.todayLunarIndex + 1} of the moon
+                      <span className="ml-2 opacity-40">
+                        · {displayStreakCount} day streak
+                      </span>
                     </p>
                   ) : (
                     <p className="text-sm font-serif text-secondary opacity-30">
@@ -893,6 +898,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 </div>
                 <MoonCycle
                   currentStreak={displayStreakCount}
+                  todayLunarIndex={lunarMonthInfo.todayLunarIndex}
+                  lunarMonthLength={lunarMonthInfo.lunarMonthLength}
+                  pulledDayIndices={lunarMonthInfo.pulledDayIndices}
                   size="md"
                 />
               </Link>

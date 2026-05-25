@@ -2,10 +2,12 @@ import { memo, useId } from "react";
 
 interface MoonCycleProps {
   currentStreak: number;
+  todayLunarIndex: number;    // 0-based position today in the current lunar month
+  lunarMonthLength: number;   // 29 or 30
+  pulledDayIndices: number[]; // which days in this lunar month the user pulled
   size?: "sm" | "md" | "lg";
 }
 
-const SEGMENTS = 28;
 const GAP_DEG = 2.5;
 
 const SIZE = {
@@ -24,10 +26,11 @@ function segmentPath(
   cy: number,
   outerR: number,
   innerR: number,
-  index: number
+  index: number,
+  total: number
 ): string {
-  const arcDeg = 360 / SEGMENTS - GAP_DEG;
-  const startDeg = (index * 360) / SEGMENTS - 90;
+  const arcDeg = 360 / total - GAP_DEG;
+  const startDeg = (index * 360) / total - 90;
   const endDeg = startDeg + arcDeg;
   const largeArc = arcDeg > 180 ? 1 : 0;
 
@@ -45,15 +48,11 @@ function segmentPath(
   ].join(" ");
 }
 
-const QUARTER_LABELS: Record<number, string> = {
-  0: "🌑",
-  7: "🌓",
-  14: "🌕",
-  21: "🌗",
-};
-
 export const MoonCycle = memo(function MoonCycle({
   currentStreak,
+  todayLunarIndex,
+  lunarMonthLength,
+  pulledDayIndices,
   size = "sm",
 }: MoonCycleProps) {
   const filterId = useId().replace(/:/g, "");
@@ -64,23 +63,15 @@ export const MoonCycle = memo(function MoonCycle({
   const outerR = cfg.radius + cfg.thickness / 2;
   const innerR = cfg.radius - cfg.thickness / 2;
 
-  const cyclePos = currentStreak === 0 ? 0 : ((currentStreak - 1) % SEGMENTS) + 1;
-  const filledCount = cyclePos;
-  const isComplete = currentStreak > 0 && currentStreak % SEGMENTS === 0;
-  const cycleNumber = currentStreak === 0 ? 0 : Math.ceil(currentStreak / SEGMENTS);
-
-  const activeColor = isComplete
-    ? "var(--color-rarity-primordial)"
-    : "var(--color-rarity-mystic)";
-
-  const markerRadius = outerR + (size === "lg" ? 12 : size === "md" ? 9 : 6);
+  const pulledSet = new Set(pulledDayIndices);
+  const todayPulled = pulledSet.has(todayLunarIndex);
 
   return (
     <svg
       width={cfg.total}
       height={cfg.total}
       viewBox={`0 0 ${cfg.total} ${cfg.total}`}
-      aria-label={`Moon cycle: day ${cyclePos} of 28, streak ${currentStreak}`}
+      aria-label={`Lunar cycle: day ${todayLunarIndex + 1} of ${lunarMonthLength}, streak ${currentStreak}`}
       role="img"
       style={{ overflow: "visible" }}
     >
@@ -101,50 +92,48 @@ export const MoonCycle = memo(function MoonCycle({
         </filter>
       </defs>
 
-      {Array.from({ length: SEGMENTS }, (_, i) => {
-        const filled = i < filledCount;
-        const isCurrent = i === filledCount - 1 && currentStreak > 0;
+      {Array.from({ length: lunarMonthLength }, (_, i) => {
+        const pulled = pulledSet.has(i);
+        const isToday = i === todayLunarIndex;
+        const isFuture = i > todayLunarIndex;
+
+        let fill: string;
+        let opacity: number;
+        let filter: string | undefined;
+
+        if (isToday && todayPulled) {
+          fill = "var(--color-rarity-mystic)";
+          opacity = 1;
+          filter = `url(#glow-${filterId})`;
+        } else if (isToday) {
+          // Today, not yet pulled — soft ring highlight
+          fill = "var(--color-text-secondary)";
+          opacity = 0.45;
+          filter = `url(#glow-${filterId})`;
+        } else if (pulled) {
+          fill = "var(--color-text-secondary)";
+          opacity = 0.5;
+        } else if (isFuture) {
+          fill = "var(--color-border-default)";
+          opacity = 0.18;
+        } else {
+          // Past, not pulled
+          fill = "var(--color-border-default)";
+          opacity = 0.28;
+        }
 
         return (
           <path
             key={i}
-            d={segmentPath(cx, cy, outerR, innerR, i)}
-            fill={
-              isCurrent
-                ? activeColor
-                : filled
-                ? isComplete
-                  ? "var(--color-rarity-primordial)"
-                  : "var(--color-text-secondary)"
-                : "var(--color-border-default)"
-            }
-            opacity={filled ? (isCurrent ? 1 : 0.5) : 0.3}
-            filter={isCurrent ? `url(#glow-${filterId})` : undefined}
+            d={segmentPath(cx, cy, outerR, innerR, i, lunarMonthLength)}
+            fill={fill}
+            opacity={opacity}
+            filter={filter}
           />
         );
       })}
 
-      {size !== "sm" &&
-        Object.entries(QUARTER_LABELS).map(([dayStr, emoji]) => {
-          const day = Number(dayStr);
-          const deg = (day * 360) / SEGMENTS - 90;
-          const pos = polarToCartesian(cx, cy, markerRadius, deg);
-          const fontSize = size === "lg" ? 11 : 8;
-          return (
-            <text
-              key={day}
-              x={pos.x}
-              y={pos.y}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fontSize={fontSize}
-              opacity={0.3}
-            >
-              {emoji}
-            </text>
-          );
-        })}
-
+      {/* Center: streak count */}
       <text
         x={cx}
         y={cy - cfg.numSize * 0.25}
@@ -171,22 +160,6 @@ export const MoonCycle = memo(function MoonCycle({
       >
         {currentStreak === 1 ? "DAY" : "DAYS"}
       </text>
-
-      {size !== "sm" && cycleNumber > 0 && (
-        <text
-          x={cx}
-          y={cy + cfg.numSize * 1.1}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontSize={cfg.labelSize * 0.9}
-          fontFamily="var(--primitive-font-sans, system-ui)"
-          fill="var(--color-text-secondary)"
-          opacity={0.2}
-          letterSpacing="1.5"
-        >
-          CYCLE {cycleNumber}
-        </text>
-      )}
     </svg>
   );
 });
