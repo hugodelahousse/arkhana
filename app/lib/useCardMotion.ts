@@ -15,7 +15,7 @@ export interface CardMotionConfig {
 export const DEFAULT_MOTION_CONFIG: CardMotionConfig = {
   idleAmplitude: 6,
   idleSpeed: 0.5,
-  touchHScale: 210,
+  touchHScale: 180,
   touchVMax: 30,
   spinFriction: 0.05,
   springStiffness: 200,

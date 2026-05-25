@@ -85,9 +85,9 @@ export const TarotCard = memo(function TarotCard({
       aria-label={revealed ? card.name : "Unrevealed tarot card, hold to reveal"}
     >
       <motion.div className="card-tilt" style={tilt.style}>
+        <div className="card-edge card-edge-l" aria-hidden="true" />
+        <div className="card-edge card-edge-r" aria-hidden="true" />
         <div className="card-flipper">
-          <div className="card-edge card-edge-l" aria-hidden="true" />
-          <div className="card-edge card-edge-r" aria-hidden="true" />
 
           <div className="card-face card-back">
             <div className="card-back-art" />

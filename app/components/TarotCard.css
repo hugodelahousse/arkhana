@@ -111,7 +111,7 @@
 }
 
 /* ─── Tilt wrapper (motion-driven) ─── */
-.card-tilt { transform-style: preserve-3d; }
+.card-tilt { position: relative; transform-style: preserve-3d; }
 
 /* ─── Flipper ─── */
 .card-flipper {
@@ -146,13 +146,13 @@
 .card-edge-l {
   left: 0;
   transform-origin: left center;
-  transform: rotateY(90deg);
+  transform: rotateY(-90deg);
 }
 
 .card-edge-r {
   right: 0;
   transform-origin: right center;
-  transform: rotateY(-90deg);
+  transform: rotateY(90deg);
 }
 
 /* ─── Faces ─── */
