@@ -1,9 +1,11 @@
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, ne, sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { userCards } from "../../db/schema/user-cards.js";
 import { CARD_BY_ID, type CardDefinition, type Rarity } from "./cards.js";
 import { rollRarity, rollRadiant, rollReversed } from "./rarity.js";
 import { todayUTC } from "./utils.js";
+import { updateStreak } from "./streak.js";
+import type { Milestone } from "./streak.js";
 
 export type PullResult =
   | {
@@ -13,6 +15,7 @@ export type PullResult =
       isRadiant: boolean;
       isReversed: boolean;
       pullId: number;
+      previousPullDate: string | null;
     }
   | {
       status: "success";
@@ -21,6 +24,9 @@ export type PullResult =
       isRadiant: boolean;
       isReversed: boolean;
       pullId: number;
+      previousPullDate: string | null;
+      streakDay: number;
+      milestone: Milestone | null;
     };
 
 export async function dailyPull(userId: string): Promise<PullResult> {
@@ -34,6 +40,7 @@ export async function dailyPull(userId: string): Promise<PullResult> {
 
   if (existing.length > 0) {
     const row = existing[0];
+    const previousPullDate = await getPreviousPullDate(userId, row.cardId, pullDate);
     return {
       status: "already_pulled",
       card: CARD_BY_ID[row.cardId],
@@ -41,6 +48,7 @@ export async function dailyPull(userId: string): Promise<PullResult> {
       isRadiant: row.isRadiant,
       isReversed: row.isReversed,
       pullId: row.id,
+      previousPullDate,
     };
   }
 
@@ -48,6 +56,9 @@ export async function dailyPull(userId: string): Promise<PullResult> {
   const rarityScore = rollRarity();
   const isRadiant = rollRadiant();
   const isReversed = rollReversed();
+
+  // Check for previous draws of this card before inserting
+  const previousPullDate = await getPreviousPullDate(userId, cardId, pullDate);
 
   const [inserted] = await db
     .insert(userCards)
@@ -61,6 +72,7 @@ export async function dailyPull(userId: string): Promise<PullResult> {
       .from(userCards)
       .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate), eq(userCards.pullType, "daily")))
       .limit(1);
+    const prevDate = await getPreviousPullDate(userId, row.cardId, pullDate);
     return {
       status: "already_pulled",
       card: CARD_BY_ID[row.cardId],
@@ -68,8 +80,11 @@ export async function dailyPull(userId: string): Promise<PullResult> {
       isRadiant: row.isRadiant,
       isReversed: row.isReversed,
       pullId: row.id,
+      previousPullDate: prevDate,
     };
   }
+
+  const { newStreak, milestone } = await updateStreak(userId, pullDate);
 
   return {
     status: "success",
@@ -78,7 +93,31 @@ export async function dailyPull(userId: string): Promise<PullResult> {
     isRadiant,
     isReversed,
     pullId: inserted.id,
+    previousPullDate,
+    streakDay: newStreak,
+    milestone,
   };
+}
+
+async function getPreviousPullDate(
+  userId: string,
+  cardId: number,
+  excludeDate: string
+): Promise<string | null> {
+  const [row] = await db
+    .select({ pullDate: userCards.pullDate })
+    .from(userCards)
+    .where(
+      and(
+        eq(userCards.userId, userId),
+        eq(userCards.cardId, cardId),
+        eq(userCards.pullType, "daily"),
+        ne(userCards.pullDate, excludeDate)
+      )
+    )
+    .orderBy(desc(userCards.pulledAt))
+    .limit(1);
+  return row?.pullDate ?? null;
 }
 
 const pullFields = {

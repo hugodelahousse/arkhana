@@ -1,0 +1,141 @@
+import webpush from "web-push";
+import { and, desc, eq, ne, notInArray, sql } from "drizzle-orm";
+import { db } from "../../db/index.js";
+import { pushSubscriptions } from "../../db/schema/push-subscriptions.js";
+import { userCards } from "../../db/schema/user-cards.js";
+import { config } from "../../config/index.js";
+import type { Milestone } from "./streak.js";
+
+let initialized = false;
+
+function initWebPush(): boolean {
+  if (initialized) return true;
+  if (!config.vapidPublicKey || !config.vapidPrivateKey) return false;
+  webpush.setVapidDetails(
+    config.vapidSubject,
+    config.vapidPublicKey,
+    config.vapidPrivateKey
+  );
+  initialized = true;
+  return true;
+}
+
+export interface PushPayload {
+  type: "daily-reminder" | "milestone" | "celestial";
+  title: string;
+  body: string;
+  url?: string;
+  tag?: string;
+}
+
+async function sendToSubscription(
+  sub: { endpoint: string; p256dh: string; auth: string },
+  payload: PushPayload
+) {
+  try {
+    await webpush.sendNotification(
+      { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+      JSON.stringify(payload)
+    );
+  } catch (err: unknown) {
+    const status = (err as { statusCode?: number }).statusCode;
+    if (status === 410 || status === 404) {
+      await db
+        .delete(pushSubscriptions)
+        .where(eq(pushSubscriptions.endpoint, sub.endpoint));
+    }
+    throw err;
+  }
+}
+
+export async function sendPushToUser(userId: string, payload: PushPayload) {
+  if (!initWebPush()) return;
+  const subs = await db
+    .select()
+    .from(pushSubscriptions)
+    .where(eq(pushSubscriptions.userId, userId));
+  await Promise.allSettled(subs.map((s) => sendToSubscription(s, payload)));
+}
+
+export async function sendMilestoneNotification(userId: string, milestone: Milestone) {
+  const messages: Record<Milestone, string> = {
+    7: "Seven days. You've established a practice.",
+    28: "A full lunar cycle. The cards have marked you.",
+    100: "One hundred days. The arkhive remembers.",
+  };
+  await sendPushToUser(userId, {
+    type: "milestone",
+    title: "Arkhana",
+    body: messages[milestone],
+    url: "/",
+    tag: `milestone-${milestone}`,
+  });
+}
+
+export async function sendDailyReminders(pullDate: string) {
+  if (!initWebPush()) return;
+
+  // Find users with subscriptions who haven't pulled today
+  const pulledToday = db
+    .selectDistinct({ userId: userCards.userId })
+    .from(userCards)
+    .where(and(eq(userCards.pullDate, pullDate), eq(userCards.pullType, "daily")));
+
+  const targets = await db
+    .selectDistinct({ userId: pushSubscriptions.userId })
+    .from(pushSubscriptions)
+    .where(
+      notInArray(
+        pushSubscriptions.userId,
+        sql`(${pulledToday})`
+      )
+    );
+
+  const REMINDER_BODIES = [
+    "A card is waiting.",
+    "No rush. A card has been holding your name.",
+    "The arkhive stirs. Your card is ready.",
+  ];
+  const body = REMINDER_BODIES[Math.floor(Math.random() * REMINDER_BODIES.length)];
+
+  await Promise.allSettled(
+    targets.map((t) =>
+      sendPushToUser(t.userId, {
+        type: "daily-reminder",
+        title: "Arkhana",
+        body,
+        url: "/",
+        tag: "daily-reminder",
+      })
+    )
+  );
+}
+
+export async function sendCelestialNotification(event: "new-moon" | "full-moon") {
+  if (!initWebPush()) return;
+
+  const messages = {
+    "new-moon": "The new moon arrives. A good night to listen.",
+    "full-moon": "Full moon. Draw your card under its light.",
+  };
+
+  const targets = await db
+    .selectDistinct({ userId: pushSubscriptions.userId })
+    .from(pushSubscriptions);
+
+  await Promise.allSettled(
+    targets.map((t) =>
+      sendPushToUser(t.userId, {
+        type: "celestial",
+        title: "Arkhana",
+        body: messages[event],
+        url: "/",
+        tag: `celestial-${event}`,
+      })
+    )
+  );
+}
+
+export function getVapidPublicKey(): string | null {
+  return config.vapidPublicKey ?? null;
+}
