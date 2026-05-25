@@ -108,9 +108,9 @@ export const MoonCycle = memo(function MoonCycle({
                 ? isComplete
                   ? "var(--color-rarity-primordial)"
                   : "var(--color-text-secondary)"
-                : "var(--color-bg-elevated)"
+                : "var(--color-border-default)"
             }
-            opacity={filled ? (isCurrent ? 1 : 0.55) : 0.2}
+            opacity={filled ? (isCurrent ? 1 : 0.55) : 0.45}
             filter={isCurrent ? `url(#glow-${filterId})` : undefined}
           />
         );
