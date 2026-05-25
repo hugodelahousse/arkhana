@@ -1,4 +1,4 @@
-import { eq, and, desc, ne, sql } from "drizzle-orm";
+import { eq, and, desc, ne, sql, inArray } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { userCards } from "../../db/schema/user-cards.js";
 import { CARD_BY_ID, type CardDefinition, type Rarity } from "./cards.js";
@@ -179,9 +179,10 @@ export async function getDailyPullHistory(userId: string) {
       isRadiant: userCards.isRadiant,
       isReversed: userCards.isReversed,
       pullDate: userCards.pullDate,
+      pullType: userCards.pullType,
     })
     .from(userCards)
-    .where(and(eq(userCards.userId, userId), eq(userCards.pullType, "daily")))
+    .where(and(eq(userCards.userId, userId), inArray(userCards.pullType, ["daily", "spread"])))
     .orderBy(desc(userCards.pullDate));
 }
 
