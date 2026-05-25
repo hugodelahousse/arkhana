@@ -32,8 +32,10 @@ export function useCardMotion(
   onDragStart?: () => void,
 ) {
   const cfgRef = useRef(config);
+  // eslint-disable-next-line react-hooks/refs
   cfgRef.current = config;
   const onDragStartRef = useRef(onDragStart);
+  // eslint-disable-next-line react-hooks/refs
   onDragStartRef.current = onDragStart;
 
   // rotateX: spring (small clamped values — no wrap issue)

@@ -115,7 +115,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   };
 }
 
-export function meta({ data: loaderData, params }: Route.MetaArgs) {
+export function meta({ data: loaderData, params: _params }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "Arkhana" }];
   const d = loaderData as LoaderData;
   const origin = d.origin;
