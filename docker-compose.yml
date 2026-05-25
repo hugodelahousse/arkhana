@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: arkhana
-      POSTGRES_PASSWORD: arkhana
-      POSTGRES_DB: arkhana
+      POSTGRES_USER: ${POSTGRES_USER:-arkhana}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-arkhana}
+      POSTGRES_DB: ${POSTGRES_DB:-arkhana}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U arkhana"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-arkhana}"]
       interval: 5s
       timeout: 5s
       retries: 5

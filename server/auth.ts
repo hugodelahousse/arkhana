@@ -16,6 +16,10 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  rateLimit: {
+    window: 60,
+    max: 10,
+  },
   plugins: [
     anonymous({
       onLinkAccount: async ({ anonymousUser, newUser }) => {
