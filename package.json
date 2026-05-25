@@ -23,6 +23,7 @@
     "@fontsource-variable/dm-sans": "^5.2.8",
     "@fontsource/cormorant-garamond": "^5.2.11",
     "@fontsource/dm-sans": "^5.2.8",
+    "@phosphor-icons/react": "^2.1.10",
     "@react-router/express": "^7.15.1",
     "@react-router/node": "7.15.1",
     "@react-router/serve": "7.15.1",
