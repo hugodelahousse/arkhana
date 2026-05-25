@@ -17,13 +17,13 @@ export function Nav({ userName, isAnonymous }: { userName: string; isAnonymous?:
         <div className="flex items-center gap-3 sm:gap-6 text-xs tracking-widest uppercase">
           <Link
             to="/history"
-            className="opacity-60 hover:opacity-100 transition-opacity"
+            className="hidden sm:inline opacity-60 hover:opacity-100 transition-opacity"
           >
             History
           </Link>
           <Link
             to="/collection"
-            className="opacity-60 hover:opacity-100 transition-opacity"
+            className="hidden sm:inline opacity-60 hover:opacity-100 transition-opacity"
           >
             Collection
           </Link>

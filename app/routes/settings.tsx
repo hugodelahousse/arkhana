@@ -80,22 +80,11 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
           <p className="text-xs opacity-50 leading-relaxed text-secondary">
             Your username appears on your public profile at{" "}
             <span className="text-primary">
-              arkhana.app/u/
-              {loaderData.username || "username"}
+              arkhana.app/u/{loaderData.username || "username"}
             </span>
-            . Use 3–30 characters: letters, numbers, hyphens, underscores.
+            .
           </p>
           <Form method="post" className="space-y-3">
-            {error && (
-              <p className="text-sm text-rarity-arcane" role="alert">
-                {error}
-              </p>
-            )}
-            {success && (
-              <p className="text-sm text-rarity-wandering" role="status">
-                Username updated.
-              </p>
-            )}
             <div className="flex gap-3">
               <label htmlFor="username" className="sr-only">
                 Username
@@ -120,6 +109,16 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                 {isSubmitting ? "…" : "Save"}
               </button>
             </div>
+            {error && (
+              <p className="text-xs text-rarity-arcane" role="alert">
+                {error}
+              </p>
+            )}
+            {success && (
+              <p className="text-xs opacity-60 tracking-widest uppercase text-secondary" role="status">
+                Saved.
+              </p>
+            )}
           </Form>
         </section>
       </main>
