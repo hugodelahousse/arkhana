@@ -33,9 +33,20 @@ export default [
     },
   },
   {
-    files: ["scripts/**/*.mjs", "server.js"],
+    files: ["scripts/**/*.mjs", "scripts/**/*.js", "server.js"],
     languageOptions: {
       globals: { Buffer: "readonly", process: "readonly", console: "readonly" },
+    },
+  },
+  {
+    files: ["public/sw.js"],
+    languageOptions: {
+      globals: {
+        self: "readonly",
+        clients: "readonly",
+        caches: "readonly",
+        fetch: "readonly",
+      },
     },
   },
   prettierConfig,

@@ -1,5 +1,5 @@
 import webpush from "web-push";
-import { and, desc, eq, ne, notInArray, sql } from "drizzle-orm";
+import { and, eq, notInArray, sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { pushSubscriptions } from "../../db/schema/push-subscriptions.js";
 import { userCards } from "../../db/schema/user-cards.js";

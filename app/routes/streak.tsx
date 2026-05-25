@@ -361,7 +361,7 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
 
 // ─── Calendar row ─────────────────────────────────────────────────────────────
 
-function LunarMonthRow({ month, today }: { month: LunarMonth; today: string }) {
+function LunarMonthRow({ month }: { month: LunarMonth }) {
   const label = formatLunarMonthLabel(month.newMoonDate, month.days);
   const pulledCount = month.days.filter((d) => !d.isFuture && d.pulled).length;
   const totalPast = month.days.filter((d) => !d.isFuture).length;

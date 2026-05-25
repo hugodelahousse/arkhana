@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Moon, MoonStars, Sparkle } from "@phosphor-icons/react";
 import type { Milestone } from "../lib/streak.js";
@@ -33,15 +33,15 @@ export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) 
   const [visible, setVisible] = useState(true);
   const copy = MILESTONE_COPY[milestone];
 
-  function dismiss() {
+  const dismiss = useCallback(() => {
     setVisible(false);
     setTimeout(onDismiss, 600);
-  }
+  }, [onDismiss]);
 
   useEffect(() => {
     const t = setTimeout(dismiss, 8000);
     return () => clearTimeout(t);
-  }, []);
+  }, [dismiss]);
 
   return (
     <AnimatePresence>

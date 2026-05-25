@@ -23,7 +23,6 @@ import { config } from "../../config/index.js";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
 import { ArrowRight } from "@phosphor-icons/react";
-import type { Milestone } from "../lib/streak";
 
 // Reflection prompt per arcana/suit — shown in the layered second-reveal
 function reflectionPrompt(card: CardDefinition): string {
@@ -602,8 +601,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       navigate(`/collection/${slug}`);
     });
   }
-
-  const hasPulledToday = !!dailyResult || !!todayPull;
 
   // After a fresh pull the loader streak may lag behind — use action result when available
   const liveStreakDay =
