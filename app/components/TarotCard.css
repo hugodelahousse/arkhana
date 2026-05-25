@@ -124,6 +124,29 @@
 
 .card-scene[data-revealed] .card-flipper { transform: rotateY(180deg); }
 
+/* ─── Edges — 1 CSS-px depth, perpendicular to the card faces ─── */
+/* Visible when the card tilts or spins; participate in the flipper's 3D space. */
+.card-edge {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 1px;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--color-bg-surface, #111) 55%, black);
+}
+
+.card-edge-l {
+  left: 0;
+  transform-origin: left center;
+  transform: rotateY(90deg);
+}
+
+.card-edge-r {
+  right: 0;
+  transform-origin: right center;
+  transform: rotateY(-90deg);
+}
+
 /* ─── Faces ─── */
 .card-face {
   position: absolute;

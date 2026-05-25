@@ -72,6 +72,7 @@ export default function CardLab() {
   const [idleSpeed, setIdleSpeed]         = useState(DEFAULT_MOTION_CONFIG.idleSpeed);
   const [touchHScale, setTouchHScale]     = useState(DEFAULT_MOTION_CONFIG.touchHScale);
   const [touchVMax, setTouchVMax]         = useState(DEFAULT_MOTION_CONFIG.touchVMax);
+  const [spinFriction, setSpinFriction]       = useState(DEFAULT_MOTION_CONFIG.spinFriction);
   const [springStiffness, setSpringStiffness] = useState(DEFAULT_MOTION_CONFIG.springStiffness);
   const [springDamping, setSpringDamping]     = useState(DEFAULT_MOTION_CONFIG.springDamping);
 
@@ -85,6 +86,7 @@ export default function CardLab() {
     idleSpeed,
     touchHScale,
     touchVMax,
+    spinFriction,
     springStiffness: debouncedStiffness,
     springDamping: debouncedDamping,
   };
@@ -259,6 +261,12 @@ export default function CardLab() {
               value={touchVMax}
               min={0} max={30} step={1} unit="°"
               onChange={setTouchVMax}
+            />
+            <SliderControl
+              label="Spin Friction"
+              value={spinFriction}
+              min={0.01} max={0.20} step={0.01}
+              onChange={setSpinFriction}
             />
           </div>
 

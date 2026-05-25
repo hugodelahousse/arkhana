@@ -3,10 +3,11 @@ import { useMotionValue, useSpring, animate } from "motion/react";
 import type { MotionStyle } from "motion/react";
 
 export interface CardMotionConfig {
-  idleAmplitude: number;    // degrees of idle sway
-  idleSpeed: number;        // oscillation speed multiplier
-  touchHScale: number;      // degrees per card-width of horizontal swipe
-  touchVMax: number;        // max vertical rotation in degrees
+  idleAmplitude: number;
+  idleSpeed: number;
+  touchHScale: number;    // degrees per card-width of horizontal swipe
+  touchVMax: number;      // max vertical rotation in degrees
+  spinFriction: number;   // velocity decay per frame at 60 fps (0 = no friction, 1 = instant stop)
   springStiffness: number;
   springDamping: number;
 }
@@ -14,15 +15,13 @@ export interface CardMotionConfig {
 export const DEFAULT_MOTION_CONFIG: CardMotionConfig = {
   idleAmplitude: 3,
   idleSpeed: 0.5,
-  touchHScale: 360,   // one full rotation per card width
+  touchHScale: 360,
   touchVMax: 8,
+  spinFriction: 0.08,
   springStiffness: 200,
   springDamping: 25,
 };
 
-// Normalise any accumulated rotation angle into 0–360 range.
-// rotateY(360deg) === rotateY(0deg) visually, so setting the MotionValue to the
-// normalised equivalent is a safe instant teleport with no visible change.
 function normalise360(deg: number) {
   return ((deg % 360) + 360) % 360;
 }
@@ -37,21 +36,26 @@ export function useCardMotion(
   const onDragStartRef = useRef(onDragStart);
   onDragStartRef.current = onDragStart;
 
-  // rotateX: spring (small clamped values — no wrap-around issue)
+  // rotateX: spring (small clamped values — no wrap issue)
   const rotateX = useSpring(0, { stiffness: config.springStiffness, damping: config.springDamping });
   // rotateY: plain MotionValue so we can teleport after snapping
   const rotateY = useMotionValue(0);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const snapAnimRef = useRef<any>(null);
-  const isDraggingRef = useRef(false);
-  const isHoveringRef = useRef(false);
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const baseRotYRef  = useRef(0);   // normalised rotateY at touch-start
-  const cardWidthRef = useRef(200); // updated on each touch-start
-  const velocityRef  = useRef(0);   // px/ms, EMA-smoothed
-  const lastXRef     = useRef(0);
-  const lastTimeRef  = useRef(0);
+  const snapAnimRef   = useRef<any>(null);
+  const decelRafRef   = useRef<number | null>(null);
+  const omegaRef      = useRef(0);         // angular velocity in deg/s
+
+  const isDraggingRef    = useRef(false);
+  const isHoveringRef    = useRef(false);
+  const isDeceleratingRef = useRef(false); // prevents idle fighting the spin loop
+
+  const touchStartRef  = useRef<{ x: number; y: number } | null>(null);
+  const baseRotYRef    = useRef(0);   // normalised rotateY at touch-start
+  const cardWidthRef   = useRef(200);
+  const velocityRef    = useRef(0);   // px/ms, EMA-smoothed
+  const lastXRef       = useRef(0);
+  const lastTimeRef    = useRef(0);
 
   const setCSSVars = useCallback((nx: number, ny: number) => {
     const el = ref.current;
@@ -73,15 +77,18 @@ export function useCardMotion(
     el.style.setProperty("--pointer-from-center", "0");
   }, [ref]);
 
-  // Autonomous idle animation — two incommensurate frequencies for organic motion
+  // Idle: two incommensurate frequencies + a subtle harmonic on each axis
+  // for an organic, never-quite-periodic drift.
   useEffect(() => {
     let rafId: number;
     const loop = (ts: number) => {
-      if (!isDraggingRef.current && !isHoveringRef.current) {
+      if (!isDraggingRef.current && !isHoveringRef.current && !isDeceleratingRef.current) {
         const t = ts / 1000;
         const { idleAmplitude: amp, idleSpeed: spd } = cfgRef.current;
-        const ny = Math.sin(t * spd * 0.87) * amp;
-        const nx = Math.cos(t * spd * 0.53) * amp * 0.6;
+        const ny = Math.sin(t * spd * 0.87)         * amp
+                 + Math.sin(t * spd * 0.23 + 1.4)   * amp * 0.22;
+        const nx = Math.cos(t * spd * 0.53)         * amp * 0.6
+                 + Math.cos(t * spd * 0.17 + 2.1)   * amp * 0.18;
         rotateX.set(-ny);
         rotateY.set(nx);
         const safeAmp = Math.max(0.01, amp);
@@ -93,54 +100,80 @@ export function useCardMotion(
     return () => cancelAnimationFrame(rafId);
   }, [rotateX, rotateY, setCSSVars]);
 
-  // Snap rotateY to the nearest multiple of 360° (front-facing), with momentum.
-  // After the spring settles we teleport to 0° — visually identical but keeps
-  // the value small so the idle animation can take over without a backward spin.
-  const snapYToFront = useCallback(() => {
-    snapAnimRef.current?.stop?.();
+  // Physics-based spin-down after a swipe: exponential friction until velocity
+  // drops to a threshold, then spring-snap to the nearest front-facing angle.
+  const startDeceleration = useCallback(() => {
+    if (decelRafRef.current !== null) cancelAnimationFrame(decelRafRef.current);
+    isDeceleratingRef.current = true;
 
-    const { springStiffness: stiffness, springDamping: damping, touchHScale } = cfgRef.current;
-    const cardW = cardWidthRef.current;
+    let lastTime = performance.now();
 
-    const current    = rotateY.get();
-    const normalised = normalise360(current);
-    rotateY.set(normalised); // instant teleport (safe — same visual)
+    const tick = () => {
+      const now = performance.now();
+      // Cap dt so a stalled tab doesn't cause a huge jump on resume
+      const dt  = Math.min(32, now - lastTime) / 1000; // seconds
+      lastTime  = now;
 
-    // Momentum: project where the card would be after ~250 ms at current velocity
-    const degsPerPx   = touchHScale / cardW;
-    const rawMomentum = velocityRef.current * 250 * degsPerPx;
-    // Cap at ±3 full rotations of extra momentum
-    const momentum = Math.max(-1080, Math.min(1080, rawMomentum));
+      const { spinFriction, springStiffness: stiffness, springDamping: damping } = cfgRef.current;
 
-    const target  = normalised + momentum;
-    const snapped = Math.round(target / 360) * 360;
+      // Exponential velocity decay: same formula regardless of frame rate
+      omegaRef.current *= Math.pow(1 - spinFriction, dt * 60);
 
-    if (Math.abs(normalised - snapped) < 0.5) {
-      rotateY.set(0);
-      return;
-    }
+      const delta     = omegaRef.current * dt;
+      const current   = normalise360(rotateY.get());
+      const next      = normalise360(current + delta);
+      rotateY.set(next);
 
-    snapAnimRef.current = animate(rotateY, snapped, {
-      type: "spring",
-      stiffness,
-      damping,
-      onComplete: () => {
-        if (!isDraggingRef.current) {
-          // Teleport: rotateY(N×360°) === rotateY(0°) — invisible, resets for idle
+      // Update foil/shine: use rotation angle to drive a sweep
+      const angle = next / 360; // 0–1
+      setCSSVars(Math.sin(angle * Math.PI * 2), 0);
+
+      if (Math.abs(omegaRef.current) < 30) {
+        // Velocity is low enough — snap to nearest face
+        const normalised = normalise360(rotateY.get());
+        rotateY.set(normalised);
+        const snapped = Math.round(normalised / 360) * 360; // 0 or 360
+
+        isDeceleratingRef.current = false;
+        decelRafRef.current = null;
+
+        if (Math.abs(normalised - snapped) < 0.5) {
           rotateY.set(0);
+          return;
         }
-      },
-    });
-  }, [rotateY]);
 
-  // ── Touch drag ────────────────────────────────────────────────────────────
+        snapAnimRef.current = animate(rotateY, snapped, {
+          type: "spring",
+          stiffness,
+          damping,
+          onComplete: () => {
+            if (!isDraggingRef.current) rotateY.set(0);
+          },
+        });
+        return;
+      }
+
+      decelRafRef.current = requestAnimationFrame(tick);
+    };
+
+    decelRafRef.current = requestAnimationFrame(tick);
+  }, [rotateY, setCSSVars]);
+
+  // ── Touch drag ──────────────────────────────────────────────────────────
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
+    // Cancel any in-flight animation or deceleration
+    if (decelRafRef.current !== null) {
+      cancelAnimationFrame(decelRafRef.current);
+      decelRafRef.current = null;
+    }
     snapAnimRef.current?.stop?.();
+    isDeceleratingRef.current = false;
+
     const t = e.touches[0];
     touchStartRef.current = { x: t.clientX, y: t.clientY };
 
-    // Normalise and record the Y rotation base for this gesture
+    // Normalise and record base so gestures start from current visual position
     const normalised = normalise360(rotateY.get());
     rotateY.set(normalised);
     baseRotYRef.current = normalised;
@@ -157,7 +190,7 @@ export function useCardMotion(
     const t   = e.touches[0];
     const now = performance.now();
     const dt  = Math.max(1, now - lastTimeRef.current);
-    // Exponential moving average for velocity
+    // EMA-smooth velocity to reduce noise from jittery touch events
     velocityRef.current = 0.7 * velocityRef.current + 0.3 * ((t.clientX - lastXRef.current) / dt);
     lastXRef.current    = t.clientX;
     lastTimeRef.current = now;
@@ -174,7 +207,7 @@ export function useCardMotion(
     const { touchHScale, touchVMax } = cfgRef.current;
     const degsPerPx = touchHScale / cardWidthRef.current;
 
-    // Horizontal: unclamped accumulation from touch-start base
+    // Horizontal: unclamped accumulation from gesture base
     rotateY.set(baseRotYRef.current + dx * degsPerPx);
 
     // Vertical: clamped give
@@ -182,20 +215,24 @@ export function useCardMotion(
     const ny = Math.max(-1, Math.min(1, (dy / height) * 2));
     rotateX.set(-ny * touchVMax);
 
-    // Normalise horizontal for CSS vars (90° ≡ full shine)
-    const nxNorm = Math.max(-1, Math.min(1, (dx * degsPerPx) / 90));
-    setCSSVars(nxNorm, ny);
+    // CSS vars for foil/shine (normalise horizontal to ±1 over 90°)
+    setCSSVars(Math.max(-1, Math.min(1, (dx * degsPerPx) / 90)), ny);
   }, [ref, rotateX, rotateY, setCSSVars]);
 
   const onTouchEnd = useCallback(() => {
     isDraggingRef.current = false;
     touchStartRef.current = null;
     rotateX.set(0);
-    snapYToFront();
     resetCSSVars();
-  }, [rotateX, snapYToFront, resetCSSVars]);
 
-  // ── Mouse hover (desktop) ─────────────────────────────────────────────────
+    // Convert swipe velocity to angular velocity, then let physics take over
+    const { touchHScale } = cfgRef.current;
+    const degsPerPx = touchHScale / cardWidthRef.current;
+    omegaRef.current = velocityRef.current * degsPerPx * 1000; // px/ms → deg/s
+    startDeceleration();
+  }, [rotateX, resetCSSVars, startDeceleration]);
+
+  // ── Mouse hover (desktop) ────────────────────────────────────────────────
 
   const onMouseMove = useCallback((e: React.MouseEvent) => {
     if (!ref.current) return;
