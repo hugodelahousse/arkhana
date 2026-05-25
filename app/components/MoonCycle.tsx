@@ -6,12 +6,12 @@ interface MoonCycleProps {
 }
 
 const SEGMENTS = 28;
-const GAP_DEG = 3.5;
+const GAP_DEG = 3;
 
 const SIZE = {
-  sm: { total: 120, radius: 46, stroke: 3.5, numSize: 20, labelSize: 7 },
-  md: { total: 160, radius: 62, stroke: 4.5, numSize: 28, labelSize: 8 },
-  lg: { total: 280, radius: 110, stroke: 7,   numSize: 52, labelSize: 12 },
+  sm: { total: 120, radius: 46, thickness: 7,  numSize: 20, labelSize: 7 },
+  md: { total: 160, radius: 62, thickness: 10, numSize: 28, labelSize: 8 },
+  lg: { total: 280, radius: 110, thickness: 18, numSize: 52, labelSize: 12 },
 } as const;
 
 function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
@@ -19,22 +19,35 @@ function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 
+// Closed donut-wedge path: outer arc forward + inner arc backward.
+// This gives each segment two opposing curved edges so the curvature is
+// clearly visible regardless of how small the arc angle is.
 function segmentPath(
   cx: number,
   cy: number,
-  radius: number,
+  outerR: number,
+  innerR: number,
   index: number
 ): string {
   const arcDeg = 360 / SEGMENTS - GAP_DEG;
   const startDeg = (index * 360) / SEGMENTS - 90;
   const endDeg = startDeg + arcDeg;
-  const start = polarToCartesian(cx, cy, radius, startDeg);
-  const end = polarToCartesian(cx, cy, radius, endDeg);
   const largeArc = arcDeg > 180 ? 1 : 0;
-  return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArc} 1 ${end.x} ${end.y}`;
+
+  const os = polarToCartesian(cx, cy, outerR, startDeg);
+  const oe = polarToCartesian(cx, cy, outerR, endDeg);
+  const ie = polarToCartesian(cx, cy, innerR, endDeg);
+  const is_ = polarToCartesian(cx, cy, innerR, startDeg);
+
+  return [
+    `M ${os.x} ${os.y}`,
+    `A ${outerR} ${outerR} 0 ${largeArc} 1 ${oe.x} ${oe.y}`,
+    `L ${ie.x} ${ie.y}`,
+    `A ${innerR} ${innerR} 0 ${largeArc} 0 ${is_.x} ${is_.y}`,
+    "Z",
+  ].join(" ");
 }
 
-// Quarter-point markers (new moon, first quarter, full moon, last quarter)
 const QUARTER_LABELS: Record<number, string> = {
   0: "🌑",
   7: "🌓",
@@ -51,17 +64,19 @@ export const MoonCycle = memo(function MoonCycle({
   const cx = cfg.total / 2;
   const cy = cfg.total / 2;
 
+  const outerR = cfg.radius + cfg.thickness / 2;
+  const innerR = cfg.radius - cfg.thickness / 2;
+
   const cyclePos = currentStreak === 0 ? 0 : ((currentStreak - 1) % SEGMENTS) + 1;
   const filledCount = cyclePos;
   const isComplete = currentStreak > 0 && currentStreak % SEGMENTS === 0;
   const cycleNumber = currentStreak === 0 ? 0 : Math.ceil(currentStreak / SEGMENTS);
 
-  const currentColor = isComplete
+  const activeColor = isComplete
     ? "var(--color-rarity-primordial)"
     : "var(--color-rarity-mystic)";
 
-  // Outer radius for quarter markers
-  const markerRadius = cfg.radius + cfg.stroke * 3.5;
+  const markerRadius = outerR + (size === "lg" ? 14 : size === "md" ? 10 : 7);
 
   return (
     <svg
@@ -73,8 +88,8 @@ export const MoonCycle = memo(function MoonCycle({
       style={{ overflow: "visible" }}
     >
       <defs>
-        <filter id={`glow-${filterId}`} x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
+        <filter id={`glow-${filterId}`} x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="3.5" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
@@ -89,7 +104,6 @@ export const MoonCycle = memo(function MoonCycle({
         </filter>
       </defs>
 
-      {/* Track ring (unfilled segments) */}
       {Array.from({ length: SEGMENTS }, (_, i) => {
         const filled = i < filledCount;
         const isCurrent = i === filledCount - 1 && currentStreak > 0;
@@ -97,26 +111,22 @@ export const MoonCycle = memo(function MoonCycle({
         return (
           <path
             key={i}
-            d={segmentPath(cx, cy, cfg.radius, i)}
-            fill="none"
-            strokeWidth={cfg.stroke}
-            strokeLinecap="round"
-            stroke={
+            d={segmentPath(cx, cy, outerR, innerR, i)}
+            fill={
               isCurrent
-                ? currentColor
+                ? activeColor
                 : filled
                 ? isComplete
                   ? "var(--color-rarity-primordial)"
                   : "var(--color-text-secondary)"
                 : "var(--color-border-default)"
             }
-            opacity={filled ? (isCurrent ? 1 : 0.55) : 0.45}
+            opacity={filled ? (isCurrent ? 1 : 0.5) : 0.35}
             filter={isCurrent ? `url(#glow-${filterId})` : undefined}
           />
         );
       })}
 
-      {/* Quarter-point markers — only in md/lg */}
       {size !== "sm" &&
         Object.entries(QUARTER_LABELS).map(([dayStr, emoji]) => {
           const day = Number(dayStr);
@@ -138,7 +148,6 @@ export const MoonCycle = memo(function MoonCycle({
           );
         })}
 
-      {/* Center: streak count */}
       <text
         x={cx}
         y={cy - cfg.numSize * 0.25}
@@ -146,7 +155,7 @@ export const MoonCycle = memo(function MoonCycle({
         dominantBaseline="middle"
         fontSize={cfg.numSize}
         fontFamily="var(--font-serif)"
-        fill={currentStreak > 0 ? "var(--color-text-secondary)" : "var(--color-text-secondary)"}
+        fill="var(--color-text-secondary)"
         opacity={currentStreak > 0 ? 0.95 : 0.25}
         filter={currentStreak > 0 ? `url(#glow-soft-${filterId})` : undefined}
       >
@@ -166,7 +175,6 @@ export const MoonCycle = memo(function MoonCycle({
         {currentStreak === 1 ? "DAY" : "DAYS"}
       </text>
 
-      {/* Cycle number badge — only in md/lg */}
       {size !== "sm" && cycleNumber > 0 && (
         <text
           x={cx}
