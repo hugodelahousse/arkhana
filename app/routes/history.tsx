@@ -44,7 +44,7 @@ export async function loader({ context }: Route.LoaderArgs) {
   ]);
 
   const entries: HistoryEntry[] = [
-    ...dailyPulls.filter((p) => p.pullType === "daily").map((p): DailyEntry => ({
+    ...dailyPulls.map((p): DailyEntry => ({
       kind: "daily",
       id: p.id,
       pullDate: p.pullDate,

@@ -9,7 +9,7 @@ import { Nav } from "../components/layout/nav";
 import { MoonCycle } from "../components/MoonCycle";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { getStreak } from "../lib/streak";
-import { getDailyPullHistory } from "../lib/pull";
+import { getPullDates } from "../lib/pull";
 import {
   getMoonAge,
   getLunarMonthInfo,
@@ -139,12 +139,10 @@ export async function loader({ context }: Route.LoaderArgs) {
   const today = todayUTC();
   const todayDate = new Date(today + "T12:00:00Z");
 
-  const [streakState, pullHistory] = await Promise.all([
+  const [streakState, pullDates] = await Promise.all([
     getStreak(userId),
-    getDailyPullHistory(userId),
+    getPullDates(userId),
   ]);
-
-  const pullDates = pullHistory.map((p) => p.pullDate);
   const lunarMonthInfo = getLunarMonthInfo(todayDate, pullDates);
 
   return {

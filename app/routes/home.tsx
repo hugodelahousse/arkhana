@@ -9,7 +9,7 @@ import { TarotCard } from "../components/TarotCard";
 import { SpreadSummaryGrid } from "../components/SpreadSummaryGrid";
 import { MoonCycle } from "../components/MoonCycle";
 import { StreakMilestone } from "../components/StreakMilestone";
-import { getTodayPull, getRecentPulls, getUniqueCardCount, dailyPull, getDailyPullHistory } from "../lib/pull";
+import { getTodayPull, getRecentPulls, getUniqueCardCount, dailyPull, getPullDates } from "../lib/pull";
 import { getStreak, initStreakFromHistory } from "../lib/streak";
 import { getLunarMonthInfo } from "../lib/moonphase";
 import { getTodaySpread, drawSpread, getSpreadId } from "../lib/spread-pull";
@@ -70,16 +70,16 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const todayStr = todayUTC();
   const isSundayToday = DateTime.utc().weekday === 7;
 
-  const [recentPulls, totalUnique, sundaySpread, sundaySpreadId, streakState, allPullHistory] = await Promise.all([
+  const [recentPulls, totalUnique, sundaySpread, sundaySpreadId, streakState, pullDates] = await Promise.all([
     getRecentPulls(userId, 5),
     getUniqueCardCount(userId),
     isSundayToday ? getTodaySpread(userId, "sunday-weekly", todayStr) : Promise.resolve(null),
     isSundayToday ? getSpreadId(userId, "sunday-weekly", todayStr) : Promise.resolve(null),
     getStreak(userId),
-    getDailyPullHistory(userId),
+    getPullDates(userId),
   ]);
 
-  const lunarMonthInfo = getLunarMonthInfo(new Date(todayStr + "T12:00:00Z"), allPullHistory.map((p) => p.pullDate));
+  const lunarMonthInfo = getLunarMonthInfo(new Date(todayStr + "T12:00:00Z"), pullDates);
 
   const spreadDef = isSundayToday ? (() => {
     const d = getSpreadType("sunday-weekly")!;
