@@ -13,7 +13,7 @@ import { getOrigin } from "../lib/utils";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   const spreadId = parseInt(params.id, 10);
-  if (isNaN(spreadId)) throw data("Not found", { status: 404 });
+  if (isNaN(spreadId) || spreadId <= 0 || spreadId > 2147483647) throw data("Not found", { status: 404 });
 
   const spread = await getSpreadById(spreadId);
   if (!spread) throw data("Not found", { status: 404 });

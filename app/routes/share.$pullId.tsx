@@ -18,10 +18,10 @@ import { getOrigin } from "../lib/utils";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   const pullId = parseInt(params.pullId, 10);
-  if (isNaN(pullId)) throw data("Not found", { status: 404 });
+  if (isNaN(pullId) || pullId <= 0 || pullId > 2147483647) throw data("Not found", { status: 404 });
 
   const pull = await getPullById(pullId);
-  if (!pull) throw data("Not found", { status: 404 });
+  if (!pull || pull.pullType !== "daily") throw data("Not found", { status: 404 });
 
   const card = CARD_BY_ID[pull.cardId];
   if (!card) throw data("Not found", { status: 404 });

@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { userCards } from "../db/schema/user-cards.js";
 import { spreads, spreadCards } from "../db/schema/spreads.js";
@@ -31,17 +31,31 @@ export async function migrateAnonymousPulls(
         .update(spreads)
         .set({ userId: newUserId })
         .where(eq(spreads.id, anonSpread.id));
+
+      // Also migrate the associated userCards rows so they belong to the new user.
+      // Without this, getAllPulls/getUniqueCardCount would miss these cards, and
+      // deleting the anonymous user would fail the FK constraint on spreadCards.userCardId.
+      const linkedCards = await db
+        .select({ userCardId: spreadCards.userCardId })
+        .from(spreadCards)
+        .where(eq(spreadCards.spreadId, anonSpread.id));
+      if (linkedCards.length > 0) {
+        await db
+          .update(userCards)
+          .set({ userId: newUserId })
+          .where(inArray(userCards.id, linkedCards.map((r) => r.userCardId)));
+      }
     } else {
       // Conflict: delete the anonymous spread (cascade deletes its spreadCards)
       await db.delete(spreads).where(eq(spreads.id, anonSpread.id));
     }
   }
 
-  // Migrate daily pulls
+  // Migrate daily pulls (spread userCards are already handled above with their spreads)
   const anonPulls = await db
     .select()
     .from(userCards)
-    .where(eq(userCards.userId, anonymousUserId));
+    .where(and(eq(userCards.userId, anonymousUserId), eq(userCards.pullType, "daily")));
 
   for (const anonPull of anonPulls) {
     const [conflict] = await db
@@ -50,7 +64,8 @@ export async function migrateAnonymousPulls(
       .where(
         and(
           eq(userCards.userId, newUserId),
-          eq(userCards.pullDate, anonPull.pullDate)
+          eq(userCards.pullDate, anonPull.pullDate),
+          eq(userCards.pullType, "daily")
         )
       )
       .limit(1);
