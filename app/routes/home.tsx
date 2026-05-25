@@ -577,6 +577,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     >
                       Card history →
                     </a>
+                    <div className="flex justify-center pt-2">
+                      <ShareButton
+                        title={`${dailyResult.card.name} — Arkhana`}
+                        url={user.username ? `/u/${user.username}/pull/${todayStr}` : `/share/${dailyResult.pullId}`}
+                        text=""
+                        label="Share"
+                      />
+                    </div>
                   </div>
                 </div>
               ) : todayPull && todayCard ? (
@@ -615,6 +623,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     >
                       {getCardDescription(todayCard, todayPull.rarityScore, todayPull.isReversed)}
                     </p>
+                    <div className="flex justify-center pt-2">
+                      <ShareButton
+                        title={`${todayCard.name} — Arkhana`}
+                        url={user.username ? `/u/${user.username}/pull/${todayStr}` : `/share/${todayPull.id}`}
+                        text=""
+                        label="Share"
+                      />
+                    </div>
                   </div>
                 </div>
               ) : (
