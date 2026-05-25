@@ -44,6 +44,18 @@ registerRoute(
   new NetworkOnly()
 );
 
+// React Router v7 single-fetch data requests (client-side navigation)
+// These have a .data suffix, e.g. /collection.data — not navigate-mode so
+// they bypass the pages route above and fail silently offline without this.
+registerRoute(
+  ({ url }) => url.pathname.endsWith(".data"),
+  new NetworkFirst({
+    cacheName: "rr-data",
+    networkTimeoutSeconds: 5,
+    plugins: [new ExpirationPlugin({ maxEntries: 100 })],
+  })
+);
+
 // Serve offline fallback for any navigation that fails both network and cache
 setCatchHandler(async ({ request }) => {
   if (request.destination === "document") {

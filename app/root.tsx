@@ -60,8 +60,13 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let message = "Oops!";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;
+  let isOffline = false;
 
-  if (isRouteErrorResponse(error)) {
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    isOffline = true;
+    message = "The Moon";
+    details = "The cards cannot reach you here. Return when the connection is restored.";
+  } else if (isRouteErrorResponse(error)) {
     message = error.status === 404 ? "404" : "Error";
     details =
       error.status === 404
@@ -75,6 +80,11 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   return (
     <main className="min-h-screen bg-base flex flex-col items-center justify-center px-6 text-center">
       <div className="max-w-md space-y-6">
+        {isOffline && (
+          <div className="w-32 mx-auto mb-2 rounded border border-default overflow-hidden bg-surface">
+            <img src="/cards/masks/m18.png" alt="The Moon" className="w-full opacity-85" />
+          </div>
+        )}
         <p className="text-6xl font-light tracking-widest text-primary font-serif">
           {message}
         </p>
@@ -82,8 +92,9 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
           {details}
         </p>
         <a
-          href="/"
-          className="inline-block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-4 text-secondary"
+          href={isOffline ? undefined : "/"}
+          onClick={isOffline ? () => history.back() : undefined}
+          className="inline-block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-4 text-secondary cursor-pointer"
         >
           ← Return home
         </a>
