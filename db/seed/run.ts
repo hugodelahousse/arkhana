@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { CARDS } from "../../app/lib/cards.js";
 import { db } from "../index.js";
 import { cards } from "../schema/cards.js";
@@ -65,7 +65,7 @@ try {
     const pulls = await db
       .select({ pullDate: userCards.pullDate })
       .from(userCards)
-      .where(and(eq(userCards.userId, userId), eq(userCards.pullType, "daily")));
+      .where(and(eq(userCards.userId, userId), inArray(userCards.pullType, ["daily", "spread"])));
     await initStreakFromHistory(userId, pulls.map((p) => p.pullDate));
   }
 

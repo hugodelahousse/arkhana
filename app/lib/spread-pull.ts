@@ -6,6 +6,7 @@ import { userCards } from "../../db/schema/user-cards.js";
 import { CARD_BY_ID, type CardDefinition, type Rarity } from "./cards.js";
 import { rollRarity, rollRadiant, rollReversed } from "./rarity.js";
 import { getSpreadType } from "./spreads.js";
+import { updateStreak } from "./streak.js";
 
 export type SpreadCardResult = {
   position: number;
@@ -139,6 +140,8 @@ export async function drawSpread(
     isRadiant: uc.isRadiant,
     isReversed: uc.isReversed,
   }));
+
+  await updateStreak(userId, spreadDate);
 
   return { status: "success", spreadId: result.spreadId, cards };
 }

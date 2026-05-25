@@ -91,7 +91,7 @@ export async function migrateAnonymousPulls(
   const allPulls = await db
     .select({ pullDate: userCards.pullDate })
     .from(userCards)
-    .where(and(eq(userCards.userId, newUserId), eq(userCards.pullType, "daily")));
+    .where(and(eq(userCards.userId, newUserId), inArray(userCards.pullType, ["daily", "spread"])));
 
   await initStreakFromHistory(newUserId, allPulls.map((r) => r.pullDate));
 }
