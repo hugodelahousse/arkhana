@@ -601,6 +601,7 @@
   display: block;
   z-index: 1;
   pointer-events: none;
+  translate: 0 0 0.001px;
   mask-size: cover;
   mask-mode: luminance;
 }
