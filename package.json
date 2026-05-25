@@ -13,8 +13,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx db/seed/run.ts",
-    "lint": "eslint .",
-    "lint:css": "stylelint \"app/**/*.css\"",
+    "lint": "eslint . && stylelint \"app/**/*.css\"",
     "format": "prettier --write .",
     "test": "vitest run"
   },
