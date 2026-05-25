@@ -181,15 +181,23 @@ export async function getDailyPullHistory(userId: string) {
       pullDate: userCards.pullDate,
     })
     .from(userCards)
-    .where(and(eq(userCards.userId, userId), inArray(userCards.pullType, ["daily", "spread"])))
+    .where(and(eq(userCards.userId, userId), eq(userCards.pullType, "daily")))
     .orderBy(desc(userCards.pullDate));
+}
+
+export async function getPullDates(userId: string): Promise<string[]> {
+  const rows = await db
+    .selectDistinct({ pullDate: userCards.pullDate })
+    .from(userCards)
+    .where(and(eq(userCards.userId, userId), inArray(userCards.pullType, ["daily", "spread"])));
+  return rows.map((r) => r.pullDate);
 }
 
 export async function getUserCardHistory(userId: string, cardId: number) {
   return db
     .select()
     .from(userCards)
-    .where(and(eq(userCards.userId, userId), eq(userCards.cardId, cardId), eq(userCards.pullType, "daily")))
+    .where(and(eq(userCards.userId, userId), eq(userCards.cardId, cardId)))
     .orderBy(userCards.pulledAt);
 }
 
