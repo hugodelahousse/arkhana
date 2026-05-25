@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CARDS, CARD_BY_ID, RARITY_LABELS, getCardDescription } from "../lib/cards";
-import { TarotCard } from "../components/TarotCard";
+import { TarotCard, DEFAULT_MOTION_CONFIG } from "../components/TarotCard";
+import type { CardMotionConfig } from "../components/TarotCard";
 import { useAutoReveal } from "../lib/useAutoReveal";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -10,6 +11,54 @@ export function meta() {
 
 type RarityScore = 1 | 2 | 3 | 4 | 5;
 
+function useDebounced<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return debounced;
+}
+
+interface SliderControlProps {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  unit?: string;
+  onChange: (v: number) => void;
+}
+
+function SliderControl({ label, value, min, max, step, unit = "", onChange }: SliderControlProps) {
+  return (
+    <label
+      className="flex flex-col gap-1.5 text-[0.6rem] tracking-[0.12em] uppercase"
+      style={{ color: "var(--color-text-primary)" }}
+    >
+      {label}
+      <div className="flex items-center gap-2.5">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="w-28"
+          style={{ accentColor: "var(--color-border-default)" }}
+        />
+        <span
+          className="text-[0.75rem] font-mono w-14 text-right tabular-nums"
+          style={{ color: "var(--color-text-primary)", opacity: 0.6 }}
+        >
+          {value}{unit}
+        </span>
+      </div>
+    </label>
+  );
+}
+
 export default function CardLab() {
   const [cardId, setCardId] = useState(0);
   const [rarity, setRarity] = useState<RarityScore>(3);
@@ -17,6 +66,28 @@ export default function CardLab() {
   const [isReversed, setIsReversed] = useState(false);
   const [drawn, setDrawn] = useState(false);
   const [drawKey, setDrawKey] = useState(0);
+
+  // Motion config state
+  const [idleAmplitude, setIdleAmplitude] = useState(DEFAULT_MOTION_CONFIG.idleAmplitude);
+  const [idleSpeed, setIdleSpeed]         = useState(DEFAULT_MOTION_CONFIG.idleSpeed);
+  const [touchHScale, setTouchHScale]     = useState(DEFAULT_MOTION_CONFIG.touchHScale);
+  const [touchVGive, setTouchVGive]       = useState(DEFAULT_MOTION_CONFIG.touchVGive);
+  const [springStiffness, setSpringStiffness] = useState(DEFAULT_MOTION_CONFIG.springStiffness);
+  const [springDamping, setSpringDamping]     = useState(DEFAULT_MOTION_CONFIG.springDamping);
+
+  // Spring params require remount — debounce so slider drags don't thrash
+  const debouncedStiffness = useDebounced(springStiffness, 350);
+  const debouncedDamping   = useDebounced(springDamping, 350);
+  const springKey = `${debouncedStiffness}-${debouncedDamping}`;
+
+  const motionConfig: Partial<CardMotionConfig> = {
+    idleAmplitude,
+    idleSpeed,
+    touchHScale,
+    touchVGive,
+    springStiffness: debouncedStiffness,
+    springDamping: debouncedDamping,
+  };
 
   const [revealed, revealNow] = useAutoReveal(drawn, 800);
 
@@ -26,7 +97,6 @@ export default function CardLab() {
   function handleDraw() {
     setDrawn(false);
     setDrawKey((k) => k + 1);
-    // Let the reset flush before triggering, so useAutoReveal sees the transition
     requestAnimationFrame(() => setDrawn(true));
   }
 
@@ -41,7 +111,7 @@ export default function CardLab() {
       className="min-h-screen p-8"
       style={{ background: "var(--color-bg-base)" }}
     >
-      <div className="max-w-2xl mx-auto space-y-10">
+      <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div className="space-y-1">
           <h1
@@ -58,7 +128,7 @@ export default function CardLab() {
           </p>
         </div>
 
-        {/* Controls */}
+        {/* Card controls */}
         <div
           className="flex flex-wrap gap-5 items-end p-5 border"
           style={{ background: "var(--color-bg-surface)", borderColor: "var(--color-bg-elevated)" }}
@@ -156,10 +226,73 @@ export default function CardLab() {
           </button>
         </div>
 
+        {/* Motion controls */}
+        <div
+          className="p-5 border space-y-4"
+          style={{ background: "var(--color-bg-surface)", borderColor: "var(--color-bg-elevated)" }}
+        >
+          <p className="text-[0.6rem] tracking-[0.15em] uppercase opacity-40" style={{ color: "var(--color-text-primary)" }}>
+            Motion
+          </p>
+
+          <div className="flex flex-wrap gap-x-8 gap-y-4">
+            <SliderControl
+              label="Idle Amplitude"
+              value={idleAmplitude}
+              min={0} max={10} step={0.5} unit="°"
+              onChange={setIdleAmplitude}
+            />
+            <SliderControl
+              label="Idle Speed"
+              value={idleSpeed}
+              min={0.1} max={2} step={0.05}
+              onChange={setIdleSpeed}
+            />
+            <SliderControl
+              label="Touch H Scale"
+              value={touchHScale}
+              min={5} max={60} step={1} unit="°"
+              onChange={setTouchHScale}
+            />
+            <SliderControl
+              label="Touch V Give"
+              value={touchVGive}
+              min={0} max={1} step={0.05}
+              onChange={setTouchVGive}
+            />
+          </div>
+
+          <div
+            className="border-t pt-4 flex flex-wrap gap-x-8 gap-y-4"
+            style={{ borderColor: "var(--color-bg-elevated)" }}
+          >
+            <div className="flex flex-wrap gap-x-8 gap-y-4">
+              <SliderControl
+                label="Spring Stiffness"
+                value={springStiffness}
+                min={50} max={800} step={10}
+                onChange={setSpringStiffness}
+              />
+              <SliderControl
+                label="Spring Damping"
+                value={springDamping}
+                min={5} max={100} step={1}
+                onChange={setSpringDamping}
+              />
+            </div>
+            <p
+              className="self-end text-[0.6rem] tracking-[0.1em] uppercase opacity-30 pb-1"
+              style={{ color: "var(--color-text-primary)" }}
+            >
+              spring changes apply after 350 ms
+            </p>
+          </div>
+        </div>
+
         {/* Card display */}
         <div className="flex flex-col items-center gap-8 pt-4 pb-12">
           <TarotCard
-            key={drawKey}
+            key={`${drawKey}-${springKey}`}
             card={card}
             rarityScore={rarity}
             isReversed={isReversed}
@@ -168,6 +301,7 @@ export default function CardLab() {
             onReveal={revealNow}
             size="lg"
             showHint={!revealed}
+            motionConfig={motionConfig}
           />
 
           {/* Description */}
