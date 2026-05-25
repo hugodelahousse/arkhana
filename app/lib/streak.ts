@@ -33,7 +33,7 @@ export async function initStreakFromHistory(
 
   if (pullDates.length === 0) return;
 
-  const sorted = [...pullDates].sort(); // ascending YYYY-MM-DD
+  const sorted = [...new Set(pullDates)].sort(); // dedupe (spreads have N cards/day), ascending
   const mostRecent = sorted[sorted.length - 1];
 
   // Walk backward from the most recent pull counting consecutive days
