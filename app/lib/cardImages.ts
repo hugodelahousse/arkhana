@@ -27,6 +27,15 @@ export function cardNameMaskUrl(cardId: number): string {
   return `/cards/masks/${cardImageSlugCdn(cardId)}_name.png`;
 }
 
+// Card IDs that have a _top.png mask file in public/cards/masks/.
+// A missing top mask causes mobile Safari to render the layer fully unmasked
+// (Chrome hides it; Safari shows it), so we gate rendering on this set.
+const TOP_MASK_IDS = new Set([3, 7, 16, 17]);
+
+export function hasTopMask(cardId: number): boolean {
+  return TOP_MASK_IDS.has(cardId);
+}
+
 export function cardTopMaskUrl(cardId: number): string {
   return `/cards/masks/${cardImageSlugCdn(cardId)}_top.png`;
 }
