@@ -587,9 +587,6 @@
   mask-image: var(--mask-url, none);
   mask-size: cover;
   mask-mode: luminance;
-  -webkit-mask-image: var(--mask-url, none);
-  -webkit-mask-size: cover;
-  -webkit-mask-mode: luminance;
   filter: drop-shadow(0 2px 8px rgba(0,0,0,.45));
 }
 
@@ -606,18 +603,14 @@
   pointer-events: none;
   mask-size: cover;
   mask-mode: luminance;
-  -webkit-mask-size: cover;
-  -webkit-mask-mode: luminance;
 }
 
 .card-name-layer {
   mask-image: var(--name-mask-url, none);
-  -webkit-mask-image: var(--name-mask-url, none);
 }
 
 .card-top-layer {
   mask-image: var(--top-mask-url, none);
-  -webkit-mask-image: var(--top-mask-url, none);
 }
 
 .card-scene[data-rarity="5"] .card-text-layer {
@@ -673,9 +666,6 @@
   mask-image: var(--mask-url, none);
   mask-size: cover;
   mask-mode: luminance;
-  -webkit-mask-image: var(--mask-url, none);
-  -webkit-mask-size: cover;
-  -webkit-mask-mode: luminance;
 }
 
 /* Parallax the shine with the subject for rarity 4+ */
@@ -725,18 +715,12 @@
   mask-image: var(--name-mask-url, none);
   mask-size: cover;
   mask-mode: luminance;
-  -webkit-mask-image: var(--name-mask-url, none);
-  -webkit-mask-size: cover;
-  -webkit-mask-mode: luminance;
 }
 
 .card-top-foil {
   mask-image: var(--top-mask-url, none);
   mask-size: cover;
   mask-mode: luminance;
-  -webkit-mask-image: var(--top-mask-url, none);
-  -webkit-mask-size: cover;
-  -webkit-mask-mode: luminance;
 }
 
 /* Rarity 3 — Mystic: subtle text foil */
