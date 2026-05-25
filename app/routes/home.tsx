@@ -838,24 +838,51 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             </section>
           )}
 
-          {/* Stats bar */}
-          {!dailyResult && !isCeremonyActive && (
-            <section className="flex justify-center gap-12 py-6 border-t border-b border-elevated">
-              <div className="text-center">
-                <p className="whitespace-nowrap font-serif">
-                  <span className="text-2xl text-primary">{totalUnique}</span>
-                  <span className="text-base opacity-50 text-primary">/78</span>
-                  <span className="text-xs tracking-widest uppercase opacity-40 ml-2 text-secondary">discovered</span>
+          {/* Stats + streak — always visible, not ceremony */}
+          {!isCeremonyActive && (
+            <section className="border-t border-elevated pt-6 space-y-6">
+              {/* Discovered count */}
+              <div className="flex items-center justify-between">
+                <p className="text-xs tracking-widest uppercase opacity-30 text-secondary">
+                  Collection
+                </p>
+                <p className="whitespace-nowrap font-serif text-sm">
+                  <span className="text-primary opacity-80">{totalUnique}</span>
+                  <span className="opacity-30 text-primary">/78</span>
+                  <span className="text-xs tracking-widest uppercase opacity-30 ml-2 text-secondary">discovered</span>
                 </p>
               </div>
-              {streak && streak.currentStreak > 0 && (
-                <div className="text-center">
-                  <MoonCycle
-                    currentStreak={streak.currentStreak}
-                    cycleStartDate={streak.cycleStartDate}
-                  />
+
+              {/* Streak widget — always visible, links to /streak */}
+              <Link
+                to="/streak"
+                className="flex items-center justify-between group hover:opacity-80 transition-opacity"
+                aria-label={`Moon cycle: ${streak?.currentStreak ?? 0} day streak. View moon calendar.`}
+              >
+                <div className="space-y-0.5">
+                  <p className="text-xs tracking-widest uppercase opacity-30 text-secondary">
+                    Moon Cycle
+                  </p>
+                  {streak && streak.currentStreak > 0 ? (
+                    <p className="text-sm font-serif text-secondary opacity-70">
+                      Day {((streak.currentStreak - 1) % 28) + 1} of 28
+                      {streak.currentStreak >= 7 && (
+                        <span className="ml-2 opacity-40">
+                          · {streak.currentStreak} day{streak.currentStreak !== 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </p>
+                  ) : (
+                    <p className="text-sm font-serif text-secondary opacity-30">
+                      Begin your practice
+                    </p>
+                  )}
                 </div>
-              )}
+                <MoonCycle
+                  currentStreak={streak?.currentStreak ?? 0}
+                  size="md"
+                />
+              </Link>
             </section>
           )}
 
