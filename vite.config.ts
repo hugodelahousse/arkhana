@@ -29,7 +29,7 @@ export default defineConfig(({ isSsrBuild }) => ({
               globPatterns: ["**/*.{js,css,woff,woff2,ttf}"],
               additionalManifestEntries: [
                 { url: "/offline.html", revision: "1" },
-                { url: "/cards/masks/m18.png", revision: "1" },
+                { url: "/cards/moon.jpg", revision: "1" },
               ],
             },
           }),

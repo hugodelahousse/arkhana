@@ -82,7 +82,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       <div className="max-w-md space-y-6">
         {isOffline && (
           <div className="w-32 mx-auto mb-2 rounded border border-default overflow-hidden bg-surface">
-            <img src="/cards/masks/m18.png" alt="The Moon" className="w-full opacity-85" />
+            <img src="/cards/moon.jpg" alt="The Moon" className="w-full opacity-85" />
           </div>
         )}
         <p className="text-6xl font-light tracking-widest text-primary font-serif">
