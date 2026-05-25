@@ -1,6 +1,7 @@
 import { redirect } from "react-router";
 import { motion } from "motion/react";
 import { DateTime } from "luxon";
+import { ArrowRight } from "@phosphor-icons/react";
 import type { Route } from "./+types/history";
 import { Link } from "react-router";
 import { Nav } from "../components/layout/nav";
@@ -77,29 +78,20 @@ export default function History({ loaderData }: Route.ComponentProps) {
 
   return (
     <DirectionalTransition>
-      <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
+      <div className="min-h-screen">
         <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-2xl mx-auto px-6 py-12 space-y-12">
           <div className="space-y-1">
-            <h1
-              className="text-2xl font-light tracking-widest"
-              style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-serif)" }}
-            >
+            <h1 className="text-2xl font-light tracking-widest text-primary font-serif">
               History
             </h1>
-            <p
-              className="text-xs tracking-widest uppercase opacity-40"
-              style={{ color: "var(--color-text-primary)" }}
-            >
+            <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
               All your pulls, in order
             </p>
           </div>
 
           {entries.length === 0 ? (
-            <p
-              className="text-sm opacity-40 text-center py-12"
-              style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-            >
+            <p className="text-sm opacity-40 text-center py-12 text-secondary font-serif">
               No readings yet. Draw your first card.
             </p>
           ) : (
@@ -127,16 +119,13 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="space-y-5"
+        className="space-y-3"
       >
-        <p
-          className="text-xs tracking-widest uppercase opacity-40"
-          style={{ color: "var(--color-text-primary)" }}
-        >
+        <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
           {date}
         </p>
-        <div className="flex flex-col items-center gap-4">
-          <Link to={`/collection/${slug}`} className="block w-28">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+          <Link to={`/collection/${slug}`} className="block w-28 shrink-0">
             <TarotCard
               card={card}
               rarityScore={entry.rarityScore as Rarity}
@@ -146,7 +135,7 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
               size="sm"
             />
           </Link>
-          <div className="space-y-2 text-center">
+          <div className="space-y-2 text-center sm:text-left">
             <p
               className="text-xs tracking-widest uppercase"
               style={{ color: `var(--color-rarity-${rarityLabel})` }}
@@ -155,16 +144,10 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
               {entry.isRadiant && " ✦"}
               {entry.isReversed && " · Reversed"}
             </p>
-            <p
-              className="text-lg font-light"
-              style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-            >
+            <p className="text-lg font-light text-secondary font-serif">
               {card.name}
             </p>
-            <p
-              className="text-sm leading-relaxed opacity-70 max-w-xs mx-auto"
-              style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-            >
+            <p className="text-sm leading-relaxed opacity-70 text-secondary font-serif">
               {getCardDescription(card, entry.rarityScore as Rarity, entry.isReversed)}
             </p>
           </div>
@@ -187,26 +170,19 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
       className="space-y-6"
     >
       <div className="space-y-1">
-        <p
-          className="text-xs tracking-widest uppercase opacity-40"
-          style={{ color: "var(--color-text-primary)" }}
-        >
+        <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
           {date}
         </p>
-        <p
-          className="text-lg font-light"
-          style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-        >
+        <p className="text-lg font-light text-secondary font-serif">
           {name}
         </p>
       </div>
       <SpreadSummaryGrid cards={entry.cards} positions={positions} />
       <Link
         to={`/spread/${entry.spreadType}/${entry.spreadDate}`}
-        className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity"
-        style={{ color: "var(--color-text-primary)" }}
+        className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity text-secondary"
       >
-        View full reading →
+        View full reading <ArrowRight weight="light" size={13} aria-hidden />
       </Link>
     </motion.div>
   );

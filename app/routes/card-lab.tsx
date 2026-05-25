@@ -46,7 +46,7 @@ export default function CardLab() {
         <div className="space-y-1">
           <h1
             className="text-2xl font-light tracking-widest"
-            style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-serif)" }}
+            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
           >
             Card Lab
           </h1>
@@ -66,7 +66,7 @@ export default function CardLab() {
           {/* Card picker */}
           <label
             className="flex flex-col gap-1 text-[0.65rem] tracking-[0.12em] uppercase"
-            style={{ color: "var(--color-text-muted)" }}
+            style={{ color: "var(--color-text-primary)" }}
           >
             Card
             <select
@@ -91,7 +91,7 @@ export default function CardLab() {
           {/* Rarity */}
           <label
             className="flex flex-col gap-1 text-[0.65rem] tracking-[0.12em] uppercase"
-            style={{ color: "var(--color-text-muted)" }}
+            style={{ color: "var(--color-text-primary)" }}
           >
             Rarity
             <select
@@ -116,7 +116,7 @@ export default function CardLab() {
           {/* Toggles */}
           <label
             className="flex flex-row items-center gap-2 text-[0.65rem] tracking-[0.12em] uppercase cursor-pointer"
-            style={{ color: "var(--color-text-muted)" }}
+            style={{ color: "var(--color-text-primary)" }}
           >
             <input
               type="checkbox"
@@ -130,7 +130,7 @@ export default function CardLab() {
 
           <label
             className="flex flex-row items-center gap-2 text-[0.65rem] tracking-[0.12em] uppercase cursor-pointer"
-            style={{ color: "var(--color-text-muted)" }}
+            style={{ color: "var(--color-text-primary)" }}
           >
             <input
               type="checkbox"
@@ -147,7 +147,7 @@ export default function CardLab() {
             onClick={handleDraw}
             className="px-6 py-2 text-[0.7rem] tracking-[0.15em] uppercase cursor-pointer border bg-transparent hover:opacity-90 transition-opacity"
             style={{
-              color: "var(--color-text-muted)",
+              color: "var(--color-text-primary)",
               borderColor: "var(--color-border-default)",
               fontFamily: "var(--font-serif)",
             }}

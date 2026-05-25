@@ -6,7 +6,8 @@
 @theme {
   --font-serif: var(--primitive-font-serif);
   --font-sans: var(--primitive-font-sans);
-  --color-muted: var(--primitive-bone-100);
+  --color-primary: var(--primitive-bone-100);
+  --color-secondary: var(--primitive-bone-400);
   --color-base: var(--primitive-black-950);
   --color-surface: var(--primitive-black-900);
   --color-elevated: var(--primitive-black-800);
@@ -21,7 +22,12 @@
 html,
 body {
   background-color: var(--color-bg-base);
-  color: var(--color-text-primary);
+  background-image: radial-gradient(
+    ellipse 120% 45% at 50% 0%,
+    color-mix(in srgb, var(--color-accent) 6%, transparent) 0%,
+    transparent 100%
+  );
+  color: var(--color-text-secondary);
   font-family: var(--font-sans);
   color-scheme: dark;
   scroll-behavior: smooth;
@@ -85,6 +91,13 @@ body {
 ::view-transition-group(site-nav) {
   animation: none;
   z-index: 100;
+}
+
+/* Bottom tab bar — push main content up so last items aren't obscured */
+@media (max-width: 639px) {
+  body:has(nav[aria-label="Main navigation"]) main {
+    padding-bottom: 5rem;
+  }
 }
 
 /* Reduced motion — collapse all VT animations and disable smooth scroll */

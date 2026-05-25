@@ -161,7 +161,7 @@ export default function LayerLab() {
         <div className="space-y-1">
           <h1
             className="text-xl font-light tracking-widest"
-            style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-serif)" }}
+            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
           >
             Layer Lab
           </h1>
@@ -375,7 +375,7 @@ const layerLabCss = `
     font-size: .6rem;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--color-text-muted, #999);
+    color: var(--color-text-primary, #999);
     cursor: pointer;
   }
   .ll-ctrl input[type=range] { accent-color: var(--color-border-default, #555); width: 80px; }
@@ -424,7 +424,7 @@ const layerLabCss = `
     font-size: .75rem;
     letter-spacing: .15em;
     text-transform: uppercase;
-    color: var(--color-text-muted, #999);
+    color: var(--color-text-primary, #999);
     font-family: var(--font-serif, Georgia);
     opacity: .6;
   }

@@ -62,10 +62,10 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
   const error = actionData && "error" in actionData ? actionData.error : null;
 
   return (
-    <main className="min-h-[100dvh] flex flex-col items-center justify-center px-6 py-8">
+    <main className="min-h-dvh flex flex-col items-center justify-center px-6 py-8">
       <div className="max-w-sm w-full space-y-8">
         <div className="text-center space-y-2">
-          <Link to="/" className="text-2xl tracking-widest text-muted font-serif block">
+          <Link to="/" className="text-2xl tracking-widest text-primary font-serif block">
             ARKHANA
           </Link>
           <p className="text-xs tracking-widest uppercase opacity-60">
@@ -77,6 +77,27 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
           {error && (
             <p id="form-error" role="alert" className="text-sm text-rarity-arcane text-center">{error}</p>
           )}
+          <label htmlFor="email" className="sr-only">Email address</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            placeholder="your@email.com"
+            autoComplete="email"
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-secondary"
+          />
+          <label htmlFor="password" className="sr-only">Password, minimum 8 characters</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            minLength={8}
+            placeholder="Password (min 8 characters)"
+            autoComplete="new-password"
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-secondary"
+          />
           <label htmlFor="name" className="sr-only">Name (optional)</label>
           <input
             id="name"
@@ -84,8 +105,7 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             type="text"
             placeholder="Name (optional)"
             autoComplete="name"
-            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
-            style={{ color: "var(--color-text-primary)" }}
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-secondary"
           />
           <label htmlFor="username" className="sr-only">Username (optional)</label>
           <input
@@ -97,36 +117,12 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             minLength={1}
             maxLength={30}
             pattern="[a-zA-Z0-9_-]*"
-            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
-            style={{ color: "var(--color-text-primary)" }}
-          />
-          <label htmlFor="email" className="sr-only">Email address</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            required
-            placeholder="your@email.com"
-            autoComplete="email"
-            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
-            style={{ color: "var(--color-text-primary)" }}
-          />
-          <label htmlFor="password" className="sr-only">Password, minimum 8 characters</label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            required
-            minLength={8}
-            placeholder="Password (min 8 characters)"
-            autoComplete="new-password"
-            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors"
-            style={{ color: "var(--color-text-primary)" }}
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-secondary"
           />
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-muted hover:opacity-80 disabled:opacity-40 transition-opacity"
+            className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-primary hover:opacity-80 disabled:opacity-40 transition-opacity"
           >
             {isSubmitting ? "…" : "Enter the arkhive"}
           </button>

@@ -19,8 +19,8 @@
   --color-bg-base: var(--primitive-black-950);
   --color-bg-surface: var(--primitive-black-900);
   --color-bg-elevated: var(--primitive-black-800);
-  --color-text-primary: var(--primitive-bone-400);
-  --color-text-muted: var(--primitive-bone-100);
+  --color-text-primary: var(--primitive-bone-100);
+  --color-text-secondary: var(--primitive-bone-400);
   --color-border-default: var(--primitive-stone-800);
   --color-rarity-mundane: var(--primitive-rarity-1);
   --color-rarity-wandering: var(--primitive-rarity-2);

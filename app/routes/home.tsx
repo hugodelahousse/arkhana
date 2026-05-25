@@ -18,6 +18,7 @@ import { todayUTC, getOrigin } from "../lib/utils";
 import { config } from "../../config/index.js";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
+import { ArrowRight } from "@phosphor-icons/react";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   if (!context.user) {
@@ -162,21 +163,17 @@ function SpreadContemplateReveal({
       className="text-center space-y-4 sm:space-y-6 pt-2 sm:pt-8 flex flex-col items-center"
     >
       <div className="space-y-2">
-        <p
-          className="text-xs tracking-widest uppercase opacity-30"
-          style={{ color: "var(--color-text-primary)" }}
-        >
+        <p className="text-xs tracking-widest uppercase opacity-30 text-secondary">
           {position + 1} of {positions.length}
         </p>
         <h2
-          className="text-2xl sm:text-3xl font-light tracking-wide"
-          style={{ color: "var(--color-rarity-mystic)", fontFamily: "var(--font-serif)" }}
+          className="text-2xl sm:text-3xl font-light tracking-wide font-serif"
+          style={{ color: "var(--color-rarity-mystic)" }}
         >
           {posLabel}
         </h2>
       </div>
 
-      {/* Card: centered in remaining space */}
       <TarotCard
         card={card.card}
         rarityScore={card.rarityScore as Rarity}
@@ -188,9 +185,8 @@ function SpreadContemplateReveal({
         showHint={!cardRevealed}
       />
 
-      {/* Below card: grid overlay — prompt and details share the same slot, no layout shift */}
+      {/* Grid overlay — prompt and details share the same slot, no layout shift */}
       <div className="w-full max-w-xs grid" style={{ gridTemplateAreas: "'slot'" }}>
-        {/* Pre-reveal: contemplation prompt */}
         <div
           className="space-y-2 transition-opacity duration-300"
           style={{
@@ -199,14 +195,10 @@ function SpreadContemplateReveal({
             pointerEvents: cardRevealed ? "none" : "auto",
           }}
         >
-          <p
-            className="text-sm leading-relaxed opacity-80 italic"
-            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-          >
+          <p className="text-sm leading-relaxed opacity-80 italic text-secondary font-serif">
             {positions[position]?.contemplationPrompt}
           </p>
         </div>
-        {/* Post-reveal: card details + continue button */}
         <div
           className="space-y-2 transition-opacity duration-500"
           style={{
@@ -223,23 +215,17 @@ function SpreadContemplateReveal({
             {card.isRadiant && " ✦"}
             {card.isReversed && " · Reversed"}
           </p>
-          <h3
-            className="text-xl font-light tracking-wide"
-            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-          >
+          <h3 className="text-xl font-light tracking-wide text-secondary font-serif">
             {card.card.name}
           </h3>
-          <p
-            className="text-sm leading-relaxed opacity-85"
-            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-          >
+          <p className="text-sm leading-relaxed opacity-85 text-secondary font-serif">
             {getCardDescription(card.card, card.rarityScore, card.isReversed)}
           </p>
           <button
             onClick={onAdvance}
             className="mt-2 px-8 py-2.5 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
             style={{
-              color: "var(--color-text-primary)",
+              color: "var(--color-text-secondary)",
               borderColor: "var(--color-rarity-mystic)",
               opacity: showContinue ? 1 : 0,
               pointerEvents: showContinue ? "auto" : "none",
@@ -295,8 +281,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   if (!loaderData.user) {
     return (
-      <div className="min-h-screen bg-base flex items-center justify-center">
-        <p className="text-sm opacity-40 tracking-widest uppercase">The arkhive stirs…</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-sm opacity-40 tracking-widest uppercase text-secondary">The arkhive stirs…</p>
       </div>
     );
   }
@@ -316,7 +302,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   return (
     <DirectionalTransition>
-      <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
+      <div className="min-h-screen">
         <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-2xl mx-auto px-6 py-6 sm:py-12 space-y-8 sm:space-y-12">
 
@@ -324,7 +310,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             <section className="space-y-6">
               <AnimatePresence mode="wait">
 
-                {/* ── Intro ──────────────────────────────────────────────── */}
                 {sundayPhase.phase === "intro" && (
                   <motion.div
                     key="sunday-intro"
@@ -335,38 +320,22 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     className="text-center space-y-8 pt-4"
                   >
                     <div className="space-y-3">
-                      <p
-                        className="text-xs tracking-widest uppercase opacity-40"
-                        style={{ color: "var(--color-text-primary)" }}
-                      >
+                      <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
                         {spreadDef.subtitle}
                       </p>
-                      <h2
-                        className="text-3xl font-light tracking-wide"
-                        style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                      >
+                      <h2 className="text-3xl font-light tracking-wide text-secondary font-serif">
                         {spreadDef.name}
                       </h2>
                     </div>
-                    <div
-                      className="w-16 h-px mx-auto opacity-20"
-                      style={{ background: "var(--color-text-primary)" }}
-                    />
-                    <p
-                      className="text-base leading-relaxed opacity-80 max-w-sm mx-auto"
-                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                    >
+                    <div className="w-16 h-px mx-auto opacity-20 bg-secondary" />
+                    <p className="text-base leading-relaxed opacity-80 max-w-sm mx-auto text-secondary font-serif">
                       {spreadDef.description}
                     </p>
                     <div className="flex flex-wrap items-center justify-center gap-3">
                       {positions.map((pos) => (
                         <span
                           key={pos.index}
-                          className="text-xs tracking-widest uppercase opacity-30 px-3 py-1 border"
-                          style={{
-                            color: "var(--color-text-primary)",
-                            borderColor: "var(--color-bg-elevated)",
-                          }}
+                          className="text-xs tracking-widest uppercase opacity-30 px-3 py-1 border border-elevated text-secondary"
                         >
                           {pos.label}
                         </span>
@@ -377,18 +346,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                         setSundayPhase({ phase: "drawing" });
                         fetcher.submit({ _action: "spread" }, { method: "post" });
                       }}
-                      className="px-8 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
-                      style={{
-                        color: "var(--color-text-primary)",
-                        borderColor: "var(--color-rarity-mystic)",
-                      }}
+                      className="px-8 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80 text-secondary"
+                      style={{ borderColor: "var(--color-rarity-mystic)" }}
                     >
                       Begin the reading
                     </button>
                   </motion.div>
                 )}
 
-                {/* ── Drawing ──────────────────────────────────────────────*/}
                 {sundayPhase.phase === "drawing" && (
                   <motion.div
                     key="sunday-drawing"
@@ -399,33 +364,20 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     className="text-center space-y-8 pt-8"
                   >
                     <div className="space-y-3">
-                      <p
-                        className="text-xs tracking-widest uppercase opacity-40"
-                        style={{ color: "var(--color-text-primary)" }}
-                      >
+                      <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
                         {spreadDef.subtitle}
                       </p>
-                      <h2
-                        className="text-3xl font-light tracking-wide"
-                        style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                      >
+                      <h2 className="text-3xl font-light tracking-wide text-secondary font-serif">
                         {spreadDef.name}
                       </h2>
                     </div>
-                    <div
-                      className="w-16 h-px mx-auto opacity-20"
-                      style={{ background: "var(--color-text-primary)" }}
-                    />
-                    <p
-                      className="text-sm opacity-50 animate-pulse"
-                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                    >
+                    <div className="w-16 h-px mx-auto opacity-20 bg-secondary" />
+                    <p className="text-sm opacity-50 animate-pulse text-secondary font-serif">
                       The cards are gathering…
                     </p>
                   </motion.div>
                 )}
 
-                {/* ── Contemplating + reveal in place ─────────────────────*/}
                 {sundayPhase.phase === "contemplating" && currentCards[sundayPhase.position] && (
                   <SpreadContemplateReveal
                     key={`sunday-contemplating-${sundayPhase.position}`}
@@ -443,7 +395,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   />
                 )}
 
-                {/* ── Summary ──────────────────────────────────────────────*/}
                 {sundayPhase.phase === "summary" && (
                   <motion.div
                     key="sunday-summary"
@@ -454,16 +405,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     className="space-y-10"
                   >
                     <div className="text-center space-y-3">
-                      <p
-                        className="text-xs tracking-widest uppercase opacity-40"
-                        style={{ color: "var(--color-text-primary)" }}
-                      >
+                      <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
                         {spreadDef.subtitle}
                       </p>
-                      <h2
-                        className="text-2xl font-light tracking-wide"
-                        style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                      >
+                      <h2 className="text-2xl font-light tracking-wide text-secondary font-serif">
                         {spreadDef.name}
                       </h2>
                     </div>
@@ -481,7 +426,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   </motion.div>
                 )}
 
-                {/* ── Done (already completed today) ───────────────────────*/}
                 {sundayPhase.phase === "done" && (
                   <motion.div
                     key="sunday-done"
@@ -492,16 +436,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     className="space-y-8"
                   >
                     <div className="text-center space-y-3">
-                      <h2
-                        className="text-sm tracking-widest uppercase opacity-50"
-                        style={{ color: "var(--color-text-primary)" }}
-                      >
+                      <h2 className="text-sm tracking-widest uppercase opacity-50 text-secondary">
                         Sunday Reading
                       </h2>
-                      <p
-                        className="text-2xl font-light"
-                        style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                      >
+                      <p className="text-2xl font-light text-secondary font-serif">
                         {spreadDef.name}
                       </p>
                     </div>
@@ -523,10 +461,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             </section>
           ) : (
             <section className="space-y-6 text-center">
-              <h2
-                className="text-sm sm:text-xs tracking-widest uppercase opacity-50"
-                style={{ color: "var(--color-text-primary)" }}
-              >
+              <h2 className="text-sm sm:text-xs tracking-widest uppercase opacity-50 text-secondary">
                 Today
               </h2>
 
@@ -546,9 +481,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   </div>
                   <div
                     className="space-y-3 transition-opacity duration-500"
-                    style={{
-                      opacity: revealed ? 1 : 0,
-                    }}
+                    style={{ opacity: revealed ? 1 : 0 }}
                   >
                     <p
                       className="text-xs tracking-widest uppercase"
@@ -561,25 +494,18 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                         {dailyResult.isReversed && " · Reversed"}
                       </span>
                     </p>
-                    <h2
-                      className="text-2xl font-light tracking-wide"
-                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                    >
+                    <h2 className="text-2xl font-light tracking-wide text-secondary font-serif">
                       {dailyResult.card.name}
                     </h2>
-                    <p
-                      className="text-sm leading-relaxed"
-                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)", opacity: 0.85 }}
-                    >
+                    <p className="text-sm leading-relaxed opacity-85 text-secondary font-serif">
                       {getCardDescription(dailyResult.card, dailyResult.rarityScore, dailyResult.isReversed)}
                     </p>
                     <a
                       href={`/collection/${cardSlug(dailyResult.card)}`}
                       onClick={(e) => { e.preventDefault(); navigateToCard(cardSlug(dailyResult.card)); }}
-                      className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-1"
-                      style={{ color: "var(--color-text-primary)" }}
+                      className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-1 text-secondary"
                     >
-                      Card history →
+                      Card history <ArrowRight weight="light" size={13} aria-hidden />
                     </a>
                     <div className="flex justify-center pt-2">
                       <ShareButton
@@ -615,16 +541,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                         {todayPull.isReversed && " · Reversed"}
                       </span>
                     </p>
-                    <p
-                      className="text-xl font-light"
-                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                    >
+                    <p className="text-xl font-light text-secondary font-serif">
                       {todayCard.name}
                     </p>
-                    <p
-                      className="text-sm leading-relaxed max-w-xs mx-auto opacity-70"
-                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                    >
+                    <p className="text-sm leading-relaxed max-w-xs mx-auto opacity-70 text-secondary font-serif">
                       {getCardDescription(todayCard, todayPull.rarityScore, todayPull.isReversed)}
                     </p>
                     <div className="flex justify-center pt-2">
@@ -639,10 +559,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <p
-                    className="text-xl opacity-80"
-                    style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-                  >
+                  <p className="text-xl opacity-80 text-secondary font-serif">
                     {isPulling ? "The fates are turning…" : "The cards await your question."}
                   </p>
                   <div className={`flex justify-center ${isPulling ? "animate-pulse pointer-events-none" : ""}`}>
@@ -663,15 +580,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           )}
 
           {!dailyResult && !isCeremonyActive && (
-            <section
-              className="flex justify-center gap-12 py-6 border-t border-b"
-              style={{ borderColor: "var(--color-bg-elevated)" }}
-            >
+            <section className="flex justify-center gap-12 py-6 border-t border-b border-elevated">
               <div className="text-center">
-                <p className="whitespace-nowrap" style={{ fontFamily: "var(--font-serif)" }}>
-                  <span className="text-2xl" style={{ color: "var(--color-text-muted)" }}>{totalUnique}</span>
-                  <span className="text-base opacity-50" style={{ color: "var(--color-text-muted)" }}>/78</span>
-                  <span className="text-xs tracking-widest uppercase opacity-40 ml-2" style={{ color: "var(--color-text-primary)" }}>discovered</span>
+                <p className="whitespace-nowrap font-serif">
+                  <span className="text-2xl text-primary">{totalUnique}</span>
+                  <span className="text-base opacity-50 text-primary">/78</span>
+                  <span className="text-xs tracking-widest uppercase opacity-40 ml-2 text-secondary">discovered</span>
                 </p>
               </div>
             </section>
@@ -679,10 +593,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
           {!dailyResult && !isCeremonyActive && recentPulls.length > 0 && (
             <section className="space-y-4">
-              <h2
-                className="text-xs tracking-widest uppercase opacity-50"
-                style={{ color: "var(--color-text-primary)" }}
-              >
+              <h2 className="text-xs tracking-widest uppercase opacity-50 text-secondary">
                 Recent
               </h2>
               <div className="space-y-2">
@@ -694,10 +605,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       key={pull.id}
                       href={`/collection/${slug}`}
                       onClick={(e) => { e.preventDefault(); navigateToCard(slug); }}
-                      className="flex items-center justify-between py-3 border-b opacity-70 hover:opacity-100 transition-opacity"
-                      style={{ borderColor: "var(--color-bg-elevated)" }}
+                      className="flex items-center justify-between py-3 border-b border-elevated opacity-70 hover:opacity-100 transition-opacity"
                     >
-                      <span style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}>
+                      <span className="text-secondary font-serif">
                         {card?.name ?? "Unknown"}
                         {pull.isReversed && (
                           <span className="ml-2 text-xs opacity-50">(reversed)</span>
@@ -719,10 +629,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               </div>
               <Link
                 to="/history"
-                className="block text-center text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-2"
-                style={{ color: "var(--color-text-primary)" }}
+                className="inline-flex items-center justify-center gap-1.5 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-2 text-secondary"
               >
-                Full history →
+                Full history <ArrowRight weight="light" size={13} aria-hidden />
               </Link>
             </section>
           )}

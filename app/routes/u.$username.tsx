@@ -1,5 +1,6 @@
 import { data } from "react-router";
 import { Link } from "react-router";
+import { ArrowRight } from "@phosphor-icons/react";
 import type { Route } from "./+types/u.$username";
 import { db } from "../../db/index.js";
 import { user } from "../../db/schema/auth.js";
@@ -56,24 +57,15 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
   const joinYear = new Date(profile.createdAt).getFullYear();
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
-      {/* Simple header */}
-      <header
-        className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b"
-        style={{ borderColor: "var(--color-border-default)", opacity: 0.8 }}
-      >
-        <Link
-          to="/"
-          className="text-lg sm:text-xl tracking-widest font-serif"
-          style={{ color: "var(--color-text-muted)" }}
-        >
+    <div className="min-h-screen">
+      <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border opacity-80">
+        <Link to="/" className="text-lg sm:text-xl tracking-widest font-serif text-primary">
           ARKHANA
         </Link>
         <div className="flex items-center gap-3 sm:gap-6 text-xs tracking-widest uppercase">
           <Link
             to="/auth/signup"
-            className="opacity-60 hover:opacity-100 transition-opacity"
-            style={{ color: "var(--color-text-primary)" }}
+            className="opacity-60 hover:opacity-100 transition-opacity text-secondary"
           >
             Sign up
           </Link>
@@ -81,28 +73,15 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
       </header>
 
       <main className="max-w-2xl mx-auto px-6 py-16 space-y-12">
-        {/* Profile header */}
         <div className="space-y-6">
           <div className="space-y-3">
-            <p
-              className="text-xs tracking-widest uppercase opacity-40"
-              style={{ color: "var(--color-text-primary)" }}
-            >
+            <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
               Keeper of the Arkhive
             </p>
-            <h1
-              className="text-4xl font-light"
-              style={{
-                color: "var(--color-text-muted)",
-                fontFamily: "var(--font-serif)",
-              }}
-            >
+            <h1 className="text-4xl font-light text-primary font-serif">
               @{handle}
             </h1>
-            <p
-              className="text-xs opacity-40"
-              style={{ color: "var(--color-text-primary)" }}
-            >
+            <p className="text-xs opacity-40 text-secondary">
               Keeper since {joinYear}
             </p>
           </div>
@@ -115,58 +94,29 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
           />
         </div>
 
-        {/* Stats */}
-        <section
-          className="p-6 space-y-6 border"
-          style={{
-            borderColor: "var(--color-border-default)",
-            background: "var(--color-bg-surface)",
-          }}
-        >
+        <section className="p-6 space-y-6 border border-border bg-surface">
           <div className="flex gap-10">
             <div>
-              <p
-                className="text-3xl font-light"
-                style={{
-                  color: "var(--color-text-muted)",
-                  fontFamily: "var(--font-serif)",
-                }}
-              >
+              <p className="text-3xl font-light text-primary font-serif">
                 {stats.uniqueCards}
                 <span className="text-base opacity-40">/78</span>
               </p>
-              <p
-                className="text-xs tracking-widest uppercase opacity-40 mt-1"
-                style={{ color: "var(--color-text-primary)" }}
-              >
+              <p className="text-xs tracking-widest uppercase opacity-40 mt-1 text-secondary">
                 Cards discovered
               </p>
             </div>
             <div>
-              <p
-                className="text-3xl font-light"
-                style={{
-                  color: "var(--color-text-muted)",
-                  fontFamily: "var(--font-serif)",
-                }}
-              >
+              <p className="text-3xl font-light text-primary font-serif">
                 {stats.totalPulls}
               </p>
-              <p
-                className="text-xs tracking-widest uppercase opacity-40 mt-1"
-                style={{ color: "var(--color-text-primary)" }}
-              >
+              <p className="text-xs tracking-widest uppercase opacity-40 mt-1 text-secondary">
                 Total pulls
               </p>
             </div>
           </div>
 
-          {/* Progress bar */}
           <div className="space-y-2">
-            <div
-              className="h-1 rounded-full overflow-hidden"
-              style={{ background: "var(--color-bg-elevated)" }}
-            >
+            <div className="h-1 rounded-full overflow-hidden bg-elevated">
               <div
                 className="h-full rounded-full transition-all"
                 style={{
@@ -182,22 +132,15 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
                 }}
               />
             </div>
-            <p
-              className="text-xs opacity-30 tracking-widest uppercase"
-              style={{ color: "var(--color-text-primary)" }}
-            >
+            <p className="text-xs opacity-30 tracking-widest uppercase text-secondary">
               {pct}% of the arkhive unlocked
             </p>
           </div>
         </section>
 
-        {/* Recent cards */}
         {stats.recentCards.length > 0 && (
           <section className="space-y-4">
-            <h2
-              className="text-xs tracking-widest uppercase opacity-50"
-              style={{ color: "var(--color-text-primary)" }}
-            >
+            <h2 className="text-xs tracking-widest uppercase opacity-50 text-secondary">
               Recent pulls
             </h2>
             <div className="space-y-2">
@@ -207,22 +150,14 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
                 return (
                   <div
                     key={i}
-                    className="flex items-center justify-between py-3 border-b opacity-70"
-                    style={{ borderColor: "var(--color-bg-elevated)" }}
+                    className="flex items-center justify-between py-3 border-b border-elevated opacity-70"
                   >
-                    <span
-                      style={{
-                        color: "var(--color-text-primary)",
-                        fontFamily: "var(--font-serif)",
-                      }}
-                    >
+                    <span className="text-secondary font-serif">
                       {card?.name ?? "Unknown"}
                     </span>
                     <span
                       className="text-xs tracking-widest"
-                      style={{
-                        color: `var(--color-rarity-${rarityLabel?.toLowerCase()})`,
-                      }}
+                      style={{ color: `var(--color-rarity-${rarityLabel?.toLowerCase()})` }}
                     >
                       {rarityLabel}
                     </span>
@@ -233,29 +168,15 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
           </section>
         )}
 
-        {/* CTA */}
-        <div
-          className="text-center py-8 space-y-4 border-t"
-          style={{ borderColor: "var(--color-border-default)" }}
-        >
-          <p
-            className="text-sm opacity-60"
-            style={{
-              color: "var(--color-text-primary)",
-              fontFamily: "var(--font-serif)",
-            }}
-          >
+        <div className="text-center py-8 space-y-4 border-t border-border">
+          <p className="text-sm opacity-60 text-secondary font-serif">
             The cards await your question.
           </p>
           <Link
             to="/auth/signup"
-            className="inline-block px-6 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
-            style={{
-              borderColor: "var(--color-text-primary)",
-              color: "var(--color-text-primary)",
-            }}
+            className="inline-flex items-center gap-2 px-6 py-3 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80"
           >
-            Start your journey →
+            Start your journey <ArrowRight weight="light" size={14} aria-hidden />
           </Link>
         </div>
       </main>

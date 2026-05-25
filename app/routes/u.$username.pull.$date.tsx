@@ -1,5 +1,6 @@
 import { data } from "react-router";
 import { Link } from "react-router";
+import { ArrowRight } from "@phosphor-icons/react";
 import type { Route } from "./+types/u.$username.pull.$date";
 import { db } from "../../db/index.js";
 import { user } from "../../db/schema/auth.js";
@@ -41,7 +42,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const formattedDate = date.toFormat("cccc, LLLL d, yyyy");
   const origin = getOrigin(request);
 
-  // Check for a spread on this date
   const [spreadRow] = await db
     .select({ id: spreads.id, spreadType: spreads.spreadType })
     .from(spreads)
@@ -86,7 +86,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     };
   }
 
-  // Check for a daily pull on this date
   const [pull] = await db
     .select({
       cardId: userCards.cardId,
@@ -165,22 +164,14 @@ export default function PublicPull({ loaderData }: Route.ComponentProps) {
   const d = loaderData as LoaderData;
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--color-bg-base)" }}>
-      <header
-        className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b"
-        style={{ borderColor: "var(--color-border-default)", opacity: 0.8 }}
-      >
-        <Link
-          to="/"
-          className="text-lg sm:text-xl tracking-widest font-serif"
-          style={{ color: "var(--color-text-muted)" }}
-        >
+    <div className="min-h-screen">
+      <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border opacity-80">
+        <Link to="/" className="text-lg sm:text-xl tracking-widest font-serif text-primary">
           ARKHANA
         </Link>
         <Link
           to="/"
-          className="text-xs tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity"
-          style={{ color: "var(--color-text-primary)" }}
+          className="text-xs tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity text-secondary"
         >
           Draw your card
         </Link>
@@ -188,23 +179,14 @@ export default function PublicPull({ loaderData }: Route.ComponentProps) {
 
       <main className="max-w-lg mx-auto px-6 py-12 space-y-10 text-center">
         <div className="space-y-2">
-          <p
-            className="text-xs tracking-widest uppercase opacity-40"
-            style={{ color: "var(--color-text-primary)" }}
-          >
-            <Link
-              to={`/u/${d.handle}`}
-              className="hover:opacity-100 transition-opacity"
-            >
+          <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
+            <Link to={`/u/${d.handle}`} className="hover:opacity-100 transition-opacity">
               @{d.handle}
             </Link>
             {" · "}{d.formattedDate}
           </p>
           {d.type === "spread" && (
-            <h1
-              className="text-2xl font-light tracking-wide"
-              style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-            >
+            <h1 className="text-2xl font-light tracking-wide text-secondary font-serif">
               {d.spreadName}
             </h1>
           )}
@@ -225,22 +207,15 @@ export default function PublicPull({ loaderData }: Route.ComponentProps) {
           />
         </div>
 
-        <div
-          className="py-8 space-y-4 border-t"
-          style={{ borderColor: "var(--color-border-default)" }}
-        >
-          <p
-            className="text-sm opacity-50"
-            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-          >
+        <div className="py-8 space-y-4 border-t border-border">
+          <p className="text-sm opacity-50 text-secondary font-serif">
             The cards await your question.
           </p>
           <Link
             to="/"
-            className="inline-block px-6 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
-            style={{ borderColor: "var(--color-text-primary)", color: "var(--color-text-primary)" }}
+            className="inline-flex items-center gap-2 px-6 py-3 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80"
           >
-            Draw your card →
+            Draw your card <ArrowRight weight="light" size={14} aria-hidden />
           </Link>
         </div>
       </main>
@@ -274,20 +249,14 @@ function DailyView({ data }: { data: Extract<LoaderData, { type: "daily" }> }) {
           {data.pull.isRadiant && " ✦"}
           {data.pull.isReversed && " · Reversed"}
         </p>
-        <h1
-          className="text-3xl font-light"
-          style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-serif)" }}
-        >
+        <h1 className="text-3xl font-light text-primary font-serif">
           {card.name}
         </h1>
         <div
-          className="w-8 h-px mx-auto"
-          style={{ background: `var(--color-rarity-${rarityLabel?.toLowerCase()})`, opacity: 0.5 }}
+          className="w-8 h-px mx-auto opacity-50"
+          style={{ background: `var(--color-rarity-${rarityLabel?.toLowerCase()})` }}
         />
-        <p
-          className="text-sm leading-relaxed max-w-xs mx-auto opacity-80"
-          style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
-        >
+        <p className="text-sm leading-relaxed max-w-xs mx-auto opacity-80 text-secondary font-serif">
           {getCardDescription(card, rarity, data.pull.isReversed)}
         </p>
       </div>
