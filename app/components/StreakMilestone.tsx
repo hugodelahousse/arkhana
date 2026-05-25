@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { Moon, MoonStars, Sparkle } from "@phosphor-icons/react";
 import type { Milestone } from "../lib/streak.js";
 
 interface StreakMilestoneProps {
@@ -22,6 +23,12 @@ const MILESTONE_COPY: Record<Milestone, { heading: string; body: string }> = {
   },
 };
 
+const MILESTONE_ICON: Record<Milestone, React.ReactNode> = {
+  7: <Moon weight="thin" size={56} />,
+  28: <MoonStars weight="thin" size={56} />,
+  100: <Sparkle weight="thin" size={56} />,
+};
+
 export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) {
   const [visible, setVisible] = useState(true);
   const copy = MILESTONE_COPY[milestone];
@@ -31,7 +38,6 @@ export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) 
     setTimeout(onDismiss, 600);
   }
 
-  // Auto-dismiss after 8 seconds
   useEffect(() => {
     const t = setTimeout(dismiss, 8000);
     return () => clearTimeout(t);
@@ -56,13 +62,17 @@ export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) 
             className="text-center space-y-6 max-w-xs px-8"
             onClick={(e) => e.stopPropagation()}
           >
-            <p
-              className="text-6xl"
+            <div
               aria-hidden="true"
-              style={{ filter: "drop-shadow(0 0 20px var(--color-rarity-mystic))" }}
+              style={{
+                color: "var(--color-rarity-mystic)",
+                filter: "drop-shadow(0 0 18px var(--color-rarity-mystic))",
+                display: "flex",
+                justifyContent: "center",
+              }}
             >
-              {milestone === 7 ? "🌙" : milestone === 28 ? "🌕" : "✦"}
-            </p>
+              {MILESTONE_ICON[milestone]}
+            </div>
 
             <div className="space-y-3">
               <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">

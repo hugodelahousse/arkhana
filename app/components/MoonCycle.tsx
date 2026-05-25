@@ -6,12 +6,12 @@ interface MoonCycleProps {
 }
 
 const SEGMENTS = 28;
-const GAP_DEG = 3;
+const GAP_DEG = 2.5;
 
 const SIZE = {
-  sm: { total: 120, radius: 46, thickness: 7,  numSize: 20, labelSize: 7 },
-  md: { total: 160, radius: 62, thickness: 10, numSize: 28, labelSize: 8 },
-  lg: { total: 280, radius: 110, thickness: 18, numSize: 52, labelSize: 12 },
+  sm: { total: 120, radius: 46, thickness: 3,  numSize: 20, labelSize: 7 },
+  md: { total: 160, radius: 62, thickness: 5,  numSize: 28, labelSize: 8 },
+  lg: { total: 280, radius: 110, thickness: 9, numSize: 52, labelSize: 12 },
 } as const;
 
 function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
@@ -19,9 +19,6 @@ function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 
-// Closed donut-wedge path: outer arc forward + inner arc backward.
-// This gives each segment two opposing curved edges so the curvature is
-// clearly visible regardless of how small the arc angle is.
 function segmentPath(
   cx: number,
   cy: number,
@@ -76,7 +73,7 @@ export const MoonCycle = memo(function MoonCycle({
     ? "var(--color-rarity-primordial)"
     : "var(--color-rarity-mystic)";
 
-  const markerRadius = outerR + (size === "lg" ? 14 : size === "md" ? 10 : 7);
+  const markerRadius = outerR + (size === "lg" ? 12 : size === "md" ? 9 : 6);
 
   return (
     <svg
@@ -89,14 +86,14 @@ export const MoonCycle = memo(function MoonCycle({
     >
       <defs>
         <filter id={`glow-${filterId}`} x="-60%" y="-60%" width="220%" height="220%">
-          <feGaussianBlur stdDeviation="3.5" result="blur" />
+          <feGaussianBlur stdDeviation="2.5" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
         <filter id={`glow-soft-${filterId}`} x="-100%" y="-100%" width="300%" height="300%">
-          <feGaussianBlur stdDeviation="6" result="blur" />
+          <feGaussianBlur stdDeviation="5" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
@@ -121,7 +118,7 @@ export const MoonCycle = memo(function MoonCycle({
                   : "var(--color-text-secondary)"
                 : "var(--color-border-default)"
             }
-            opacity={filled ? (isCurrent ? 1 : 0.5) : 0.35}
+            opacity={filled ? (isCurrent ? 1 : 0.5) : 0.3}
             filter={isCurrent ? `url(#glow-${filterId})` : undefined}
           />
         );
@@ -132,7 +129,7 @@ export const MoonCycle = memo(function MoonCycle({
           const day = Number(dayStr);
           const deg = (day * 360) / SEGMENTS - 90;
           const pos = polarToCartesian(cx, cy, markerRadius, deg);
-          const fontSize = size === "lg" ? 12 : 9;
+          const fontSize = size === "lg" ? 11 : 8;
           return (
             <text
               key={day}
@@ -141,7 +138,7 @@ export const MoonCycle = memo(function MoonCycle({
               textAnchor="middle"
               dominantBaseline="middle"
               fontSize={fontSize}
-              opacity={0.35}
+              opacity={0.3}
             >
               {emoji}
             </text>

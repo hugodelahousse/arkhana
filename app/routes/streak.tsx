@@ -3,6 +3,7 @@ import { startTransition } from "react";
 import { addTransitionType } from "react";
 import type { Route } from "./+types/streak";
 import { Link, useNavigate } from "react-router";
+import { Moon, MoonStars, Sparkle } from "@phosphor-icons/react";
 import { Nav } from "../components/layout/nav";
 import { MoonCycle } from "../components/MoonCycle";
 import { DirectionalTransition } from "../components/DirectionalTransition";
@@ -201,25 +202,28 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
               <h2 className="text-xs tracking-widest uppercase opacity-30 text-secondary">
                 Milestones
               </h2>
-              <div className="flex gap-4">
-                {([7, 28, 100] as const).map((m) => {
-                  const reached = longestStreak >= m;
+              <div className="flex gap-3">
+                {([
+                  { days: 7,   Icon: Moon,       label: "Seven days" },
+                  { days: 28,  Icon: MoonStars,  label: "Full cycle" },
+                  { days: 100, Icon: Sparkle,    label: "Hundred days" },
+                ] as const).map(({ days, Icon, label }) => {
+                  const reached = longestStreak >= days;
                   return (
                     <div
-                      key={m}
-                      className="flex flex-col items-center gap-2 flex-1 py-4 border rounded-sm"
+                      key={days}
+                      className="flex flex-col items-center gap-2.5 flex-1 py-5 border rounded-sm transition-opacity"
                       style={{
                         borderColor: reached
                           ? "var(--color-rarity-mystic)"
                           : "var(--color-border-default)",
-                        opacity: reached ? 1 : 0.35,
+                        opacity: reached ? 1 : 0.3,
+                        color: reached ? "var(--color-rarity-mystic)" : "var(--color-text-secondary)",
                       }}
                     >
-                      <span className="text-xl" aria-hidden>
-                        {m === 7 ? "🌙" : m === 28 ? "🌕" : "✦"}
-                      </span>
+                      <Icon weight="thin" size={22} aria-hidden />
                       <p className="text-xs font-light font-serif text-secondary opacity-70">
-                        {m} days
+                        {days}
                       </p>
                     </div>
                   );
@@ -276,7 +280,8 @@ function CycleRow({ cycle, today }: { cycle: CycleRow; today: string }) {
           {pulledInCycle}/{cycle.days.filter((d) => !d.isFuture).length}
         </p>
       </div>
-      <div className="flex gap-[3px] flex-wrap">
+      {/* 7-column grid: 4 rows of 7 days — avoids flex-wrap hanging on mobile */}
+      <div className="grid grid-cols-7 gap-[3px]">
         {cycle.days.map((day) => (
           <DayDot key={day.date} day={day} isCurrentCycle={isCurrentCycle} />
         ))}
@@ -286,8 +291,6 @@ function CycleRow({ cycle, today }: { cycle: CycleRow; today: string }) {
 }
 
 function DayDot({ day, isCurrentCycle }: { day: DayCell; isCurrentCycle: boolean }) {
-  const size = 10;
-
   let fill: string;
   let opacity: number;
   let ring = false;
@@ -301,28 +304,29 @@ function DayDot({ day, isCurrentCycle }: { day: DayCell; isCurrentCycle: boolean
     opacity = 0.12;
     ring = true;
   } else if (day.pulled) {
-    fill = isCurrentCycle ? "var(--color-text-secondary)" : "var(--color-text-secondary)";
+    fill = "var(--color-text-secondary)";
     opacity = isCurrentCycle ? 0.75 : 0.45;
   } else {
     fill = "var(--color-bg-elevated)";
     opacity = isCurrentCycle ? 0.4 : 0.2;
   }
 
+  // Square cell, circle fills ~60% of the cell width
   return (
     <span
       title={day.date + (day.moonEmoji ? ` ${day.moonEmoji}` : "")}
-      style={{ position: "relative", display: "inline-block", width: size, height: size }}
+      className="relative flex items-center justify-center aspect-square"
     >
       <svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${size} ${size}`}
+        width="100%"
+        height="100%"
+        viewBox="0 0 10 10"
         aria-hidden
       >
         <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={ring ? size / 2 - 1.5 : size / 2 - 0.5}
+          cx={5}
+          cy={5}
+          r={ring ? 3 : 3.5}
           fill={fill}
           stroke={ring ? (day.isToday ? "var(--color-rarity-mystic)" : "var(--color-text-secondary)") : "none"}
           strokeWidth={ring ? 1 : 0}
@@ -331,16 +335,8 @@ function DayDot({ day, isCurrentCycle }: { day: DayCell; isCurrentCycle: boolean
       </svg>
       {day.moonEmoji && (
         <span
-          style={{
-            position: "absolute",
-            top: -8,
-            left: "50%",
-            transform: "translateX(-50%)",
-            fontSize: 8,
-            opacity: 0.5,
-            pointerEvents: "none",
-            lineHeight: 1,
-          }}
+          className="absolute -top-2 left-1/2 -translate-x-1/2 pointer-events-none"
+          style={{ fontSize: 7, opacity: 0.5, lineHeight: 1 }}
           aria-hidden
         >
           {day.moonEmoji}
