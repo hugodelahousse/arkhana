@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Export, Check } from "@phosphor-icons/react";
 import { buttonClass } from "./Button";
 
 interface ShareButtonProps {
@@ -41,10 +42,14 @@ export function ShareButton({
     <button
       type="button"
       onClick={handleShare}
-      className={buttonClass(size)}
+      className={buttonClass(size, "outline", "inline-flex items-center gap-2")}
       aria-label={copied ? "Link copied!" : label}
     >
-      {copied ? "Copied!" : label}
+      {copied ? (
+        <><Check weight="light" size={13} aria-hidden />Copied!</>
+      ) : (
+        <><Export weight="light" size={13} aria-hidden />{label}</>
+      )}
     </button>
   );
 }

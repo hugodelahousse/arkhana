@@ -18,6 +18,7 @@ import { todayUTC, getOrigin } from "../lib/utils";
 import { config } from "../../config/index.js";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
+import { ArrowRight } from "@phosphor-icons/react";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   if (!context.user) {
@@ -498,9 +499,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     <a
                       href={`/collection/${cardSlug(dailyResult.card)}`}
                       onClick={(e) => { e.preventDefault(); navigateToCard(cardSlug(dailyResult.card)); }}
-                      className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-1 text-secondary"
+                      className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-1 text-secondary"
                     >
-                      Card history →
+                      Card history <ArrowRight weight="light" size={13} aria-hidden />
                     </a>
                     <div className="flex justify-center pt-2">
                       <ShareButton
@@ -624,9 +625,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               </div>
               <Link
                 to="/history"
-                className="block text-center text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-2 text-secondary"
+                className="inline-flex items-center justify-center gap-1.5 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-2 text-secondary"
               >
-                Full history →
+                Full history <ArrowRight weight="light" size={13} aria-hidden />
               </Link>
             </section>
           )}

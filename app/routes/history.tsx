@@ -1,6 +1,7 @@
 import { redirect } from "react-router";
 import { motion } from "motion/react";
 import { DateTime } from "luxon";
+import { ArrowRight } from "@phosphor-icons/react";
 import type { Route } from "./+types/history";
 import { Link } from "react-router";
 import { Nav } from "../components/layout/nav";
@@ -179,9 +180,9 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
       <SpreadSummaryGrid cards={entry.cards} positions={positions} />
       <Link
         to={`/spread/${entry.spreadType}/${entry.spreadDate}`}
-        className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity text-secondary"
+        className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity text-secondary"
       >
-        View full reading →
+        View full reading <ArrowRight weight="light" size={13} aria-hidden />
       </Link>
     </motion.div>
   );

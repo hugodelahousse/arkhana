@@ -1,5 +1,6 @@
 import { data } from "react-router";
 import { Link } from "react-router";
+import { ArrowRight } from "@phosphor-icons/react";
 import type { Route } from "./+types/s.$id";
 import { getSpreadById } from "../lib/spread-pull";
 import type { SpreadCardResult } from "../lib/spread-pull";
@@ -122,9 +123,9 @@ export default function SpreadByIdRoute({ loaderData }: Route.ComponentProps) {
           </p>
           <Link
             to="/"
-            className="inline-block px-6 py-3 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80"
+            className="inline-flex items-center gap-2 px-6 py-3 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80"
           >
-            Draw your card →
+            Draw your card <ArrowRight weight="light" size={14} aria-hidden />
           </Link>
         </div>
       </main>

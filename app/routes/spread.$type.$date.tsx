@@ -1,6 +1,7 @@
 import { redirect, data } from "react-router";
 import { motion } from "motion/react";
 import { DateTime } from "luxon";
+import { ArrowLeft } from "@phosphor-icons/react";
 import type { Route } from "./+types/spread.$type.$date";
 import { Link } from "react-router";
 import { Nav } from "../components/layout/nav";
@@ -101,9 +102,9 @@ export default function SpreadDateRoute({ loaderData, params }: Route.ComponentP
               />
               <Link
                 to="/history"
-                className="block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity text-secondary"
+                className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity text-secondary"
               >
-                ← All readings
+                <ArrowLeft weight="light" size={13} aria-hidden />All readings
               </Link>
             </div>
           </motion.div>

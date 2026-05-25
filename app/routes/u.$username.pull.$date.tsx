@@ -1,5 +1,6 @@
 import { data } from "react-router";
 import { Link } from "react-router";
+import { ArrowRight } from "@phosphor-icons/react";
 import type { Route } from "./+types/u.$username.pull.$date";
 import { db } from "../../db/index.js";
 import { user } from "../../db/schema/auth.js";
@@ -212,9 +213,9 @@ export default function PublicPull({ loaderData }: Route.ComponentProps) {
           </p>
           <Link
             to="/"
-            className="inline-block px-6 py-3 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80"
+            className="inline-flex items-center gap-2 px-6 py-3 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80"
           >
-            Draw your card →
+            Draw your card <ArrowRight weight="light" size={14} aria-hidden />
           </Link>
         </div>
       </main>

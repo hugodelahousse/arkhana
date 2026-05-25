@@ -1,5 +1,6 @@
 import { data } from "react-router";
 import { useState, startTransition } from "react";
+import { ArrowLeft, ArrowRight } from "@phosphor-icons/react";
 import { ViewTransition, addTransitionType } from "react";
 import type { Route } from "./+types/collection.$slug";
 import { Nav } from "../components/layout/nav";
@@ -96,9 +97,9 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
             <a
               href={user ? "/collection" : "/"}
               onClick={goBack}
-              className="inline-block text-xs tracking-widest uppercase opacity-30 hover:opacity-60 transition-opacity mb-4 text-secondary"
+              className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-30 hover:opacity-60 transition-opacity mb-4 text-secondary"
             >
-              ← {user ? "Collection" : "Home"}
+              <ArrowLeft weight="light" size={13} aria-hidden />{user ? "Collection" : "Home"}
             </a>
             <p className="text-xs tracking-widest uppercase opacity-50 text-secondary">
               {card.arcana === "major"
@@ -200,9 +201,9 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
               </p>
               <Link
                 to="/"
-                className="text-xs tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity text-secondary"
+                className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity text-secondary"
               >
-                Pull today's card →
+                Pull today's card <ArrowRight weight="light" size={13} aria-hidden />
               </Link>
             </section>
           ) : (
@@ -212,9 +213,9 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
               </p>
               <Link
                 to="/"
-                className="inline-block px-6 py-3 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80"
+                className="inline-flex items-center gap-2 px-6 py-3 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80"
               >
-                Draw today's card →
+                Draw today's card <ArrowRight weight="light" size={14} aria-hidden />
               </Link>
             </div>
           )}

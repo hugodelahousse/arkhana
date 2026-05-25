@@ -1,5 +1,6 @@
 import { data } from "react-router";
 import { Link } from "react-router";
+import { ArrowRight } from "@phosphor-icons/react";
 import type { Route } from "./+types/share.$pullId";
 import { getPullById } from "../lib/pull";
 import {
@@ -144,9 +145,9 @@ export default function SharePull({ loaderData }: Route.ComponentProps) {
           />
           <Link
             to={`/collection/${cardSlug(card)}`}
-            className="text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity text-secondary"
+            className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity text-secondary"
           >
-            View card →
+            View card <ArrowRight weight="light" size={13} aria-hidden />
           </Link>
         </div>
 
@@ -156,9 +157,9 @@ export default function SharePull({ loaderData }: Route.ComponentProps) {
           </p>
           <Link
             to="/auth/signup"
-            className="inline-block px-6 py-3 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80"
+            className="inline-flex items-center gap-2 px-6 py-3 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80"
           >
-            Start your journey →
+            Start your journey <ArrowRight weight="light" size={14} aria-hidden />
           </Link>
         </div>
       </main>
