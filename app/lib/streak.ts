@@ -1,7 +1,9 @@
 import { eq } from "drizzle-orm";
+import { DateTime } from "luxon";
 import { db } from "../../db/index.js";
 import { streaks } from "../../db/schema/streaks.js";
-import { DateTime } from "luxon";
+import { computeStreakFromSortedDates } from "./streak-compute.js";
+export { computeStreakFromSortedDates } from "./streak-compute.js";
 
 export interface StreakState {
   currentStreak: number;
@@ -15,7 +17,7 @@ export type Milestone = 7 | 28 | 100;
 const MILESTONES: Milestone[] = [7, 28, 100];
 
 /**
- * Compute and persist a streak record from a sorted list of pull dates.
+ * Compute and persist a streak record from a list of pull dates.
  * Used when a user has existing pulls but no streak row (e.g. after
  * anonymous→registered migration or first load after the feature deployed).
  * No-ops if a streak record already exists.
@@ -34,31 +36,15 @@ export async function initStreakFromHistory(
   if (pullDates.length === 0) return;
 
   const sorted = [...new Set(pullDates)].sort(); // dedupe (spreads have N cards/day), ascending
-  const mostRecent = sorted[sorted.length - 1];
-
-  // Walk backward from the most recent pull counting consecutive days
-  let currentStreak = 1;
-  let longestStreak = 1;
-  for (let i = sorted.length - 2; i >= 0; i--) {
-    const prev = DateTime.fromISO(sorted[i + 1], { zone: "utc" });
-    const curr = DateTime.fromISO(sorted[i], { zone: "utc" });
-    if (prev.diff(curr, "days").days === 1) {
-      currentStreak++;
-      if (currentStreak > longestStreak) longestStreak = currentStreak;
-    } else {
-      break;
-    }
-  }
-
-  const cycleStart = sorted[sorted.length - currentStreak];
+  const computed = computeStreakFromSortedDates(sorted);
 
   await db.insert(streaks).values({
     userId,
-    currentStreak,
-    longestStreak,
-    lastPullDate: mostRecent,
-    cycleStartDate: cycleStart,
-    graceNightsUsed: 0,
+    currentStreak: computed.currentStreak,
+    longestStreak: computed.longestStreak,
+    lastPullDate: computed.lastPullDate,
+    cycleStartDate: computed.cycleStartDate,
+    graceNightsUsed: computed.graceNightsUsed,
   });
 }
 

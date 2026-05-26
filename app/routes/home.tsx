@@ -89,8 +89,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   // Lazy-backfill: if the user has pulled before but has no streak record yet
   // (e.g. pulled before the streak system was deployed, or just after account migration).
   let resolvedStreakState = streakState;
-  if (!resolvedStreakState && recentPulls.length > 0) {
-    await initStreakFromHistory(userId, recentPulls.map((p) => p.pullDate));
+  if (!resolvedStreakState && pullDates.length > 0) {
+    await initStreakFromHistory(userId, pullDates);
     resolvedStreakState = await getStreak(userId);
   }
 
