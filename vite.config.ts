@@ -4,6 +4,9 @@ import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig(({ isSsrBuild }) => ({
+  ssr: {
+    external: ["@better-auth/passkey/client", "better-auth/client"],
+  },
   build: {
     rollupOptions: isSsrBuild
       ? {
