@@ -13,9 +13,17 @@ Daily tarot card pull app. Dark fantasy aesthetic. One card per user per UTC day
 ## Commands
 - Dev: `pnpm dev` (starts Express + Vite dev server with HMR, no build needed)
 - Build: `pnpm build`
-- DB push (sync schema): `pnpm db:push`
+- DB generate migration: `pnpm db:generate` — run after ANY change to `db/schema/`
+- DB run migrations: `pnpm db:migrate`
+- DB push (sync schema, dev only): `pnpm db:push`
 - DB seed (78 cards): `pnpm db:seed`
 - DB studio: `pnpm db:studio`
+
+## Database migrations
+Production uses `pnpm db:migrate` (not `db:push`). After editing any file in `db/schema/`, always:
+1. Run `pnpm db:generate` to create the migration SQL file
+2. Commit the generated `migrations/` files alongside the schema change
+3. Use `pnpm db:push` only for local dev iteration — never for production
 
 ## Environment
 - Copy `.env.example` → `.env` and fill in values (`.env` is gitignored)
