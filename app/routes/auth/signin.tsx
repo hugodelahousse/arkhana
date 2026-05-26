@@ -123,34 +123,34 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
               Forgot password?
             </Link>
           </div>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-accent text-accent hover:opacity-80 disabled:opacity-40 transition-opacity"
-          >
-            {isSubmitting ? "…" : "Enter"}
-          </button>
-        </Form>
+          <div className="flex flex-col gap-3">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-accent text-accent hover:opacity-80 disabled:opacity-40 transition-opacity"
+            >
+              {isSubmitting ? "…" : "Enter"}
+            </button>
 
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 opacity-30">
-            <div className="flex-1 border-t border-border" />
-            <span className="text-[10px] tracking-widest uppercase">or</span>
-            <div className="flex-1 border-t border-border" />
+            <div className="flex items-center gap-3 opacity-30">
+              <div className="flex-1 border-t border-border" />
+              <span className="text-[10px] tracking-widest uppercase">or</span>
+              <div className="flex-1 border-t border-border" />
+            </div>
+
+            {passkeyError && (
+              <p role="alert" className="text-sm text-rarity-arcane text-center">{passkeyError}</p>
+            )}
+            <button
+              type="button"
+              onClick={handlePasskeySignIn}
+              disabled={passkeyLoading}
+              className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-secondary hover:text-primary disabled:opacity-40 transition-all"
+            >
+              {passkeyLoading ? "…" : "Sign in with passkey"}
+            </button>
           </div>
-
-          {passkeyError && (
-            <p role="alert" className="text-sm text-rarity-arcane text-center">{passkeyError}</p>
-          )}
-          <button
-            type="button"
-            onClick={handlePasskeySignIn}
-            disabled={passkeyLoading}
-            className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-secondary hover:text-primary disabled:opacity-40 transition-all"
-          >
-            {passkeyLoading ? "…" : "Sign in with passkey"}
-          </button>
-        </div>
+        </Form>
 
         <p className="text-center text-xs opacity-60">
           No account yet?{" "}
