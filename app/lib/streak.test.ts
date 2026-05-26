@@ -95,4 +95,37 @@ describe("computeStreakFromSortedDates", () => {
     const r = computeStreakFromSortedDates(d);
     expect(r.currentStreak).toBe(3);
   });
+
+  it("backfill scenario: full history computes correct streak (not 1)", () => {
+    // Simulates updateStreak backfill: user had pulls on May 23-25 before
+    // the streak feature existed, then pulls on May 26 as the first tracked pull.
+    // The fix queries all prior dates and includes the new pull.
+    const priorDates = ["2026-05-23", "2026-05-24", "2026-05-25"];
+    const newPull = "2026-05-26";
+    const allDates = [...new Set([...priorDates, newPull])].sort();
+    const r = computeStreakFromSortedDates(allDates);
+    expect(r.currentStreak).toBe(4);
+    expect(r.cycleStartDate).toBe("2026-05-23");
+    expect(r.lastPullDate).toBe("2026-05-26");
+  });
+
+  it("backfill with gap in history still computes correct recent streak", () => {
+    // Old pulls May 10-12, gap, then May 23-26
+    const allDates = [
+      "2026-05-10", "2026-05-11", "2026-05-12",
+      "2026-05-23", "2026-05-24", "2026-05-25", "2026-05-26",
+    ];
+    const r = computeStreakFromSortedDates(allDates);
+    expect(r.currentStreak).toBe(4);
+    expect(r.longestStreak).toBe(4);
+    expect(r.cycleStartDate).toBe("2026-05-23");
+  });
+
+  it("backfill when new pull is already in history is a no-op", () => {
+    const priorDates = ["2026-05-23", "2026-05-24", "2026-05-25", "2026-05-26"];
+    const newPull = "2026-05-26"; // already present
+    const allDates = [...new Set([...priorDates, newPull])].sort();
+    const r = computeStreakFromSortedDates(allDates);
+    expect(r.currentStreak).toBe(4);
+  });
 });
