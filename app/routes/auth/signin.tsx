@@ -1,8 +1,12 @@
 import { redirect, data, Form, useNavigation, Link, useSearchParams } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { Route } from "./+types/signin";
 import { config } from "../../../config/index.js";
-import { authClient } from "../../lib/auth-client.js";
+
+async function getAuthClient() {
+  const { authClient } = await import("../../lib/auth-client.js");
+  return authClient;
+}
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (context.user && !context.user.isAnonymous) return redirect("/");
@@ -51,9 +55,10 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!window.PublicKeyCredential?.isConditionalMediationAvailable) return;
-    void window.PublicKeyCredential.isConditionalMediationAvailable().then((ok) => {
+    void window.PublicKeyCredential.isConditionalMediationAvailable().then(async (ok) => {
       if (!ok) return;
-      void authClient.signIn.passkey({
+      const client = await getAuthClient();
+      void client.signIn.passkey({
         autoFill: true,
         fetchOptions: { onSuccess: () => { window.location.href = "/"; } },
       });
@@ -64,7 +69,8 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
     setPasskeyError(null);
     setPasskeyLoading(true);
     try {
-      const { error } = await authClient.signIn.passkey({
+      const client = await getAuthClient();
+      const { error } = await client.signIn.passkey({
         fetchOptions: { onSuccess: () => { window.location.href = "/"; } },
       });
       if (error) setPasskeyError("Passkey sign-in failed. Try again or use your password.");
