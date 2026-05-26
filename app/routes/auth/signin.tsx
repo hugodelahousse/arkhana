@@ -1,6 +1,8 @@
-import { redirect, data, Form, useNavigation, Link } from "react-router";
+import { redirect, data, Form, useNavigation, Link, useSearchParams } from "react-router";
+import { useEffect, useState } from "react";
 import type { Route } from "./+types/signin";
 import { config } from "../../../config/index.js";
+import { authClient } from "../../lib/auth-client.js";
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (context.user && !context.user.isAnonymous) return redirect("/");
@@ -41,6 +43,37 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const error = actionData && "error" in actionData ? actionData.error : null;
+  const [searchParams] = useSearchParams();
+  const wasReset = searchParams.get("reset") === "1";
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [passkeyError, setPasskeyError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!window.PublicKeyCredential?.isConditionalMediationAvailable) return;
+    void window.PublicKeyCredential.isConditionalMediationAvailable().then((ok) => {
+      if (!ok) return;
+      void authClient.signIn.passkey({
+        autoFill: true,
+        fetchOptions: { onSuccess: () => { window.location.href = "/"; } },
+      });
+    });
+  }, []);
+
+  async function handlePasskeySignIn() {
+    setPasskeyError(null);
+    setPasskeyLoading(true);
+    try {
+      const { error } = await authClient.signIn.passkey({
+        fetchOptions: { onSuccess: () => { window.location.href = "/"; } },
+      });
+      if (error) setPasskeyError("Passkey sign-in failed. Try again or use your password.");
+    } catch {
+      setPasskeyError("Passkey sign-in was cancelled or is not supported.");
+    } finally {
+      setPasskeyLoading(false);
+    }
+  }
 
   return (
     <main className="min-h-dvh flex flex-col items-center justify-center px-6 py-8">
@@ -54,6 +87,10 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
           </p>
         </div>
 
+        {wasReset && (
+          <p className="text-sm text-primary/80 text-center">Password reset successfully. Sign in with your new password.</p>
+        )}
+
         <Form method="post" className="space-y-3" aria-describedby={error ? "form-error" : undefined}>
           {error && (
             <p id="form-error" role="alert" className="text-sm text-rarity-arcane text-center">{error}</p>
@@ -65,7 +102,7 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
             type="email"
             required
             placeholder="your@email.com"
-            autoComplete="email"
+            autoComplete="username webauthn"
             className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-secondary"
           />
           <label htmlFor="password" className="sr-only">Password</label>
@@ -75,9 +112,17 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
             type="password"
             required
             placeholder="Password"
-            autoComplete="current-password"
+            autoComplete="current-password webauthn"
             className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-secondary"
           />
+          <div className="flex justify-end">
+            <Link
+              to="/auth/forgot-password"
+              className="text-xs opacity-50 hover:opacity-80 transition-opacity"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <button
             type="submit"
             disabled={isSubmitting}
@@ -86,6 +131,26 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
             {isSubmitting ? "…" : "Enter"}
           </button>
         </Form>
+
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 opacity-30">
+            <div className="flex-1 border-t border-border" />
+            <span className="text-[10px] tracking-widest uppercase">or</span>
+            <div className="flex-1 border-t border-border" />
+          </div>
+
+          {passkeyError && (
+            <p role="alert" className="text-sm text-rarity-arcane text-center">{passkeyError}</p>
+          )}
+          <button
+            type="button"
+            onClick={handlePasskeySignIn}
+            disabled={passkeyLoading}
+            className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border/40 text-secondary hover:text-primary hover:border-border/70 disabled:opacity-40 transition-all"
+          >
+            {passkeyLoading ? "…" : "Sign in with passkey"}
+          </button>
+        </div>
 
         <p className="text-center text-xs opacity-60">
           No account yet?{" "}

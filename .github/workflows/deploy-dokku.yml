@@ -110,7 +110,10 @@ jobs:
           ssh dokku@${{ secrets.DOKKU_HOST }} config:set --no-restart ${{ env.APP_NAME }} \
             NODE_ENV=production \
             BETTER_AUTH_SECRET="${{ secrets.BETTER_AUTH_SECRET }}" \
-            BETTER_AUTH_URL="https://${{ env.DOMAIN }}"
+            BETTER_AUTH_URL="https://${{ env.DOMAIN }}" \
+            SMTP_HOST="${{ secrets.SMTP_HOST || '172.17.0.1' }}" \
+            SMTP_PORT="${{ secrets.SMTP_PORT || '25' }}" \
+            EMAIL_FROM="${{ secrets.EMAIL_FROM || 'noreply@arkhana.app' }}"
 
       - name: Setup domain and SSL
         run: |
