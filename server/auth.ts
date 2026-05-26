@@ -18,7 +18,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {
-      void sendEmail({
+      sendEmail({
         to: user.email,
         subject: "Reset your Arkhana password",
         text: `Reset your password: ${url}`,
@@ -30,7 +30,7 @@ export const auth = betterAuth({
           "<p style=\"text-align:center;font-size:12px;opacity:0.5;margin-top:32px\">If you didn't request this, ignore this email.</p>",
           "</div>",
         ].join(""),
-      });
+      }).catch((err) => console.error("[email] Failed to send:", err));
     },
     revokeSessionsOnPasswordReset: true,
   },
