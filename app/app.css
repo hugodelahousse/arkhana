@@ -17,6 +17,7 @@
   --color-rarity-mystic: var(--primitive-rarity-3);
   --color-rarity-arcane: var(--primitive-rarity-4);
   --color-rarity-primordial: var(--primitive-rarity-5);
+  --color-accent: var(--primitive-purple-500);
 }
 
 html,
