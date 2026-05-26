@@ -122,7 +122,7 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-primary hover:opacity-80 disabled:opacity-40 transition-opacity"
+            className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-accent text-accent hover:opacity-80 disabled:opacity-40 transition-opacity"
           >
             {isSubmitting ? "…" : "Enter the arkhive"}
           </button>
