@@ -46,10 +46,11 @@ function CardDetailOverlay({
       >
         <motion.p
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.4 }}
+          animate={{ opacity: 0.7 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3, delay: 0.15 }}
-          className="text-xs tracking-widest uppercase text-secondary"
+          className="text-xs tracking-widest uppercase text-primary"
+          style={{ textShadow: "0 1px 6px rgba(0,0,0,.9)" }}
         >
           {posLabel}
         </motion.p>
@@ -71,6 +72,7 @@ function CardDetailOverlay({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3, delay: 0.15 }}
           className="text-center space-y-2"
+          style={{ textShadow: "0 1px 8px rgba(0,0,0,.9), 0 0 2px rgba(0,0,0,.7)" }}
         >
           <p
             className="text-xs tracking-widest uppercase"
@@ -79,24 +81,25 @@ function CardDetailOverlay({
             {RARITY_LABELS[card.rarityScore]}
             {card.isRadiant && " ✦"}
           </p>
-          <p className="text-lg font-light text-secondary font-serif">
+          <p className="text-lg text-primary font-serif">
             {card.card.name}
             {card.isReversed && (
-              <span className="ml-2 text-sm opacity-50">(reversed)</span>
+              <span className="ml-2 text-sm opacity-60">(reversed)</span>
             )}
           </p>
-          <p className="text-sm leading-relaxed opacity-70 max-w-[260px] text-secondary font-serif">
+          <p className="text-sm leading-relaxed opacity-85 max-w-[260px] text-primary font-serif">
             {getCardDescription(card.card, card.rarityScore, card.isReversed)}
           </p>
         </motion.div>
 
         <motion.button
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.4 }}
+          animate={{ opacity: 0.6 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
           onClick={onClose}
-          className="mt-2 text-xs tracking-widest uppercase hover:opacity-70 transition-opacity text-secondary"
+          className="mt-2 text-xs tracking-widest uppercase hover:opacity-90 transition-opacity text-primary"
+          style={{ textShadow: "0 1px 6px rgba(0,0,0,.9)" }}
         >
           close
         </motion.button>

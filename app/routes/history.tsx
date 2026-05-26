@@ -124,7 +124,7 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
         <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
           {date}
         </p>
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+        <div className="flex flex-col items-center gap-5">
           <Link to={`/collection/${slug}`} className="block w-28 shrink-0">
             <TarotCard
               card={card}
@@ -135,7 +135,7 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
               size="sm"
             />
           </Link>
-          <div className="space-y-2 text-center sm:text-left">
+          <div className="space-y-2 text-center">
             <p
               className="text-xs tracking-widest uppercase"
               style={{ color: `var(--color-rarity-${rarityLabel})` }}

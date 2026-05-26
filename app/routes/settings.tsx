@@ -1,8 +1,9 @@
-import { redirect, data, Form, useNavigation } from "react-router";
+import { redirect, data, Form, useNavigation, useRevalidator } from "react-router";
+import { useState } from "react";
 import type { Route } from "./+types/settings";
 import { Nav } from "../components/layout/nav";
 import { db } from "../../db/index.js";
-import { user } from "../../db/schema/auth.js";
+import { user, passkey as passkeyTable } from "../../db/schema/auth.js";
 import { eq, and, ne } from "drizzle-orm";
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -12,13 +13,37 @@ export async function loader({ context }: Route.LoaderArgs) {
     .from(user)
     .where(eq(user.id, context.user.id))
     .limit(1);
-  return { user: context.user, username: profile?.displayUsername ?? profile?.username ?? "" };
+  const passkeys = await db
+    .select({
+      id: passkeyTable.id,
+      name: passkeyTable.name,
+      deviceType: passkeyTable.deviceType,
+      createdAt: passkeyTable.createdAt,
+    })
+    .from(passkeyTable)
+    .where(eq(passkeyTable.userId, context.user.id));
+  return {
+    user: context.user,
+    username: profile?.displayUsername ?? profile?.username ?? "",
+    passkeys,
+  };
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
   if (!context.user || context.user.isAnonymous) return redirect("/");
 
   const form = await request.formData();
+  const intent = form.get("intent");
+
+  if (intent === "delete-passkey") {
+    const passkeyId = String(form.get("passkeyId") ?? "");
+    if (!passkeyId) return data({ error: "Missing passkey ID." }, { status: 400 });
+    await db
+      .delete(passkeyTable)
+      .where(and(eq(passkeyTable.id, passkeyId), eq(passkeyTable.userId, context.user.id)));
+    return data({ success: true });
+  }
+
   const raw = String(form.get("username") ?? "").trim();
 
   if (raw.length < 1)
@@ -54,11 +79,38 @@ export function meta() {
   return [{ title: "Settings — Arkhana" }];
 }
 
+async function getPasskeyClient() {
+  const { createAuthClient } = await import("better-auth/client");
+  const { passkeyClient } = await import("@better-auth/passkey/client");
+  return createAuthClient({ plugins: [passkeyClient()] });
+}
+
 export default function Settings({ loaderData, actionData }: Route.ComponentProps) {
   const navigation = useNavigation();
+  const revalidator = useRevalidator();
   const isSubmitting = navigation.state === "submitting";
   const error = actionData && "error" in actionData ? actionData.error : null;
   const success = actionData && "success" in actionData ? actionData.success : false;
+  const [passkeyAdding, setPasskeyAdding] = useState(false);
+  const [passkeyError, setPasskeyError] = useState<string | null>(null);
+
+  async function handleAddPasskey() {
+    setPasskeyError(null);
+    setPasskeyAdding(true);
+    try {
+      const client = await getPasskeyClient();
+      const { error } = await client.passkey.addPasskey();
+      if (error) {
+        setPasskeyError("Failed to register passkey. Try again.");
+        return;
+      }
+      revalidator.revalidate();
+    } catch {
+      setPasskeyError("Passkey registration was cancelled or is not supported.");
+    } finally {
+      setPasskeyAdding(false);
+    }
+  }
 
   return (
     <div className="min-h-screen">
@@ -120,6 +172,57 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
               </p>
             )}
           </Form>
+        </section>
+
+        <section className="p-6 space-y-6 border border-border bg-surface">
+          <h2 className="text-xs tracking-widest uppercase opacity-50 text-secondary">
+            Passkeys
+          </h2>
+          <p className="text-xs opacity-50 leading-relaxed text-secondary">
+            Passkeys let you sign in with biometrics or your device PIN instead of a password.
+          </p>
+
+          {loaderData.passkeys.length > 0 && (
+            <ul className="space-y-3">
+              {loaderData.passkeys.map((pk) => (
+                <li key={pk.id} className="flex items-center justify-between gap-3 py-2 border-b border-border/50 last:border-0">
+                  <div className="min-w-0">
+                    <p className="text-sm text-secondary truncate">
+                      {pk.name || pk.deviceType || "Passkey"}
+                    </p>
+                    {pk.createdAt && (
+                      <p className="text-[10px] tracking-widest uppercase opacity-40">
+                        Added {new Date(pk.createdAt).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                  <Form method="post">
+                    <input type="hidden" name="intent" value="delete-passkey" />
+                    <input type="hidden" name="passkeyId" value={pk.id} />
+                    <button
+                      type="submit"
+                      className="text-[10px] tracking-widest uppercase opacity-40 hover:opacity-80 hover:text-rarity-arcane transition-all"
+                    >
+                      Remove
+                    </button>
+                  </Form>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {passkeyError && (
+            <p className="text-xs text-rarity-arcane" role="alert">{passkeyError}</p>
+          )}
+
+          <button
+            type="button"
+            onClick={handleAddPasskey}
+            disabled={passkeyAdding}
+            className="w-full px-4 py-3 text-xs tracking-widest uppercase border border-border text-secondary hover:text-primary hover:border-primary disabled:opacity-40 transition-all"
+          >
+            {passkeyAdding ? "…" : "Add passkey"}
+          </button>
         </section>
       </main>
     </div>
