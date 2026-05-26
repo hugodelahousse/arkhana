@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.11",
+    "@better-auth/passkey": "^1.6.11",
     "@fontsource-variable/cormorant-garamond": "^5.2.6",
     "@fontsource-variable/dm-sans": "^5.2.8",
     "@fontsource/cormorant-garamond": "^5.2.11",
