@@ -1,10 +1,18 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import { CARDS } from "../../app/lib/cards.js";
-import { db } from "../index.js";
 import { cards } from "../schema/cards.js";
 import { user } from "../schema/auth.js";
 import { userCards } from "../schema/user-cards.js";
-import { initStreakFromHistory } from "../../app/lib/streak.js";
+import { streaks } from "../schema/streaks.js";
+import * as schema from "../schema/index.js";
+import { computeStreakFromSortedDates } from "../../app/lib/streak-compute.js";
+
+const url = process.env.DATABASE_URL;
+if (!url) throw new Error("DATABASE_URL is required");
+const client = postgres(url, { max: 1 });
+const db = drizzle(client, { schema });
 
 await db
   .insert(cards)
@@ -54,7 +62,6 @@ try {
 }
 
 // Backfill streak records for users with pull history but no streak row.
-// initStreakFromHistory no-ops if a record already exists, so safe to run repeatedly.
 try {
   const usersWithPulls = await db
     .selectDistinct({ userId: userCards.userId })
@@ -66,7 +73,40 @@ try {
       .select({ pullDate: userCards.pullDate })
       .from(userCards)
       .where(and(eq(userCards.userId, userId), inArray(userCards.pullType, ["daily", "spread"])));
-    await initStreakFromHistory(userId, pulls.map((p) => p.pullDate), { recompute: true });
+
+    const pullDates = pulls.map((p) => p.pullDate);
+    if (pullDates.length === 0) continue;
+
+    const sorted = [...new Set(pullDates)].sort();
+    const computed = computeStreakFromSortedDates(sorted);
+
+    const existing = await db
+      .select({ id: streaks.id })
+      .from(streaks)
+      .where(eq(streaks.userId, userId))
+      .limit(1);
+
+    if (existing.length > 0) {
+      await db
+        .update(streaks)
+        .set({
+          currentStreak: computed.currentStreak,
+          longestStreak: computed.longestStreak,
+          lastPullDate: computed.lastPullDate,
+          cycleStartDate: computed.cycleStartDate,
+          graceNightsUsed: computed.graceNightsUsed,
+        })
+        .where(eq(streaks.userId, userId));
+    } else {
+      await db.insert(streaks).values({
+        userId,
+        currentStreak: computed.currentStreak,
+        longestStreak: computed.longestStreak,
+        lastPullDate: computed.lastPullDate,
+        cycleStartDate: computed.cycleStartDate,
+        graceNightsUsed: computed.graceNightsUsed,
+      });
+    }
   }
 
   if (usersWithPulls.length > 0) {
@@ -76,4 +116,5 @@ try {
   console.log("Skipping streak backfill:", e);
 }
 
+await client.end();
 process.exit(0);
