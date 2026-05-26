@@ -16,7 +16,7 @@ export async function action({ request }: Route.ActionArgs) {
   const origin = new URL(config.betterAuthUrl).origin;
 
   const res = await fetch(
-    new URL("/api/auth/forget-password", config.betterAuthUrl).toString(),
+    new URL("/api/auth/request-password-reset", config.betterAuthUrl).toString(),
     {
       method: "POST",
       headers: {
