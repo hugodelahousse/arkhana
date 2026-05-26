@@ -60,6 +60,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@react-router/dev": "7.15.1",
+    "@squoosh/cli": "^0.7.3",
     "@tailwindcss/vite": "^4.2.2",
     "@types/express": "^5.0.6",
     "@types/luxon": "^3.7.1",

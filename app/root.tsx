@@ -62,7 +62,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let stack: string | undefined;
   let isOffline = false;
 
-  if (typeof navigator !== "undefined" && !navigator.onLine) {
+  if (typeof window !== "undefined" && !navigator.onLine) {
     isOffline = true;
     message = "The Moon";
     details = "The cards cannot reach you here. Return when the connection is restored.";

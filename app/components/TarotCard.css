@@ -62,8 +62,9 @@
 .card-scene[data-revealed] { cursor: default; }
 
 /* ─── Hold-to-reveal glow ─── */
-/* Soft halo that fades in with --hold-progress (0–1), driven by RAF in useHoldReveal */
-.card-scene::before {
+/* Soft halo that fades in with --hold-progress (0–1), driven by RAF in useHoldReveal.
+   Lives on .card-tilt so it follows the idle/hover transform. */
+.card-tilt::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -78,7 +79,7 @@
 }
 
 /* On reveal, flash the rarity color and fade out */
-.card-scene[data-revealed]::before {
+.card-scene[data-revealed] .card-tilt::before {
   box-shadow:
     0 0 15px 3px var(--rarity-color, var(--color-card-back-accent)),
     0 0 35px 8px color-mix(in srgb, var(--rarity-color, var(--color-card-back-accent)) 45%, transparent),
@@ -766,23 +767,13 @@
 }
 
 
-/* ─── Radiant border ─── */
-.card-radiant-border {
-  position: absolute;
-  inset: -3px;
-  border-radius: calc(var(--card-radius) + 2px);
-  background: conic-gradient(
-    from 0deg,
-    var(--color-rarity-primordial),
-    var(--color-rarity-arcane),
-    var(--color-rarity-mystic),
-    var(--color-rarity-wandering),
-    var(--color-rarity-primordial)
-  );
-  background-size: 200% 200%;
-  animation: radiant-shimmer 3s linear infinite;
-  z-index: -1;
-  opacity: .8;
+/* ─── Radiant: slow hue rotation on the whole card ─── */
+@keyframes radiant-hue {
+  to { filter: hue-rotate(360deg); }
+}
+
+.card-scene[data-radiant][data-revealed] .card-front {
+  animation: reveal-glow 1.2s ease-out 0.35s both, radiant-hue 8s linear infinite;
 }
 
 /* ─── Reveal glow burst ─── */
@@ -835,7 +826,6 @@
   .card-flipper,
   .card-shine,
   .card-glare,
-  .card-radiant-border,
   .card-reveal-hint {
     transition: none !important;
     animation: none !important;

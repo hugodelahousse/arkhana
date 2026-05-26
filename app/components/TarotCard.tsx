@@ -42,9 +42,34 @@ export const TarotCard = memo(function TarotCard({
   const rarityLabel = RARITY_LABELS[rarityScore]?.toLowerCase() ?? "mundane";
   const hasSubjectMask = rarityScore >= 3;
   const hasParallax = rarityScore >= 4;
+  const hasTextLayers = rarityScore >= 5;
   const isMajor = card.arcana === "major";
   const cardHasTopMask = isMajor && hasTopMask(card.id);
   const imgSrc = cardImageUrl(card.id);
+
+  const baseImgMask = hasTextLayers ? (() => {
+    const masks = [
+      ...(cardHasTopMask ? [`url(${cardTopMaskUrl(card.id)})`] : []),
+      `url(${cardNameMaskUrl(card.id)})`,
+      "linear-gradient(black, black)",
+    ];
+    const composites = [
+      ...(cardHasTopMask ? ["subtract"] : []),
+      "subtract",
+    ];
+    const webkitComposites = [
+      ...(cardHasTopMask ? ["destination-out"] : []),
+      "destination-out",
+    ];
+    return {
+      maskImage: masks.join(", "),
+      maskSize: "cover",
+      maskComposite: composites.join(", "),
+      WebkitMaskImage: masks.join(", "),
+      WebkitMaskSize: "cover",
+      WebkitMaskComposite: webkitComposites.join(", "),
+    } as React.CSSProperties;
+  })() : undefined;
 
   return (
     <div
@@ -101,6 +126,7 @@ export const TarotCard = memo(function TarotCard({
               alt={card.name}
               loading="eager"
               draggable={false}
+              style={baseImgMask}
             />
             {hasParallax && (
               <>
@@ -135,7 +161,6 @@ export const TarotCard = memo(function TarotCard({
             {hasSubjectMask && <div className="card-name-foil" aria-hidden="true" />}
             {hasSubjectMask && cardHasTopMask && <div className="card-top-foil" aria-hidden="true" />}
             <div className="card-glare" />
-            {isRadiant && <div className="card-radiant-border" aria-hidden="true" />}
           </div>
         </div>
       </motion.div>
