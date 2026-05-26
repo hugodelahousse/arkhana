@@ -146,7 +146,7 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
             type="button"
             onClick={handlePasskeySignIn}
             disabled={passkeyLoading}
-            className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border/40 text-secondary hover:text-primary hover:border-border/70 disabled:opacity-40 transition-all"
+            className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-secondary hover:text-primary disabled:opacity-40 transition-all"
           >
             {passkeyLoading ? "…" : "Sign in with passkey"}
           </button>
