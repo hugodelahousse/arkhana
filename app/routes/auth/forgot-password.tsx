@@ -15,17 +15,29 @@ export async function action({ request }: Route.ActionArgs) {
 
   const origin = new URL(config.betterAuthUrl).origin;
 
-  await fetch(
+  const res = await fetch(
     new URL("/api/auth/forget-password", config.betterAuthUrl).toString(),
     {
       method: "POST",
-      headers: { "content-type": "application/json", origin },
+      headers: {
+        "content-type": "application/json",
+        origin,
+        cookie: request.headers.get("cookie") ?? "",
+      },
       body: JSON.stringify({
         email,
         redirectTo: `${config.betterAuthUrl}/auth/reset-password`,
       }),
     }
-  ).catch(() => {});
+  ).catch((err) => {
+    console.error("[forgot-password] fetch failed:", err);
+    return null;
+  });
+
+  if (res) {
+    const body = await res.text().catch(() => "");
+    console.log("[forgot-password]", res.status, body);
+  }
 
   return data({ sent: true });
 }
