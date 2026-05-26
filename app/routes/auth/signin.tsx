@@ -3,9 +3,11 @@ import { useEffect, useState, useCallback } from "react";
 import type { Route } from "./+types/signin";
 import { config } from "../../../config/index.js";
 
-async function getAuthClient() {
-  const { authClient } = await import("../../lib/auth-client.js");
-  return authClient;
+async function getPasskeySignIn() {
+  const { createAuthClient } = await import("better-auth/client");
+  const { passkeyClient } = await import("@better-auth/passkey/client");
+  const client = createAuthClient({ plugins: [passkeyClient()] });
+  return client.signIn.passkey;
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -57,8 +59,8 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
     if (!window.PublicKeyCredential?.isConditionalMediationAvailable) return;
     void window.PublicKeyCredential.isConditionalMediationAvailable().then(async (ok) => {
       if (!ok) return;
-      const client = await getAuthClient();
-      void client.signIn.passkey({
+      const signInPasskey = await getPasskeySignIn();
+      void signInPasskey({
         autoFill: true,
         fetchOptions: { onSuccess: () => { window.location.href = "/"; } },
       });
@@ -69,8 +71,8 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
     setPasskeyError(null);
     setPasskeyLoading(true);
     try {
-      const client = await getAuthClient();
-      const { error } = await client.signIn.passkey({
+      const signInPasskey = await getPasskeySignIn();
+      const { error } = await signInPasskey({
         fetchOptions: { onSuccess: () => { window.location.href = "/"; } },
       });
       if (error) setPasskeyError("Passkey sign-in failed. Try again or use your password.");
