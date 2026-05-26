@@ -1,7 +1,8 @@
-import { eq } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { DateTime } from "luxon";
 import { db } from "../../db/index.js";
 import { streaks } from "../../db/schema/streaks.js";
+import { userCards } from "../../db/schema/user-cards.js";
 import { computeStreakFromSortedDates } from "./streak-compute.js";
 export { computeStreakFromSortedDates } from "./streak-compute.js";
 
@@ -24,28 +25,42 @@ const MILESTONES: Milestone[] = [7, 28, 100];
  */
 export async function initStreakFromHistory(
   userId: string,
-  pullDates: string[] // any order — will be sorted internally
+  pullDates: string[], // any order — will be sorted internally
+  { recompute = false }: { recompute?: boolean } = {}
 ): Promise<void> {
   const existing = await db
     .select({ id: streaks.id })
     .from(streaks)
     .where(eq(streaks.userId, userId))
     .limit(1);
-  if (existing.length > 0) return;
+  if (existing.length > 0 && !recompute) return;
 
   if (pullDates.length === 0) return;
 
-  const sorted = [...new Set(pullDates)].sort(); // dedupe (spreads have N cards/day), ascending
+  const sorted = [...new Set(pullDates)].sort();
   const computed = computeStreakFromSortedDates(sorted);
 
-  await db.insert(streaks).values({
-    userId,
-    currentStreak: computed.currentStreak,
-    longestStreak: computed.longestStreak,
-    lastPullDate: computed.lastPullDate,
-    cycleStartDate: computed.cycleStartDate,
-    graceNightsUsed: computed.graceNightsUsed,
-  });
+  if (existing.length > 0) {
+    await db
+      .update(streaks)
+      .set({
+        currentStreak: computed.currentStreak,
+        longestStreak: computed.longestStreak,
+        lastPullDate: computed.lastPullDate,
+        cycleStartDate: computed.cycleStartDate,
+        graceNightsUsed: computed.graceNightsUsed,
+      })
+      .where(eq(streaks.userId, userId));
+  } else {
+    await db.insert(streaks).values({
+      userId,
+      currentStreak: computed.currentStreak,
+      longestStreak: computed.longestStreak,
+      lastPullDate: computed.lastPullDate,
+      cycleStartDate: computed.cycleStartDate,
+      graceNightsUsed: computed.graceNightsUsed,
+    });
+  }
 }
 
 export async function getStreak(userId: string): Promise<StreakState | null> {
@@ -68,15 +83,24 @@ export async function updateStreak(
     .limit(1);
 
   if (!existing) {
+    const priorPulls = await db
+      .selectDistinct({ pullDate: userCards.pullDate })
+      .from(userCards)
+      .where(and(eq(userCards.userId, userId), inArray(userCards.pullType, ["daily", "spread"])));
+    const dates = [...new Set(priorPulls.map((r) => r.pullDate))].sort();
+    if (dates.length > 0 && dates[dates.length - 1] !== pullDate) dates.push(pullDate);
+    else if (dates.length === 0) dates.push(pullDate);
+
+    const computed = computeStreakFromSortedDates(dates);
     await db.insert(streaks).values({
       userId,
-      currentStreak: 1,
-      longestStreak: 1,
-      lastPullDate: pullDate,
-      cycleStartDate: pullDate,
-      graceNightsUsed: 0,
+      currentStreak: computed.currentStreak,
+      longestStreak: computed.longestStreak,
+      lastPullDate: computed.lastPullDate,
+      cycleStartDate: computed.cycleStartDate,
+      graceNightsUsed: computed.graceNightsUsed,
     });
-    return { newStreak: 1, milestone: null };
+    return { newStreak: computed.currentStreak, milestone: null };
   }
 
   if (existing.lastPullDate === pullDate) {

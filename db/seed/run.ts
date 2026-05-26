@@ -66,7 +66,7 @@ try {
       .select({ pullDate: userCards.pullDate })
       .from(userCards)
       .where(and(eq(userCards.userId, userId), inArray(userCards.pullType, ["daily", "spread"])));
-    await initStreakFromHistory(userId, pulls.map((p) => p.pullDate));
+    await initStreakFromHistory(userId, pulls.map((p) => p.pullDate), { recompute: true });
   }
 
   if (usersWithPulls.length > 0) {
