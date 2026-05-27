@@ -1,40 +1,118 @@
-:root {
-  /* Primitives */
-  --primitive-black-950: #0a0a0f;
-  --primitive-black-900: #13131a;
-  --primitive-black-800: #1e1e2e;
-  --primitive-bone-100: #e8e4de;
-  --primitive-bone-400: #b0aca6;
-  --primitive-stone-800: #303038;
-  --primitive-rarity-1: #9ca3af;
-  --primitive-rarity-2: #60a5fa;
-  --primitive-rarity-3: #a855f7;
-  --primitive-rarity-4: #f97316;
-  --primitive-rarity-5: #eab308;
-  --primitive-purple-500: #a855f7;
-  --primitive-font-serif: "Cormorant Garamond Variable", Georgia, serif;
-  --primitive-font-sans: "DM Sans Variable", system-ui, sans-serif;
+/* ════════════════════════════════════════════════════════
+   DESIGN TOKENS — two layers
+   1. Primitives   — raw OKLCH values, no semantic meaning
+   2. Semantics    — purpose-named, reference primitives
+   Theme: light by default; .dark overrides to dark palette
+   ════════════════════════════════════════════════════════ */
 
-  /* Semantic */
-  --color-bg-base: var(--primitive-black-950);
-  --color-bg-surface: var(--primitive-black-900);
-  --color-bg-elevated: var(--primitive-black-800);
-  --color-text-primary: var(--primitive-bone-100);
-  --color-text-secondary: var(--primitive-bone-400);
-  --color-border-default: var(--primitive-stone-800);
-  --color-rarity-mundane: var(--primitive-rarity-1);
-  --color-rarity-wandering: var(--primitive-rarity-2);
-  --color-rarity-mystic: var(--primitive-rarity-3);
-  --color-rarity-arcane: var(--primitive-rarity-4);
-  --color-rarity-primordial: var(--primitive-rarity-5);
-  --color-card-back-accent: var(--primitive-purple-500);
-  --color-accent: var(--primitive-purple-500);
-  --font-serif: var(--primitive-font-serif);
+:root {
+  /* ── Primitives: dark scale — exact original hex values ── */
+  --black-950: #0a0a0f;
+  --black-900: #13131a;
+  --black-800: #1e1e2e;
+
+  /* ── Primitives: bone / warm neutral ── */
+  --bone-100: #e8e4de;
+  --bone-400: #b0aca6;
+
+  /* ── Primitives: parchment (light mode surfaces) ── */
+  --parchment-50: #f5f2ed;
+
+  /* ── Primitives: stone scale ── */
+  --stone-800: #303038;   /* dark divider          */
+  --stone-500: #57565f;   /* muted text on light   */
+  --stone-300: #c0bfc8;   /* border on light       */
+  --stone-100: #e8e7ec;   /* muted surface on light */
+
+  /* ── Primitives: warm gold (light mode backdrop) ── */
+  --gold-400: #d4a017;
+  --gold-300: #e8b931;
+
+  /* ── Primitives: rarity spectrum — exact original hex values ── */
+  --rarity-1: #9ca3af;   /* mundane    — slate    */
+  --rarity-2: #60a5fa;   /* wandering  — blue     */
+  --rarity-3: #a855f7;   /* mystic     — purple   */
+  --rarity-4: #f97316;   /* arcane     — orange   */
+  --rarity-5: #eab308;   /* primordial — gold     */
+
+  /* ── Primitives: accent (purple) ── */
+  --purple-500: #a855f7;
 }
 
+/* ── Light mode (default :root semantics) ── */
+:root {
+  color-scheme: light;
+
+  --background:          var(--bone-100);
+  --foreground:          var(--black-950);
+
+  --card:                var(--parchment-50);
+  --card-foreground:     var(--black-950);
+
+  --muted:               var(--stone-100);
+  --muted-foreground:    var(--stone-500);
+  --faint-foreground:    color-mix(in srgb, var(--stone-500) 70%, var(--bone-100));
+  --ghost-foreground:    color-mix(in srgb, var(--stone-500) 50%, var(--bone-100));
+
+  --border:              var(--stone-300);
+  --ring:                var(--purple-500);
+
+  /* primary = near-black in light: high-contrast CTA on parchment */
+  --primary:             var(--black-950);
+  --primary-foreground:  var(--bone-100);
+
+  --accent:              var(--gold-300);
+  --accent-foreground:   var(--black-950);
+  --accent-text:         color-mix(in srgb, var(--gold-400) 55%, var(--black-950));
+
+
+  /* Rarity semantic aliases */
+  --rarity-mundane:    var(--rarity-1);
+  --rarity-wandering:  var(--rarity-2);
+  --rarity-mystic:     var(--rarity-3);
+  --rarity-arcane:     var(--rarity-4);
+  --rarity-primordial: var(--rarity-5);
+}
+
+/* ── Dark mode — must be a complete set, identical to the original dark palette ── */
+.dark {
+  color-scheme: dark;
+
+  --background:          var(--black-950);
+  --foreground:          var(--bone-100);
+
+  --card:                var(--black-900);
+  --card-foreground:     var(--bone-100);
+
+  --muted:               var(--black-800);
+  --muted-foreground:    var(--bone-400);
+  --faint-foreground:    color-mix(in srgb, var(--bone-400) 70%, var(--black-950));
+  --ghost-foreground:    color-mix(in srgb, var(--bone-400) 50%, var(--black-950));
+
+  --border:              var(--stone-800);
+  --ring:                var(--purple-500);
+
+  --primary:             var(--bone-100);
+  --primary-foreground:  var(--black-950);
+
+  --accent:              var(--purple-500);
+  --accent-foreground:   var(--bone-100);
+  --accent-text:         var(--purple-500);
+
+  --rarity-mundane:    var(--rarity-1);
+  --rarity-wandering:  var(--rarity-2);
+  --rarity-mystic:     var(--rarity-3);
+  --rarity-arcane:     var(--rarity-4);
+  --rarity-primordial: var(--rarity-5);
+}
+
+/* ════════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ════════════════════════════════════════════════════════ */
+
 @keyframes radiant-shimmer {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
@@ -49,11 +127,11 @@
   border-radius: inherit;
   background: conic-gradient(
     from 0deg,
-    var(--color-rarity-primordial),
-    var(--color-rarity-arcane),
-    var(--color-rarity-mystic),
-    var(--color-rarity-wandering),
-    var(--color-rarity-primordial)
+    var(--rarity-primordial),
+    var(--rarity-arcane),
+    var(--rarity-mystic),
+    var(--rarity-wandering),
+    var(--rarity-primordial)
   );
   background-size: 200% 200%;
   animation: radiant-shimmer 3s linear infinite;

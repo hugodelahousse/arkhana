@@ -51,7 +51,7 @@ export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) 
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.6 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-bg-base)]/90 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm"
           onClick={dismiss}
         >
           <motion.div
@@ -65,8 +65,8 @@ export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) 
             <div
               aria-hidden="true"
               style={{
-                color: "var(--color-rarity-mystic)",
-                filter: "drop-shadow(0 0 18px var(--color-rarity-mystic))",
+                color: "var(--accent)",
+                filter: "drop-shadow(0 0 18px var(--accent))",
                 display: "flex",
                 justifyContent: "center",
               }}
@@ -75,26 +75,26 @@ export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) 
             </div>
 
             <div className="space-y-3">
-              <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
+              <p className="type-label">
                 {milestone}-day milestone
               </p>
               <h2
                 className="text-3xl font-light tracking-wide font-serif"
-                style={{ color: "var(--color-rarity-mystic)" }}
+                style={{ color: "var(--accent-text)" }}
               >
                 {copy.heading}
               </h2>
             </div>
 
-            <div className="w-12 h-px mx-auto opacity-20 bg-secondary" />
+            <div className="w-12 h-px mx-auto opacity-20 bg-border" />
 
-            <p className="text-base leading-relaxed opacity-80 text-secondary font-serif">
+            <p className="type-body-serif text-base">
               {copy.body}
             </p>
 
             <button
               onClick={dismiss}
-              className="mt-4 text-xs tracking-widest uppercase opacity-30 hover:opacity-60 transition-opacity text-secondary"
+              className="mt-4 text-xs tracking-widest uppercase text-faint-foreground hover:text-foreground transition-colors"
             >
               Continue
             </button>
