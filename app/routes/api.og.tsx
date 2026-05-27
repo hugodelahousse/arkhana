@@ -3,7 +3,7 @@ import { Resvg } from "@resvg/resvg-js";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Route } from "./+types/api.og";
-import { CARD_BY_ID, RARITY_LABELS, type Rarity } from "../lib/cards";
+import { CARD_BY_ID, RARITY_LABELS, getCardDescription, type Rarity } from "../lib/cards";
 import { cardImageUrl } from "../lib/cardImages";
 
 function getFonts(): Array<{ name: string; data: Buffer; weight: 400; style: "normal" }> {
@@ -148,6 +148,15 @@ function CardOG({
   const CARD_W = 365;
   const CARD_H = 630;
 
+  const arcanaLabel =
+    card.arcana === "major"
+      ? "Major Arcana"
+      : `Minor Arcana · ${card.suit ? card.suit.charAt(0).toUpperCase() + card.suit.slice(1) : ""}`;
+
+  const rawDescription = getCardDescription(card, rarity, isReversed);
+  const description =
+    rawDescription.length > 140 ? rawDescription.slice(0, 137) + "…" : rawDescription;
+
   return (
     <div
       style={{
@@ -216,68 +225,100 @@ function CardOG({
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
+          justifyContent: "space-between",
           padding: "56px 64px",
-          gap: 0,
         }}
       >
-        {/* Card name — hero element */}
-        <h1
-          style={{
-            fontSize: 72,
-            color: BONE_100,
-            fontFamily: "Cormorant Garamond",
-            fontWeight: 400,
-            margin: 0,
-            lineHeight: 1.05,
-            marginBottom: 28,
-          }}
-        >
-          {card.name}
-          {isReversed ? " ↓" : ""}
-        </h1>
-
-        {/* Rarity + radiant */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+        {/* Main content block */}
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {/* Arcana metadata */}
           <span
             style={{
-              fontSize: 13,
+              fontSize: 11,
               letterSpacing: 5,
-              color: rarityColor,
+              color: BONE_400,
               fontFamily: "DM Sans",
               textTransform: "uppercase",
+              opacity: 0.4,
+              marginBottom: 16,
             }}
           >
-            {rarityLabel}
+            {arcanaLabel}
           </span>
-          {isRadiant && (
+
+          {/* Card name — hero element */}
+          <h1
+            style={{
+              fontSize: 80,
+              color: BONE_100,
+              fontFamily: "Cormorant Garamond",
+              fontWeight: 400,
+              margin: 0,
+              lineHeight: 1.0,
+              marginBottom: 20,
+            }}
+          >
+            {card.name}
+            {isReversed ? " ↓" : ""}
+          </h1>
+
+          {/* Rarity + radiant */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 18 }}>
             <span
               style={{
                 fontSize: 13,
-                letterSpacing: 3,
-                color: "#eab308",
+                letterSpacing: 5,
+                color: rarityColor,
                 fontFamily: "DM Sans",
                 textTransform: "uppercase",
               }}
             >
-              ✦ Radiant
+              {rarityLabel}
             </span>
-          )}
+            {isRadiant && (
+              <span
+                style={{
+                  fontSize: 13,
+                  letterSpacing: 3,
+                  color: "#eab308",
+                  fontFamily: "DM Sans",
+                  textTransform: "uppercase",
+                }}
+              >
+                ✦ Radiant
+              </span>
+            )}
+          </div>
+
+          {/* Rarity accent line */}
+          <div
+            style={{
+              width: 40,
+              height: 2,
+              background: rarityColor,
+              opacity: 0.6,
+              display: "flex",
+              marginBottom: 24,
+            }}
+          />
+
+          {/* Rarity-matched description */}
+          <p
+            style={{
+              fontSize: 19,
+              color: BONE_400,
+              fontFamily: "Cormorant Garamond",
+              margin: 0,
+              lineHeight: 1.55,
+              opacity: 0.75,
+            }}
+          >
+            {description}
+          </p>
         </div>
 
-        {/* Rarity accent line */}
-        <div
-          style={{
-            width: 40,
-            height: 2,
-            background: rarityColor,
-            opacity: 0.6,
-            display: "flex",
-          }}
-        />
-
         {/* Footer */}
-        <div style={{ marginTop: "auto", display: "flex", justifyContent: "flex-end" }}>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <span
             style={{
               fontSize: 13,
