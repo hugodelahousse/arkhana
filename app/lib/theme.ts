@@ -20,4 +20,12 @@ export function setThemeCookie(theme: Theme): string {
  * falls back to matchMedia for 'system', and toggles .dark on <html>.
  * Wrapped in try/catch so a cookie parse error never breaks the page.
  */
-export const THEME_SCRIPT = `(function(){try{var c=document.cookie.match(/(?:^|;\\s*)theme=(light|dark|system)/);var t=c?c[1]:'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){}})();`;
+export const THEME_COLORS = { light: "#f5f2ed", dark: "#0a0a0f" } as const;
+
+/**
+ * Inline blocking script injected as first child of <body>.
+ * Runs synchronously before first paint — reads the theme cookie,
+ * falls back to matchMedia for 'system', toggles .dark on <html>,
+ * and syncs all theme-color meta tags so iOS address bar matches immediately.
+ */
+export const THEME_SCRIPT = `(function(){try{var c=document.cookie.match(/(?:^|;\\s*)theme=(light|dark|system)/);var t=c?c[1]:'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);var bg=d?'${THEME_COLORS.dark}':'${THEME_COLORS.light}';document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute('content',bg);m.removeAttribute('media');});}catch(e){}})();`;

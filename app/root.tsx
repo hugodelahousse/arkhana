@@ -12,7 +12,7 @@ import { useEffect } from "react";
 import type { Route } from "./+types/root";
 import "./app.css";
 import { OrientationProvider } from "./lib/orientation";
-import { getThemeFromCookie, THEME_SCRIPT, type Theme } from "./lib/theme";
+import { getThemeFromCookie, THEME_SCRIPT, THEME_COLORS, type Theme } from "./lib/theme";
 
 export const links: Route.LinksFunction = () => [
   { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -28,9 +28,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const data = useRouteLoaderData<typeof loader>("root");
   const theme = data?.theme ?? "system";
 
-  // theme-color matches the resolved background color
-  const themeColor = theme === "light" ? "#ede8e0" : "#0a0a0f";
-
   // suppressHydrationWarning: the blocking script intentionally mutates
   // document.documentElement.classList before React hydrates — not a bug.
   return (
@@ -38,7 +35,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <meta name="theme-color" content={themeColor} />
+        {/* system: two media-conditional tags so the browser picks correctly without JS.
+            explicit light/dark: single tag. The blocking script collapses both to the
+            resolved value before first paint, so iOS sees the right color immediately. */}
+        {theme === "system" ? (
+          <>
+            <meta name="theme-color" content={THEME_COLORS.light} media="(prefers-color-scheme: light)" />
+            <meta name="theme-color" content={THEME_COLORS.dark} media="(prefers-color-scheme: dark)" />
+          </>
+        ) : (
+          <meta name="theme-color" content={theme === "light" ? THEME_COLORS.light : THEME_COLORS.dark} />
+        )}
         <link rel="manifest" href="/site.webmanifest" />
         <Meta />
         <Links />
@@ -80,6 +87,12 @@ export default function App() {
         t === "dark" ||
         (t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
       document.documentElement.classList.toggle("dark", isDark);
+      // Keep iOS address-bar color in sync with the resolved theme
+      const color = isDark ? THEME_COLORS.dark : THEME_COLORS.light;
+      document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m, i) => {
+        if (i === 0) { m.content = color; m.removeAttribute("media"); }
+        else m.remove();
+      });
     }
 
     apply(theme);
