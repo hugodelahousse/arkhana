@@ -1,4 +1,5 @@
-export type Theme = "light" | "dark" | "system";
+export type { Theme } from "../../db/schema/auth.js";
+import type { Theme } from "../../db/schema/auth.js";
 
 const ONE_YEAR_S = 365 * 24 * 60 * 60;
 

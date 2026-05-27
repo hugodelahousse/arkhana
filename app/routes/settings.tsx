@@ -7,7 +7,7 @@ import { user, passkey as passkeyTable } from "../../db/schema/auth.js";
 import { eq, and, ne } from "drizzle-orm";
 import { getThemeFromCookie, setThemeCookie, type Theme } from "../lib/theme";
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   if (!context.user || context.user.isAnonymous) return redirect("/");
   const [profile] = await db
     .select({ username: user.username, displayUsername: user.displayUsername })
@@ -41,7 +41,13 @@ export async function action({ request, context }: Route.ActionArgs) {
     const theme = String(form.get("theme") ?? "system");
     if (!["light", "dark", "system"].includes(theme))
       return data({ error: "Invalid theme." }, { status: 400 });
-    await db.update(user).set({ theme }).where(eq(user.id, context.user.id));
+    const [row] = await db
+      .select({ preferences: user.preferences })
+      .from(user)
+      .where(eq(user.id, context.user.id))
+      .limit(1);
+    const prefs = { ...(row?.preferences ?? {}), theme: theme as Theme };
+    await db.update(user).set({ preferences: prefs }).where(eq(user.id, context.user.id));
     return data(
       { success: true },
       { headers: { "Set-Cookie": setThemeCookie(theme as Theme) } },

@@ -1,5 +1,11 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, integer, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, integer, index, jsonb } from "drizzle-orm/pg-core";
+
+export type Theme = "light" | "dark" | "system";
+
+export interface UserPreferences {
+  theme?: Theme;
+}
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -8,7 +14,7 @@ export const user = pgTable("user", {
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
   isAnonymous: boolean("is_anonymous").default(false),
-  theme: text("theme").default("system").notNull(),
+  preferences: jsonb("preferences").$type<UserPreferences>().default({}),
   username: text("username").unique(),
   displayUsername: text("display_username"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

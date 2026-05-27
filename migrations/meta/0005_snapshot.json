@@ -1,5 +1,5 @@
 {
-  "id": "59e28f6e-1f99-4188-9460-7331230cd4cb",
+  "id": "1a140dd5-6235-427d-a785-6694a062aa28",
   "prevId": "dbaba836-7f4c-44f7-80d0-405bcddc981a",
   "version": "7",
   "dialect": "postgresql",
@@ -393,12 +393,12 @@
           "notNull": false,
           "default": false
         },
-        "theme": {
-          "name": "theme",
-          "type": "text",
+        "preferences": {
+          "name": "preferences",
+          "type": "jsonb",
           "primaryKey": false,
-          "notNull": true,
-          "default": "'system'"
+          "notNull": false,
+          "default": "'{}'::jsonb"
         },
         "username": {
           "name": "username",
