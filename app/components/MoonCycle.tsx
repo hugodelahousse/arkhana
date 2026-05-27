@@ -106,7 +106,7 @@ export const MoonCycle = memo(function MoonCycle({
         let filter: string | undefined;
 
         if (isToday && todayPulled) {
-          fill = "var(--color-rarity-mystic)";
+          fill = "var(--accent)";
           opacity = 1;
           filter = `url(#glow-${filterId})`;
         } else if (isToday) {

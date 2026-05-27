@@ -216,7 +216,7 @@ function SpreadContemplateReveal({
         </p>
         <h2
           className="text-2xl sm:text-3xl font-light tracking-wide font-serif"
-          style={{ color: "var(--color-rarity-mystic)" }}
+          style={{ color: "var(--accent)" }}
         >
           {posLabel}
         </h2>
@@ -274,7 +274,7 @@ function SpreadContemplateReveal({
             className="mt-2 px-8 py-2.5 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
             style={{
               color: "var(--muted-foreground)",
-              borderColor: "var(--color-rarity-mystic)",
+              borderColor: "var(--accent)",
               opacity: showContinue ? 1 : 0,
               pointerEvents: showContinue ? "auto" : "none",
               transition: "opacity 0.4s",
@@ -501,7 +501,7 @@ function PushPermissionAsk({ onDismiss }: { onDismiss: () => void }) {
           onClick={requestPermission}
           disabled={asking}
           className="text-xs tracking-widest uppercase px-5 py-2 border transition-opacity hover:opacity-80 text-muted-foreground"
-          style={{ borderColor: "var(--color-rarity-mystic)" }}
+          style={{ borderColor: "var(--accent)" }}
         >
           {asking ? "…" : "Allow reminders"}
         </button>
@@ -667,7 +667,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                         fetcher.submit({ _action: "spread" }, { method: "post" });
                       }}
                       className="px-8 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80 text-muted-foreground"
-                      style={{ borderColor: "var(--color-rarity-mystic)" }}
+                      style={{ borderColor: "var(--accent)" }}
                     >
                       Begin the reading
                     </button>

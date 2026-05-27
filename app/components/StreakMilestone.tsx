@@ -65,8 +65,8 @@ export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) 
             <div
               aria-hidden="true"
               style={{
-                color: "var(--color-rarity-mystic)",
-                filter: "drop-shadow(0 0 18px var(--color-rarity-mystic))",
+                color: "var(--accent)",
+                filter: "drop-shadow(0 0 18px var(--accent))",
                 display: "flex",
                 justifyContent: "center",
               }}
@@ -80,7 +80,7 @@ export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) 
               </p>
               <h2
                 className="text-3xl font-light tracking-wide font-serif"
-                style={{ color: "var(--color-rarity-mystic)" }}
+                style={{ color: "var(--accent)" }}
               >
                 {copy.heading}
               </h2>

@@ -286,11 +286,11 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
                       className="flex flex-col items-center gap-2.5 flex-1 py-5 border rounded-sm"
                       style={{
                         borderColor: reached
-                          ? "var(--color-rarity-mystic)"
+                          ? "var(--accent)"
                           : "var(--border)",
                         opacity: reached ? 1 : 0.3,
                         color: reached
-                          ? "var(--color-rarity-mystic)"
+                          ? "var(--accent)"
                           : "var(--muted-foreground)",
                       }}
                     >
@@ -405,9 +405,9 @@ function LunarDayCell({ day }: { day: LunarDay }) {
   let filter: string | undefined;
 
   if (isToday && day.pulled) {
-    color = "var(--color-rarity-mystic)";
+    color = "var(--accent)";
     opacity = 1;
-    filter = "drop-shadow(0 0 3px var(--color-rarity-mystic))";
+    filter = "drop-shadow(0 0 3px var(--accent))";
   } else if (isToday) {
     color = "var(--muted-foreground)";
     opacity = 0.6;

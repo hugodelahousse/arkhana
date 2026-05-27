@@ -62,7 +62,7 @@ export function Nav({ userName: _userName, isAnonymous }: { userName: string; is
                 <button
                   type="submit"
                   aria-label="Sign out"
-                  className="opacity-60 hover:opacity-100 transition-opacity"
+                  className="uppercase opacity-60 hover:opacity-100 transition-opacity"
                 >
                   Sign out
                 </button>

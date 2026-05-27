@@ -57,7 +57,7 @@ function PositionCardReveal({
         </p>
         <h2
           className="text-3xl font-light tracking-wide"
-          style={{ color: "var(--color-rarity-mystic)", fontFamily: "var(--font-serif)" }}
+          style={{ color: "var(--accent)", fontFamily: "var(--font-serif)" }}
         >
           {positionLabel}
         </h2>
@@ -105,7 +105,7 @@ function PositionCardReveal({
             <button
               onClick={onAdvance}
               className="px-6 py-2 text-[0.7rem] tracking-[0.15em] uppercase cursor-pointer border bg-transparent hover:opacity-80 transition-opacity"
-              style={{ color: "var(--foreground)", borderColor: "var(--color-rarity-mystic)" }}
+              style={{ color: "var(--foreground)", borderColor: "var(--accent)" }}
             >
               {isLast ? "See your reading" : `Continue to ${nextLabel}`}
             </button>
@@ -220,7 +220,7 @@ export default function SpreadLab() {
             <button
               onClick={startCeremony}
               className="px-6 py-2 text-[0.7rem] tracking-[0.15em] uppercase cursor-pointer border bg-transparent hover:opacity-80 transition-opacity"
-              style={{ color: "var(--foreground)", borderColor: "var(--color-rarity-mystic)", fontFamily: "var(--font-serif)" }}
+              style={{ color: "var(--foreground)", borderColor: "var(--accent)", fontFamily: "var(--font-serif)" }}
             >
               Run ceremony
             </button>
@@ -247,7 +247,7 @@ export default function SpreadLab() {
                 >
                   <span
                     className="text-xs tracking-widest uppercase w-14 pt-5"
-                    style={{ color: "var(--color-rarity-mystic)" }}
+                    style={{ color: "var(--accent)" }}
                   >
                     {pos.label}
                   </span>
@@ -377,7 +377,7 @@ export default function SpreadLab() {
               >
                 <h2
                   className="text-4xl font-light"
-                  style={{ color: "var(--color-rarity-mystic)", fontFamily: "var(--font-serif)" }}
+                  style={{ color: "var(--accent)", fontFamily: "var(--font-serif)" }}
                 >
                   {positions[phase.position]?.label}
                 </h2>
@@ -390,7 +390,7 @@ export default function SpreadLab() {
                 <button
                   onClick={() => setPhase({ phase: "revealing", position: phase.position })}
                   className="px-6 py-2 text-[0.7rem] tracking-[0.15em] uppercase cursor-pointer border bg-transparent hover:opacity-80 transition-opacity"
-                  style={{ color: "var(--foreground)", borderColor: "var(--color-rarity-mystic)" }}
+                  style={{ color: "var(--foreground)", borderColor: "var(--accent)" }}
                 >
                   I am ready
                 </button>
