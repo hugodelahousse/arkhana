@@ -487,7 +487,7 @@ function behaviourRandom(rng: RNG): TracerBehaviour {
   };
 }
 
-function behaviourMesh(rng: RNG): TracerBehaviour {
+function behaviourMesh(_rng: RNG): TracerBehaviour {
   return { wiggling: 0, curvature: 0, roughness: 0, zigzag: 0.5, align: 6, spawn: 0 };
 }
 
@@ -675,6 +675,7 @@ class Tracer {
 // ---------------------------------------------------------------------------
 // ArtStyle / color palettes
 // ---------------------------------------------------------------------------
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface ArtStyle {
   palette: number[];
   paper: number;
@@ -726,7 +727,7 @@ function gradient(color: number): [number, number, number] {
   return [adjustLightness(color, -0.2), color, adjustLightness(color, 0.2)];
 }
 
-function colorDistance(a: number, b: number): number {
+function _colorDistance(a: number, b: number): number {
   const [ar, ag, ab] = hexToRGB(a);
   const [br, bg, bb] = hexToRGB(b);
   return Math.sqrt((ar - br) ** 2 + (ag - bg) ** 2 + (ab - bb) ** 2);
@@ -903,8 +904,6 @@ class Painter {
     if (cur.end.y < cur.start.y) cur = cur.invert();
 
     const shape: Vec2[] = [cur.start.clone()];
-    const curKey1 = this.ptKey(cur.start);
-    const curKey2 = this.ptKey(cur.end);
 
     // Max polygon vertices: no shape should need more than ~200 edges
     const MAX_SHAPE = 200;
@@ -1205,7 +1204,6 @@ class Sketcher {
         // Split other stroke at intersection
         const ip = Vec2.lerp(other.start, other.end, closestU);
         s.end = ip.clone();
-        const newIdx = this.strokes.length; // will be added as strokes[newIdx] after splice... actually needs careful handling
         const second = new Stroke(ip.clone(), other.end.clone(), other.thickness);
         other.end = ip.clone();
         this.strokes.splice(closestIdx + 1, 0, second);
@@ -1330,7 +1328,7 @@ class Sketcher {
     rng: RNG,
     style: SketcherStyle,
     level: number = 0,
-    density: number = 10
+    _density: number = 10
   ): Sketcher {
     const mask = new Mask();
     const ratio = level <= 0 ? 0.1 + rng.normal() * 0.2 : level;
