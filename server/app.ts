@@ -6,7 +6,7 @@ import { auth } from "./auth.js";
 import { db } from "../db/index.js";
 import { pushSubscriptions } from "../db/schema/push-subscriptions.js";
 import { eq } from "drizzle-orm";
-import { getVapidPublicKey, sendDailyReminders, sendCelestialNotification } from "../app/lib/push.js";
+import { getVapidPublicKey, testPushToUser, sendDailyReminders, sendCelestialNotification } from "../app/lib/push.js";
 import { getUpcomingCelestialEvents } from "../app/lib/moonphase.js";
 import { todayUTC } from "../app/lib/utils.js";
 
@@ -71,6 +71,37 @@ app.delete("/api/push/subscribe", async (req, res) => {
     .where(eq(pushSubscriptions.endpoint, endpoint));
 
   res.json({ ok: true });
+});
+
+// Test push notification (dev only)
+app.post("/api/push/test", async (req, res) => {
+  const session = await auth.api.getSession({
+    headers: new Headers(req.headers as Record<string, string>),
+  });
+  if (!session?.user) return res.status(401).json({ error: "Unauthorized" });
+
+  const { type = "daily-reminder" } = req.body ?? {};
+  const payloads: Record<string, { title: string; body: string; tag: string }> = {
+    "daily-reminder": {
+      title: "Arkhana",
+      body: "A card is waiting.",
+      tag: "daily-reminder",
+    },
+    milestone: {
+      title: "Arkhana",
+      body: "Seven days. You've established a practice.",
+      tag: "milestone-7",
+    },
+    celestial: {
+      title: "Arkhana",
+      body: "Full moon. Draw your card under its light.",
+      tag: "celestial-full-moon",
+    },
+  };
+
+  const payload = payloads[type] ?? payloads["daily-reminder"];
+  const result = await testPushToUser(session.user.id, { type: type as "daily-reminder", ...payload, url: "/" });
+  res.json(result);
 });
 
 app.use(

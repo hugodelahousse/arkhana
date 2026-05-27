@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { CARDS, CARD_BY_ID, RARITY_LABELS, getCardDescription } from "../lib/cards";
-import { TarotCard } from "../components/TarotCard";
-import { useAutoReveal } from "../lib/useAutoReveal";
+import { CARDS, CARD_BY_ID, RARITY_LABELS, getCardDescription } from "../../lib/cards";
+import { TarotCard } from "../../components/TarotCard";
+import { useAutoReveal } from "../../lib/useAutoReveal";
 import { motion, AnimatePresence } from "motion/react";
-import { SPREAD_REGISTRY } from "../lib/spreads";
-import type { SpreadCardResult } from "../lib/spread-pull";
-import type { Rarity } from "../lib/cards";
+import { SPREAD_REGISTRY } from "../../lib/spreads";
+import type { SpreadCardResult } from "../../lib/spread-pull";
+import type { Rarity } from "../../lib/cards";
 
 export function meta() {
   return [{ title: "Spread Lab — Arkhana" }];

@@ -2,6 +2,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { userCards } from "../db/schema/user-cards.js";
 import { spreads, spreadCards } from "../db/schema/spreads.js";
+import { pushSubscriptions } from "../db/schema/push-subscriptions.js";
 import { initStreakFromHistory } from "../app/lib/streak.js";
 
 export async function migrateAnonymousPulls(
@@ -86,6 +87,12 @@ export async function migrateAnonymousPulls(
       await db.delete(userCards).where(eq(userCards.id, anonPull.id));
     }
   }
+
+  // Migrate push subscriptions
+  await db
+    .update(pushSubscriptions)
+    .set({ userId: newUserId })
+    .where(eq(pushSubscriptions.userId, anonymousUserId));
 
   // Seed the streak record for the new user from their full daily pull history.
   const allPulls = await db

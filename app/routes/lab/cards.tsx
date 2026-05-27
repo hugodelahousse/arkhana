@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { CARDS, CARD_BY_ID, RARITY_LABELS, getCardDescription } from "../lib/cards";
-import { TarotCard, DEFAULT_MOTION_CONFIG } from "../components/TarotCard";
-import type { CardMotionConfig } from "../components/TarotCard";
-import { useAutoReveal } from "../lib/useAutoReveal";
+import { CARDS, CARD_BY_ID, RARITY_LABELS, getCardDescription } from "../../lib/cards";
+import { TarotCard, DEFAULT_MOTION_CONFIG } from "../../components/TarotCard";
+import type { CardMotionConfig } from "../../components/TarotCard";
+import { useAutoReveal } from "../../lib/useAutoReveal";
 import { motion, AnimatePresence } from "motion/react";
 
 export function meta() {

@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect, memo } from "react";
-import { CARDS } from "../lib/cards";
-import { cardImageUrl, cardMaskUrl, cardNameMaskUrl, cardTopMaskUrl } from "../lib/cardImages";
-import type { CardDefinition } from "../lib/cards";
+import { CARDS } from "../../lib/cards";
+import { cardImageUrl, cardMaskUrl, cardNameMaskUrl, cardTopMaskUrl } from "../../lib/cardImages";
+import type { CardDefinition } from "../../lib/cards";
 
 export function meta() {
   return [{ title: "Layer Lab — Arkhana" }];

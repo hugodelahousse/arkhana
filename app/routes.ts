@@ -19,7 +19,8 @@ export default [
   route("auth/signout", "routes/auth/signout.tsx"),
   route("auth/forgot-password", "routes/auth/forgot-password.tsx"),
   route("auth/reset-password", "routes/auth/reset-password.tsx"),
-  route("card-lab", "routes/card-lab.tsx"),
-  route("spread-lab", "routes/spread-lab.tsx"),
-  route("layer-lab", "routes/layer-lab.tsx"),
+  route("lab/cards", "routes/lab/cards.tsx"),
+  route("lab/spreads", "routes/lab/spreads.tsx"),
+  route("lab/layers", "routes/lab/layers.tsx"),
+  route("lab/push", "routes/lab/push.tsx"),
 ] satisfies RouteConfig;

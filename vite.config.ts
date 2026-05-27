@@ -24,7 +24,7 @@ export default defineConfig(({ isSsrBuild }) => ({
             registerType: "autoUpdate",
             injectRegister: false,
             manifest: false,
-            devOptions: { enabled: false },
+            devOptions: { enabled: true, type: "module" },
             injectManifest: {
               globPatterns: ["**/*.{js,css,woff,woff2,ttf}"],
               additionalManifestEntries: [

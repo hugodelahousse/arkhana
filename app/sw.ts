@@ -65,3 +65,29 @@ setCatchHandler(async ({ request }) => {
   }
   return Response.error();
 });
+
+// Push notifications
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+  const payload = event.data.json();
+  event.waitUntil(
+    self.registration.showNotification(payload.title ?? "Arkhana", {
+      body: payload.body,
+      tag: payload.tag,
+      renotify: !!payload.tag,
+      data: { url: payload.url ?? "/" },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url ?? "/";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window" }).then((clients) => {
+      const match = clients.find((c) => new URL(c.url).pathname === url);
+      if (match) return match.focus();
+      return self.clients.openWindow(url);
+    })
+  );
+});

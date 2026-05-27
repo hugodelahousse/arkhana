@@ -136,6 +136,36 @@ export async function sendCelestialNotification(event: "new-moon" | "full-moon")
   );
 }
 
+export interface TestPushResult {
+  vapidConfigured: boolean;
+  subscriptionCount: number;
+  results: { endpoint: string; ok: boolean; error?: string }[];
+}
+
+export async function testPushToUser(userId: string, payload: PushPayload): Promise<TestPushResult> {
+  const vapidConfigured = initWebPush();
+  if (!vapidConfigured) return { vapidConfigured, subscriptionCount: 0, results: [] };
+
+  const subs = await db
+    .select()
+    .from(pushSubscriptions)
+    .where(eq(pushSubscriptions.userId, userId));
+
+  const results = await Promise.all(
+    subs.map(async (s) => {
+      try {
+        await sendToSubscription(s, payload);
+        return { endpoint: s.endpoint, ok: true };
+      } catch (err) {
+        const status = (err as { statusCode?: number }).statusCode;
+        return { endpoint: s.endpoint, ok: false, error: `${status ?? ""} ${err}`.trim() };
+      }
+    })
+  );
+
+  return { vapidConfigured, subscriptionCount: subs.length, results };
+}
+
 export function getVapidPublicKey(): string | null {
   return config.vapidPublicKey ?? null;
 }
