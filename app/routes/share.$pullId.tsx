@@ -51,9 +51,10 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
   ]
     .filter(Boolean)
     .join(", ");
-  const title = `${who}${card.name}${modifier ? ` · ${modifier}` : ""} — Arkhana`;
-  const description = `${rarityLabel} · ${getCardDescription(card, rarity, pull.isReversed)}`;
-  const ogImage = `${origin}/api/og.png?type=card&cardId=${pull.cardId}&rarity=${rarity}&reversed=${pull.isReversed}&radiant=${pull.isRadiant}`;
+  const title = `${who}${card.name}${modifier ? ` (${modifier})` : ""} — Daily Pull on Arkhana`;
+  const cardDescription = getCardDescription(card, rarity, pull.isReversed);
+  const description = `${rarityLabel} pull. ${cardDescription}`;
+  const ogImage = `${origin}/api/og.png?type=card&cardId=${pull.cardId}&rarity=${rarity}&reversed=${pull.isReversed}&radiant=${pull.isRadiant}${handle ? `&username=${encodeURIComponent(handle)}` : ""}${pull.pullDate ? `&date=${pull.pullDate}` : ""}`;
 
   return [
     { title },

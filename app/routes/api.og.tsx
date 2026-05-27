@@ -3,14 +3,15 @@ import { Resvg } from "@resvg/resvg-js";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Route } from "./+types/api.og";
-import { CARD_BY_ID, RARITY_LABELS, type Rarity } from "../lib/cards";
+import { CARD_BY_ID, RARITY_LABELS, getCardDescription, type Rarity } from "../lib/cards";
 import { cardImageUrl } from "../lib/cardImages";
 
-function getFonts(): Array<{ name: string; data: Buffer; weight: 400; style: "normal" }> {
+function getFonts() {
   const fontsDir = resolve(process.cwd(), "public/fonts");
   return [
-    { name: "Cormorant Garamond", data: readFileSync(resolve(fontsDir, "cormorant-garamond.ttf")), weight: 400, style: "normal" },
-    { name: "DM Sans", data: readFileSync(resolve(fontsDir, "dm-sans.ttf")), weight: 400, style: "normal" },
+    { name: "Cormorant Garamond", data: readFileSync(resolve(fontsDir, "cormorant-garamond.ttf")), weight: 400 as const, style: "normal" as const },
+    { name: "Cormorant Garamond", data: readFileSync(resolve(fontsDir, "cormorant-garamond-semibold.ttf")), weight: 600 as const, style: "normal" as const },
+    { name: "DM Sans", data: readFileSync(resolve(fontsDir, "dm-sans.ttf")), weight: 400 as const, style: "normal" as const },
   ];
 }
 
@@ -33,6 +34,14 @@ const SURFACE = "#13131a";
 const BONE_100 = "#e8e4de";
 const BONE_400 = "#b0aca6";
 const STONE = "#303038";
+
+function SparkleFill({ size = 24, color = "currentColor" }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 256 256" fill={color}>
+      <path d="M208,144a15.78,15.78,0,0,1-10.42,14.94L146,178l-19,51.62a15.92,15.92,0,0,1-29.88,0L78,178l-51.62-19a15.92,15.92,0,0,1,0-29.88L78,110l19-51.62a15.92,15.92,0,0,1,29.88,0L146,110l51.62,19A15.78,15.78,0,0,1,208,144ZM152,48h16V64a8,8,0,0,0,16,0V48h16a8,8,0,0,0,0-16H184V16a8,8,0,0,0-16,0V32H152a8,8,0,0,0,0,16Zm88,32h-8V72a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16h8v8a8,8,0,0,0,16,0V96h8a8,8,0,0,0,0-16Z" />
+    </svg>
+  );
+}
 
 const imageCache = new Map<string, string>();
 
@@ -78,9 +87,9 @@ function AppCard() {
       />
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
         <div style={{ display: "flex", gap: 20, color: BONE_400, fontSize: 18, opacity: 0.4, fontFamily: "DM Sans" }}>
-          <span>✦</span>
-          <span>✦</span>
-          <span>✦</span>
+          <SparkleFill size={18} color={BONE_400} />
+          <SparkleFill size={18} color={BONE_400} />
+          <SparkleFill size={18} color={BONE_400} />
         </div>
         <h1
           style={{
@@ -124,19 +133,22 @@ function AppCard() {
   );
 }
 
-// Card image fills the full height; text panel on the right
 function CardOG({
   cardId,
   rarity,
   isReversed,
   isRadiant,
   cardImage,
+  username,
+  date,
 }: {
   cardId: number;
   rarity: Rarity;
   isReversed: boolean;
   isRadiant: boolean;
   cardImage: string | null;
+  username: string | null;
+  date: string | null;
 }) {
   const card = CARD_BY_ID[cardId];
   if (!card) return <AppCard />;
@@ -144,9 +156,12 @@ function CardOG({
   const rarityColor = RARITY_COLORS[rarity] ?? BONE_400;
   const rarityLabel = RARITY_LABELS[rarity];
 
-  // Card aspect ratio ~220:380 ≈ 0.579. At 630px height the natural width is ~365px.
   const CARD_W = 365;
   const CARD_H = 630;
+
+  const description = getCardDescription(card, rarity, isReversed);
+
+  const drewByLine = username ? `@${username}` : null;
 
   return (
     <div
@@ -159,7 +174,17 @@ function CardOG({
         overflow: "hidden",
       }}
     >
-      {/* Full-height card image */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: "flex",
+          background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(168, 85, 247, 0.15) 0%, rgba(10, 10, 15, 0) 70%)",
+        }}
+      />
       <div
         style={{
           width: CARD_W,
@@ -193,10 +218,9 @@ function CardOG({
               justifyContent: "center",
             }}
           >
-            <span style={{ color: BONE_400, fontSize: 64, fontFamily: "Cormorant Garamond", opacity: 0.2 }}>✦</span>
+            <SparkleFill size={48} color={BONE_400} />
           </div>
         )}
-        {/* Rarity color wash at the bottom of the card */}
         <div
           style={{
             position: "absolute",
@@ -210,86 +234,122 @@ function CardOG({
         />
       </div>
 
-      {/* Right text panel */}
       <div
         style={{
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
-          padding: "56px 64px",
-          gap: 0,
+          justifyContent: "space-between",
+          padding: "48px 56px",
         }}
       >
-        {/* Card name — hero element */}
-        <h1
-          style={{
-            fontSize: 72,
-            color: BONE_100,
-            fontFamily: "Cormorant Garamond",
-            fontWeight: 400,
-            margin: 0,
-            lineHeight: 1.05,
-            marginBottom: 28,
-          }}
-        >
-          {card.name}
-          {isReversed ? " ↓" : ""}
-        </h1>
-
-        {/* Rarity + radiant */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-          <span
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <h1
             style={{
-              fontSize: 13,
-              letterSpacing: 5,
-              color: rarityColor,
-              fontFamily: "DM Sans",
-              textTransform: "uppercase",
+              fontSize: 80,
+              color: BONE_100,
+              fontFamily: "Cormorant Garamond",
+              fontWeight: 600,
+              margin: 0,
+              lineHeight: 1.0,
+              marginBottom: 18,
             }}
           >
-            {rarityLabel}
-          </span>
-          {isRadiant && (
+            {card.name}
+          </h1>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 18 }}>
+            {isReversed && (
+              <span
+                style={{
+                  fontSize: 24,
+                  letterSpacing: 4,
+                  color: "#c6c2bc",
+                  fontFamily: "DM Sans",
+                  textTransform: "uppercase",
+                }}
+              >
+                Reversed
+              </span>
+            )}
             <span
               style={{
-                fontSize: 13,
-                letterSpacing: 3,
-                color: "#eab308",
+                fontSize: 24,
+                letterSpacing: 4,
+                color: rarityColor,
                 fontFamily: "DM Sans",
                 textTransform: "uppercase",
               }}
             >
-              ✦ Radiant
+              {rarityLabel}
             </span>
-          )}
-        </div>
+            {isRadiant && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <SparkleFill size={20} color="#eab308" />
+                <span
+                  style={{
+                    fontSize: 24,
+                    letterSpacing: 3,
+                    color: "#eab308",
+                    fontFamily: "DM Sans",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Radiant
+                </span>
+              </div>
+            )}
+          </div>
 
-        {/* Rarity accent line */}
-        <div
-          style={{
-            width: 40,
-            height: 2,
-            background: rarityColor,
-            opacity: 0.6,
-            display: "flex",
-          }}
-        />
-
-        {/* Footer */}
-        <div style={{ marginTop: "auto", display: "flex", justifyContent: "flex-end" }}>
-          <span
+          <div
             style={{
-              fontSize: 13,
-              letterSpacing: 5,
-              color: BONE_400,
+              width: 48,
+              height: 2,
+              background: rarityColor,
+              display: "flex",
+              marginBottom: 24,
+            }}
+          />
+
+          <p
+            style={{
+              fontSize: 28,
+              color: "#c6c2bc",
               fontFamily: "DM Sans",
-              textTransform: "uppercase",
-              opacity: 0.3,
+              margin: 0,
+              lineHeight: 1.55,
             }}
           >
-            ARKHANA ✦
+            {description}
+          </p>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span
+            style={{
+              fontSize: 20,
+              letterSpacing: 3,
+              color: "#918d87",
+              fontFamily: "DM Sans",
+              textTransform: "uppercase",
+            }}
+          >
+            {[drewByLine, date].filter(Boolean).join("  /  ")}
           </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
+                fontSize: 20,
+                letterSpacing: 4,
+                color: "#918d87",
+                fontFamily: "DM Sans",
+                textTransform: "uppercase",
+              }}
+            >
+              ARKHANA
+            </span>
+            <SparkleFill size={16} color="#918d87" />
+          </div>
         </div>
       </div>
     </div>
@@ -400,7 +460,7 @@ function CollectionOG({
           </span>
         </div>
       </div>
-      <div style={{ position: "absolute", bottom: 48, right: 120, display: "flex", alignItems: "center" }}>
+      <div style={{ position: "absolute", bottom: 48, right: 120, display: "flex", alignItems: "center", gap: 8 }}>
         <span
           style={{
             fontSize: 13,
@@ -411,8 +471,9 @@ function CollectionOG({
             opacity: 0.25,
           }}
         >
-          ARKHANA ✦
+          ARKHANA
         </span>
+        <SparkleFill size={12} color={BONE_400} />
       </div>
       <div
         style={{
@@ -511,7 +572,7 @@ function SpreadOG({
                       justifyContent: "center",
                     }}
                   >
-                    <span style={{ color: BONE_400, fontSize: 24, fontFamily: "Cormorant Garamond", opacity: 0.2 }}>✦</span>
+                    <span style={{ color: BONE_400, fontSize: 24, fontFamily: "Cormorant Garamond", opacity: 0.2 }}>*</span>
                   </div>
                 )}
               </div>
@@ -573,7 +634,7 @@ function SpreadOG({
           {spreadName}
         </h1>
         <div style={{ width: 40, height: 2, background: BONE_400, opacity: 0.25, display: "flex", marginBottom: "auto" }} />
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8 }}>
           <span
             style={{
               fontSize: 13,
@@ -584,8 +645,9 @@ function SpreadOG({
               opacity: 0.3,
             }}
           >
-            ARKHANA ✦
+            ARKHANA
           </span>
+          <SparkleFill size={12} color={BONE_400} />
         </div>
       </div>
     </div>
@@ -608,8 +670,10 @@ export async function loader({ request }: Route.LoaderArgs) {
   if (type === "card") {
     const imgUrl = cardImageUrl(cardId);
     const cardImage = await fetchAsDataUri(imgUrl);
+    const cardUsername = url.searchParams.get("username") ?? null;
+    const cardDate = url.searchParams.get("date") ?? null;
     element = (
-      <CardOG cardId={cardId} rarity={rarity} isReversed={isReversed} isRadiant={isRadiant} cardImage={cardImage} />
+      <CardOG cardId={cardId} rarity={rarity} isReversed={isReversed} isRadiant={isRadiant} cardImage={cardImage} username={cardUsername} date={cardDate} />
     );
   } else if (type === "collection") {
     element = <CollectionOG username={username} discovered={discovered} total={78} />;
