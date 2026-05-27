@@ -877,7 +877,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               {/* Streak widget — always visible, links to /streak */}
               <Link
                 to="/streak"
-                className="flex items-center justify-between group hover:opacity-80 transition-opacity"
+                className="flex items-center justify-between group hover:brightness-125 transition-[filter]"
                 aria-label={`Moon cycle: day ${lunarMonthInfo.todayLunarIndex + 1}, ${displayStreakCount} day streak.`}
               >
                 <div className="space-y-0.5">
