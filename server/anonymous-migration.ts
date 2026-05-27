@@ -93,5 +93,5 @@ export async function migrateAnonymousPulls(
     .from(userCards)
     .where(and(eq(userCards.userId, newUserId), inArray(userCards.pullType, ["daily", "spread"])));
 
-  await initStreakFromHistory(newUserId, allPulls.map((r) => r.pullDate));
+  await initStreakFromHistory(newUserId, allPulls.map((r) => r.pullDate), { recompute: true });
 }
