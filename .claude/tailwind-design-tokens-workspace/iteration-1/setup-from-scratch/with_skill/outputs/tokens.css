@@ -1,0 +1,115 @@
+/* ════════════════════════════════════════════
+   DESIGN TOKENS — two layers
+   SaaS Dashboard — brand: #6366f1 (indigo)
+   ════════════════════════════════════════════ */
+
+:root {
+  /* ── Primitives ──────────────────────────────
+     OKLCH format: oklch(Lightness Chroma Hue)
+     L: 0–1  |  C: 0–0.4  |  H: 0–360          */
+
+  /* Neutrals */
+  --white:         oklch(1     0     0);
+  --neutral-50:    oklch(0.985 0.002 264);
+  --neutral-100:   oklch(0.961 0.003 264);
+  --neutral-200:   oklch(0.925 0.006 264);
+  --neutral-300:   oklch(0.869 0.008 264);
+  --neutral-400:   oklch(0.707 0.014 264);
+  --neutral-500:   oklch(0.556 0.018 264);
+  --neutral-600:   oklch(0.446 0.016 264);
+  --neutral-700:   oklch(0.372 0.013 264);
+  --neutral-800:   oklch(0.269 0.010 264);
+  --neutral-900:   oklch(0.169 0.007 264);
+  --neutral-950:   oklch(0.105 0.005 264);
+
+  /* Brand — Indigo (#6366f1 ≈ oklch(0.585 0.233 272)) */
+  --indigo-300:    oklch(0.754 0.152 272);
+  --indigo-400:    oklch(0.673 0.192 272);
+  --indigo-500:    oklch(0.585 0.233 272);
+  --indigo-600:    oklch(0.511 0.219 272);
+  --indigo-700:    oklch(0.432 0.194 272);
+
+  /* Status */
+  --green-500:     oklch(0.723 0.183 151);
+  --yellow-500:    oklch(0.795 0.174  87);
+  --red-500:       oklch(0.638 0.221  28);
+  --blue-400:      oklch(0.694 0.148 237);
+
+  /* ── Light-mode Semantics ─────────────────── */
+  --background:             var(--neutral-50);
+  --foreground:             var(--neutral-950);
+
+  --card:                   var(--white);
+  --card-foreground:        var(--neutral-950);
+
+  --popover:                var(--white);
+  --popover-foreground:     var(--neutral-950);
+
+  --muted:                  var(--neutral-100);
+  --muted-foreground:       var(--neutral-500);
+
+  --border:                 var(--neutral-200);
+  --input:                  var(--neutral-200);
+  --ring:                   var(--indigo-500);
+
+  --primary:                var(--indigo-500);
+  --primary-foreground:     var(--white);
+
+  --secondary:              var(--neutral-100);
+  --secondary-foreground:   var(--neutral-900);
+
+  --accent:                 var(--neutral-100);
+  --accent-foreground:      var(--neutral-900);
+
+  --destructive:            var(--red-500);
+  --destructive-foreground: var(--white);
+
+  --success:                var(--green-500);
+  --success-foreground:     var(--white);
+
+  --warning:                var(--yellow-500);
+  --warning-foreground:     var(--neutral-950);
+
+  /* Sidebar */
+  --sidebar:                var(--neutral-900);
+  --sidebar-foreground:     var(--neutral-100);
+  --sidebar-muted:          var(--neutral-800);
+  --sidebar-muted-foreground: var(--neutral-400);
+  --sidebar-border:         var(--neutral-700);
+  --sidebar-primary:        var(--indigo-400);
+  --sidebar-primary-foreground: var(--white);
+
+  --radius: 0.5rem;
+}
+
+/* ── Dark-mode overrides ─────────────────────
+   Only swap semantics — never touch primitives.
+   Toggle via .dark class on <html>.            */
+.dark {
+  --background:             var(--neutral-950);
+  --foreground:             var(--neutral-50);
+
+  --card:                   var(--neutral-900);
+  --card-foreground:        var(--neutral-50);
+
+  --popover:                var(--neutral-900);
+  --popover-foreground:     var(--neutral-50);
+
+  --muted:                  var(--neutral-800);
+  --muted-foreground:       var(--neutral-400);
+
+  --border:                 var(--neutral-800);
+  --input:                  var(--neutral-800);
+  --ring:                   var(--indigo-400);
+
+  --primary:                var(--indigo-500);
+  --primary-foreground:     var(--white);
+
+  --secondary:              var(--neutral-800);
+  --secondary-foreground:   var(--neutral-50);
+
+  --accent:                 var(--neutral-800);
+  --accent-foreground:      var(--neutral-50);
+
+  --sidebar-primary:        var(--indigo-400);
+}

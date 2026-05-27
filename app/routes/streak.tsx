@@ -256,8 +256,7 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
             ].map(({ label, value }) => (
               <div key={label} className="bg-card px-4 py-5 text-center space-y-1">
                 <p
-                  className="text-2xl font-light font-serif"
-                  style={{ color: "var(--muted-foreground)" }}
+                  className="text-2xl font-light font-serif text-muted-foreground"
                 >
                   {value}
                 </p>

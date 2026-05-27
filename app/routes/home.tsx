@@ -647,7 +647,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                         {spreadDef.name}
                       </h2>
                     </div>
-                    <div className="w-16 h-px mx-auto opacity-20 bg-secondary" />
+                    <div className="w-16 h-px mx-auto opacity-20 bg-border" />
                     <p className="text-base leading-relaxed opacity-80 max-w-sm mx-auto text-muted-foreground font-serif">
                       {spreadDef.description}
                     </p>
@@ -691,7 +691,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                         {spreadDef.name}
                       </h2>
                     </div>
-                    <div className="w-16 h-px mx-auto opacity-20 bg-secondary" />
+                    <div className="w-16 h-px mx-auto opacity-20 bg-border" />
                     <p className="text-sm opacity-50 animate-pulse text-muted-foreground font-serif">
                       The cards are gathering…
                     </p>

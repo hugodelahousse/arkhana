@@ -186,7 +186,7 @@ export default function PushLab({ loaderData }: Route.ComponentProps) {
               status === "unsubscribed" ? "bg-yellow-500" :
               status === "no-vapid" ? "bg-red-500" :
               status === "unsupported" ? "bg-red-500" :
-              "bg-secondary"
+              "bg-muted-foreground"
             }`} />
             <span className="text-sm text-primary font-serif">
               {status === "loading" && "Checking..."}

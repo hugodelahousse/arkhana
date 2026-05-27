@@ -60,9 +60,9 @@
   --rarity-primordial: var(--rarity-5);
 }
 
-/* ── Light theme override (infrastructure for future toggle) ── */
-/* When a light theme is added, put new :root values here
-   and override this block for dark. For now all defaults are dark. */
+/* ── Dark theme overrides (stub — defaults are already dark) ── */
+/* When a light mode default is added, put light values in :root and
+   dark overrides here. Currently all :root values are dark. */
 .dark {
 }
 

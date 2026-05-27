@@ -51,7 +51,7 @@ export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) 
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.6 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--background)]/90 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm"
           onClick={dismiss}
         >
           <motion.div
@@ -86,7 +86,7 @@ export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) 
               </h2>
             </div>
 
-            <div className="w-12 h-px mx-auto opacity-20 bg-secondary" />
+            <div className="w-12 h-px mx-auto opacity-20 bg-border" />
 
             <p className="text-base leading-relaxed opacity-80 text-muted-foreground font-serif">
               {copy.body}
