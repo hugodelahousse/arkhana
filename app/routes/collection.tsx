@@ -14,6 +14,7 @@ import { getOrigin } from "../lib/utils";
 import { Moon, Lightning, Drop, Sword, Coin } from "@phosphor-icons/react";
 import type { Icon } from "@phosphor-icons/react";
 
+
 interface BestPull {
   rarityScore: Rarity;
   isRadiant: boolean;
@@ -132,8 +133,7 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
                   {majorDiscovered}/{MAJOR_ARCANA.length}
                 </span>
               </h2>
-              {/* 22 = 2 × 11 — exactly 2 rows on desktop */}
-              <div className="grid grid-cols-4 sm:grid-cols-7 md:grid-cols-11 gap-4">
+              <div className="flex flex-wrap justify-center gap-4 *:w-[calc((100%_-_2rem)/3)] sm:*:w-[calc((100%_-_3rem)/4)] md:*:w-[calc((100%_-_6rem)/7)]">
                 {MAJOR_ARCANA.filter((c) => !hideUndiscovered || bestByCard[c.id]).map((card) => (
                   <CardTile key={card.id} card={card} best={bestByCard[card.id]} />
                 ))}
@@ -151,7 +151,7 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
                     {suitDiscovered}/{cards.length}
                   </span>
                 </h2>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-4">
+                <div className="flex flex-wrap justify-center gap-4 *:w-[calc((100%_-_2rem)/3)] sm:*:w-[calc((100%_-_3rem)/4)] md:*:w-[calc((100%_-_6rem)/7)]">
                   {cards.filter((c) => !hideUndiscovered || bestByCard[c.id]).map((card) => (
                     <CardTile key={card.id} card={card} best={bestByCard[card.id]} />
                   ))}
@@ -190,7 +190,6 @@ const CardTile = memo(function CardTile({
     return (
       <div
         style={{
-          width: "100%",
           aspectRatio: "350 / 600",
           background: "var(--color-bg-elevated)",
           border: "1px solid var(--color-border-default)",
