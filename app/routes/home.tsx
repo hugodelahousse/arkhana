@@ -86,12 +86,16 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     return { name: d.name, subtitle: d.subtitle, description: d.description, positions: d.positions };
   })() : null;
 
-  // Lazy-backfill: if the user has pulled before but has no streak record yet
-  // (e.g. pulled before the streak system was deployed, or just after account migration).
   let resolvedStreakState = streakState;
   if (!resolvedStreakState && pullDates.length > 0) {
     await initStreakFromHistory(userId, pullDates);
     resolvedStreakState = await getStreak(userId);
+  } else if (resolvedStreakState && pullDates.length > 0) {
+    const latestPull = pullDates.reduce((a, b) => (a > b ? a : b));
+    if (resolvedStreakState.lastPullDate !== latestPull.slice(0, 10)) {
+      await initStreakFromHistory(userId, pullDates, { recompute: true });
+      resolvedStreakState = await getStreak(userId);
+    }
   }
 
   const streak = resolvedStreakState
