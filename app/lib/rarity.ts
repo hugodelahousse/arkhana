@@ -31,7 +31,9 @@ function reversedChance(pullType: PullType): number {
   switch (pullType) {
     case "daily": return 0.10;
     case "spread": return 0.25;
-    default: { const _: never = pullType; return 0.10; }
+    default:
+      pullType satisfies never;
+      return 0.10;
   }
 }
 
