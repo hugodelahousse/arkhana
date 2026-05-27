@@ -10,6 +10,7 @@ const transporter = config.smtpHost
       secure: config.smtpPort === 465,
       ...(hasAuth ? { auth: { user: config.smtpUser, pass: config.smtpPass } } : {}),
       tls: { rejectUnauthorized: hasAuth },
+      ...(!hasAuth ? { ignoreTLS: true } : {}),
     })
   : null;
 
