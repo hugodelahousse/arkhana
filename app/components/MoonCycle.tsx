@@ -88,8 +88,11 @@ export const MoonCycle = memo(function MoonCycle({
           </feMerge>
         </filter>
         <filter id={`glow-soft-${filterId}`} x="-100%" y="-100%" width="300%" height="300%">
-          <feGaussianBlur stdDeviation="5" result="blur" />
+          <feFlood floodColor="var(--accent)" result="color" />
+          <feComposite in="color" in2="SourceAlpha" operator="in" result="colored" />
+          <feGaussianBlur in="colored" stdDeviation="6" result="blur" />
           <feMerge>
+            <feMergeNode in="blur" />
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
