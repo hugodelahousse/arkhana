@@ -58,10 +58,9 @@
   --primary:             var(--black-950);
   --primary-foreground:  var(--bone-100);
 
-  --accent:              var(--purple-500);
-  --accent-foreground:   var(--bone-100);
+  --accent:              var(--gold-400);
+  --accent-foreground:   var(--black-950);
 
-  --backdrop:            var(--gold-400);
 
   /* Rarity semantic aliases */
   --rarity-mundane:    var(--rarity-1);
