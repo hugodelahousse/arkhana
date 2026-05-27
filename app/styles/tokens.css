@@ -25,7 +25,8 @@
   --stone-100: #e8e7ec;   /* muted surface on light */
 
   /* ── Primitives: warm gold (light mode backdrop) ── */
-  --gold-400: #c9a84c;
+  --gold-400: #d4a017;
+  --gold-300: #e8b931;
 
   /* ── Primitives: rarity spectrum — exact original hex values ── */
   --rarity-1: #9ca3af;   /* mundane    — slate    */
@@ -58,7 +59,7 @@
   --primary:             var(--black-950);
   --primary-foreground:  var(--bone-100);
 
-  --accent:              var(--gold-400);
+  --accent:              var(--gold-300);
   --accent-foreground:   var(--black-950);
 
 
