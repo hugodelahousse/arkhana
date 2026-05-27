@@ -22,9 +22,9 @@ export function rollRarity(): Rarity {
 }
 
 export function rollRadiant(): boolean {
-  return Math.random() < 0.05;
+  return Math.random() < 0.01;
 }
 
-export function rollReversed(): boolean {
-  return Math.random() < 0.33;
+export function rollReversed(pullType: "daily" | "spread" = "daily"): boolean {
+  return Math.random() < (pullType === "spread" ? 0.25 : 0.10);
 }
