@@ -20,9 +20,12 @@
 
   /* ── Primitives: stone scale ── */
   --stone-800: #303038;   /* dark divider          */
-  --stone-600: #6b6b78;   /* muted text on light   */
+  --stone-500: #57565f;   /* muted text on light   */
   --stone-300: #c0bfc8;   /* border on light       */
   --stone-100: #e8e7ec;   /* muted surface on light */
+
+  /* ── Primitives: warm gold (light mode backdrop) ── */
+  --gold-400: #c9a84c;
 
   /* ── Primitives: rarity spectrum — exact original hex values ── */
   --rarity-1: #9ca3af;   /* mundane    — slate    */
@@ -46,7 +49,7 @@
   --card-foreground:     var(--black-950);
 
   --muted:               var(--stone-100);
-  --muted-foreground:    var(--stone-600);
+  --muted-foreground:    var(--stone-500);
 
   --border:              var(--stone-300);
   --ring:                var(--purple-500);
@@ -57,6 +60,8 @@
 
   --accent:              var(--purple-500);
   --accent-foreground:   var(--bone-100);
+
+  --backdrop:            var(--gold-400);
 
   /* Rarity semantic aliases */
   --rarity-mundane:    var(--rarity-1);
@@ -87,6 +92,8 @@
 
   --accent:              var(--purple-500);
   --accent-foreground:   var(--bone-100);
+
+  --backdrop:            var(--purple-500);
 
   --rarity-mundane:    var(--rarity-1);
   --rarity-wandering:  var(--rarity-2);
