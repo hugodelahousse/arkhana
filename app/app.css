@@ -97,7 +97,7 @@ body {
 /* Bottom tab bar — push main content up so last items aren't obscured */
 @media (max-width: 639px) {
   body:has(nav[aria-label="Main navigation"]) main {
-    padding-bottom: 5rem;
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
   }
 }
 

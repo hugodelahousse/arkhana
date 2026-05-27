@@ -1,5 +1,5 @@
 import { redirect, data, Form, useNavigation, useRevalidator } from "react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Route } from "./+types/settings";
 import { Nav } from "../components/layout/nav";
 import { db } from "../../db/index.js";
@@ -93,6 +93,69 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
   const success = actionData && "success" in actionData ? actionData.success : false;
   const [passkeyAdding, setPasskeyAdding] = useState(false);
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
+
+  // Push notification state
+  const pushSupported = typeof window !== "undefined"
+    && "serviceWorker" in navigator
+    && "PushManager" in window;
+  const [pushPermission, setPushPermission] = useState<NotificationPermission>(
+    () => pushSupported ? Notification.permission : "default"
+  );
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
+
+  useEffect(() => {
+    if (!pushSupported) return;
+    navigator.serviceWorker.ready.then((reg) =>
+      reg.pushManager.getSubscription().then((sub) => setPushSubscribed(!!sub))
+    );
+  }, [pushSupported]);
+
+  async function handlePushToggle() {
+    setPushLoading(true);
+    try {
+      if (pushSubscribed) {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          await fetch("/api/push/subscribe", {
+            method: "DELETE",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ endpoint: sub.endpoint }),
+          });
+          await sub.unsubscribe();
+        }
+        setPushSubscribed(false);
+      } else {
+        const keyRes = await fetch("/api/push/vapid-public-key");
+        if (!keyRes.ok) return;
+        const { publicKey } = await keyRes.json();
+
+        const permission = await Notification.requestPermission();
+        setPushPermission(permission);
+        if (permission !== "granted") return;
+
+        const reg = await navigator.serviceWorker.ready;
+        const padding = "=".repeat((4 - (publicKey.length % 4)) % 4);
+        const b64 = (publicKey + padding).replace(/-/g, "+").replace(/_/g, "/");
+        const raw = atob(b64);
+        const key = Uint8Array.from(raw, (c) => c.charCodeAt(0));
+
+        const subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: key as unknown as BufferSource,
+        });
+        await fetch("/api/push/subscribe", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(subscription.toJSON()),
+        });
+        setPushSubscribed(true);
+      }
+    } finally {
+      setPushLoading(false);
+    }
+  }
 
   async function handleAddPasskey() {
     setPasskeyError(null);
@@ -224,6 +287,32 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
             {passkeyAdding ? "…" : "Add passkey"}
           </button>
         </section>
+        {pushSupported && (
+          <section className="p-6 space-y-6 border border-border bg-surface">
+            <h2 className="text-xs tracking-widest uppercase opacity-50 text-secondary">
+              Notifications
+            </h2>
+            <p className="text-xs opacity-50 leading-relaxed text-secondary">
+              Get a daily reminder when you haven't drawn your card, plus streak milestones
+              and celestial events.
+            </p>
+
+            {pushPermission === "denied" ? (
+              <p className="text-xs text-rarity-arcane">
+                Notifications are blocked. Update your browser settings to allow them.
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={handlePushToggle}
+                disabled={pushLoading}
+                className="w-full px-4 py-3 text-xs tracking-widest uppercase border border-border text-secondary hover:text-primary hover:border-primary disabled:opacity-40 transition-all"
+              >
+                {pushLoading ? "…" : pushSubscribed ? "Disable notifications" : "Enable notifications"}
+              </button>
+            )}
+          </section>
+        )}
       </main>
     </div>
   );
