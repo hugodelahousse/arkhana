@@ -145,9 +145,10 @@ export function meta({ data: loaderData, params: _params }: Route.MetaArgs) {
   const rarity = d.pull.rarityScore;
   const rarityLabel = RARITY_LABELS[rarity];
   const modifier = [d.pull.isReversed ? "Reversed" : null, d.pull.isRadiant ? "Radiant" : null].filter(Boolean).join(", ");
-  const title = `@${d.handle} drew ${card.name}${modifier ? ` · ${modifier}` : ""} — Arkhana`;
-  const description = `${rarityLabel} · ${getCardDescription(card, rarity, d.pull.isReversed)}`;
-  const ogImage = `${origin}/api/og.png?type=card&cardId=${d.pull.cardId}&rarity=${rarity}&reversed=${d.pull.isReversed}&radiant=${d.pull.isRadiant}`;
+  const title = `@${d.handle} drew ${card.name}${modifier ? ` (${modifier})` : ""} on ${d.formattedDate} — Arkhana`;
+  const cardDescription = getCardDescription(card, rarity, d.pull.isReversed);
+  const description = `${rarityLabel} pull. ${cardDescription}`;
+  const ogImage = `${origin}/api/og.png?type=card&cardId=${d.pull.cardId}&rarity=${rarity}&reversed=${d.pull.isReversed}&radiant=${d.pull.isRadiant}&username=${encodeURIComponent(d.handle)}&date=${d.date}`;
 
   return [
     { title },
