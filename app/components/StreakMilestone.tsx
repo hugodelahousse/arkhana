@@ -80,7 +80,7 @@ export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) 
               </p>
               <h2
                 className="text-3xl font-light tracking-wide font-serif"
-                style={{ color: "var(--accent)" }}
+                style={{ color: "var(--accent-text)" }}
               >
                 {copy.heading}
               </h2>

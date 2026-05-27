@@ -36,6 +36,7 @@
 
   --color-accent:              var(--accent);
   --color-accent-foreground:   var(--accent-foreground);
+  --color-accent-text:         var(--accent-text);
 
   /* Rarity — also accessible as var(--color-rarity-*) in JS */
   --color-rarity-mundane:    var(--rarity-mundane);

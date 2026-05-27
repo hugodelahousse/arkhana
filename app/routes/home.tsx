@@ -216,7 +216,7 @@ function SpreadContemplateReveal({
         </p>
         <h2
           className="type-page-title text-2xl sm:text-3xl"
-          style={{ color: "var(--accent)" }}
+          style={{ color: "var(--accent-text)" }}
         >
           {posLabel}
         </h2>
