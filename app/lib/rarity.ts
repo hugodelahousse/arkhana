@@ -1,5 +1,7 @@
 import type { Rarity } from "./cards.js";
 
+export type PullType = "daily" | "spread";
+
 const RARITY_TABLE: Array<{ score: Rarity; weight: number }> = [
   { score: 1, weight: 0.5 },
   { score: 2, weight: 0.25 },
@@ -22,9 +24,19 @@ export function rollRarity(): Rarity {
 }
 
 export function rollRadiant(): boolean {
-  return Math.random() < 0.05;
+  return Math.random() < 0.01;
 }
 
-export function rollReversed(): boolean {
-  return Math.random() < 0.33;
+function reversedChance(pullType: PullType): number {
+  switch (pullType) {
+    case "daily": return 0.10;
+    case "spread": return 0.25;
+    default:
+      pullType satisfies never;
+      return 0.10;
+  }
+}
+
+export function rollReversed(pullType: PullType): boolean {
+  return Math.random() < reversedChance(pullType);
 }

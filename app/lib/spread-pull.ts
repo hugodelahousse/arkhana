@@ -67,7 +67,7 @@ export async function drawSpread(
     cardId: Math.floor(Math.random() * 78),
     rarityScore: rollRarity(),
     isRadiant: rollRadiant(),
-    isReversed: rollReversed(),
+    isReversed: rollReversed("spread"),
   }));
 
   const result = await db.transaction(async (tx) => {

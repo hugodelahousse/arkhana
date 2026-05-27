@@ -55,7 +55,7 @@ export async function dailyPull(userId: string): Promise<PullResult> {
   const cardId = Math.floor(Math.random() * 78);
   const rarityScore = rollRarity();
   const isRadiant = rollRadiant();
-  const isReversed = rollReversed();
+  const isReversed = rollReversed("daily");
 
   // Check for previous draws of this card before inserting
   const previousPullDate = await getPreviousPullDate(userId, cardId, pullDate);
