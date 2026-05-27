@@ -173,12 +173,23 @@ function CardOG({
       style={{
         width: 1200,
         height: 630,
-        background: `radial-gradient(ellipse 120% 50% at 50% 0%, #12101a 0%, ${BG} 60%)`,
+        background: BG,
         display: "flex",
         position: "relative",
         overflow: "hidden",
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: "flex",
+          background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(168, 85, 247, 0.15) 0%, rgba(10, 10, 15, 0) 70%)",
+        }}
+      />
       <div
         style={{
           width: CARD_W,
