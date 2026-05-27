@@ -51,6 +51,8 @@
 
   --muted:               var(--stone-100);
   --muted-foreground:    var(--stone-500);
+  --faint-foreground:    color-mix(in srgb, var(--stone-500) 70%, var(--bone-100));
+  --ghost-foreground:    color-mix(in srgb, var(--stone-500) 50%, var(--bone-100));
 
   --border:              var(--stone-300);
   --ring:                var(--purple-500);
@@ -83,6 +85,8 @@
 
   --muted:               var(--black-800);
   --muted-foreground:    var(--bone-400);
+  --faint-foreground:    color-mix(in srgb, var(--bone-400) 70%, var(--black-950));
+  --ghost-foreground:    color-mix(in srgb, var(--bone-400) 50%, var(--black-950));
 
   --border:              var(--stone-800);
   --ring:                var(--purple-500);
@@ -92,8 +96,6 @@
 
   --accent:              var(--purple-500);
   --accent-foreground:   var(--bone-100);
-
-  --backdrop:            var(--purple-500);
 
   --rarity-mundane:    var(--rarity-1);
   --rarity-wandering:  var(--rarity-2);

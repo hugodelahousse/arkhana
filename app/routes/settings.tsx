@@ -212,19 +212,19 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
       <Nav userName={loaderData.user.name} isAnonymous={false} />
       <main className="max-w-lg mx-auto px-6 py-16 space-y-10">
         <div className="space-y-2">
-          <h1 className="text-2xl font-light tracking-wide text-primary font-serif">
+          <h1 className="type-page-title text-2xl">
             Settings
           </h1>
-          <p className="text-xs tracking-widest uppercase opacity-40 text-muted-foreground">
+          <p className="type-caption">
             {loaderData.user.email}
           </p>
         </div>
 
         <section className="p-6 space-y-6 border border-border bg-card">
-          <h2 className="text-xs tracking-widest uppercase opacity-50 text-muted-foreground">
+          <h2 className="type-label">
             Username
           </h2>
-          <p className="text-xs opacity-50 leading-relaxed text-muted-foreground">
+          <p className="type-caption">
             Your username appears on your public profile at{" "}
             <span className="text-primary">
               arkhana.delaho-h.com/u/{loaderData.username || "username"}
@@ -262,7 +262,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
               </p>
             )}
             {success && (
-              <p className="text-xs opacity-60 tracking-widest uppercase text-muted-foreground" role="status">
+              <p className="type-caption" role="status">
                 Saved.
               </p>
             )}
@@ -270,10 +270,10 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
         </section>
 
         <section className="p-6 space-y-6 border border-border bg-card">
-          <h2 className="text-xs tracking-widest uppercase opacity-50 text-muted-foreground">
+          <h2 className="type-label">
             Theme
           </h2>
-          <p className="text-xs opacity-50 leading-relaxed text-muted-foreground">
+          <p className="type-caption">
             Control the color scheme. System follows your OS preference.
           </p>
           <div className="flex border border-border overflow-hidden">
@@ -296,10 +296,10 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
         </section>
 
         <section className="p-6 space-y-6 border border-border bg-card">
-          <h2 className="text-xs tracking-widest uppercase opacity-50 text-muted-foreground">
+          <h2 className="type-label">
             Passkeys
           </h2>
-          <p className="text-xs opacity-50 leading-relaxed text-muted-foreground">
+          <p className="type-caption leading-relaxed">
             Passkeys let you sign in with biometrics or your device PIN instead of a password.
           </p>
 
@@ -308,11 +308,11 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
               {loaderData.passkeys.map((pk) => (
                 <li key={pk.id} className="flex items-center justify-between gap-3 py-2 border-b border-border/50 last:border-0">
                   <div className="min-w-0">
-                    <p className="text-sm text-muted-foreground truncate">
+                    <p className="type-body truncate">
                       {pk.name || pk.deviceType || "Passkey"}
                     </p>
                     {pk.createdAt && (
-                      <p className="text-[10px] tracking-widest uppercase opacity-40">
+                      <p className="type-ghost">
                         Added {new Date(pk.createdAt).toLocaleDateString()}
                       </p>
                     )}
@@ -322,7 +322,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                     <input type="hidden" name="passkeyId" value={pk.id} />
                     <button
                       type="submit"
-                      className="text-[10px] tracking-widest uppercase opacity-40 hover:opacity-80 hover:text-rarity-arcane transition-all"
+                      className="type-ghost hover:opacity-80 hover:text-rarity-arcane transition-all"
                     >
                       Remove
                     </button>
@@ -347,10 +347,10 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
         </section>
         {pushSupported && (
           <section className="p-6 space-y-6 border border-border bg-card">
-            <h2 className="text-xs tracking-widest uppercase opacity-50 text-muted-foreground">
+            <h2 className="type-label">
               Notifications
             </h2>
-            <p className="text-xs opacity-50 leading-relaxed text-muted-foreground">
+            <p className="type-caption leading-relaxed">
               Get a daily reminder when you haven't drawn your card, plus streak milestones
               and celestial events.
             </p>

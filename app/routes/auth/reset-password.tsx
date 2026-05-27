@@ -55,7 +55,7 @@ export default function ResetPassword({ actionData, loaderData }: Route.Componen
           <Link to="/" className="text-2xl tracking-widest text-primary font-serif block">
             ARKHANA
           </Link>
-          <p className="text-xs tracking-widest uppercase opacity-60">
+          <p className="type-caption">
             Choose a new password
           </p>
         </div>
@@ -110,9 +110,9 @@ export default function ResetPassword({ actionData, loaderData }: Route.Componen
               </button>
             </Form>
 
-            <p className="text-center text-xs opacity-60">
+            <p className="text-center type-caption">
               Remember your password?{" "}
-              <Link to="/auth/signin" className="opacity-80 hover:opacity-100 transition-opacity underline">
+              <Link to="/auth/signin" className="hover:opacity-100 transition-opacity underline">
                 Sign in
               </Link>
             </p>

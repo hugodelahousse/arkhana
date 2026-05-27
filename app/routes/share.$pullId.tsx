@@ -84,7 +84,7 @@ export default function SharePull({ loaderData }: Route.ComponentProps) {
         <div className="flex items-center gap-3 sm:gap-6 text-xs tracking-widest uppercase">
           <Link
             to="/auth/signup"
-            className="opacity-60 hover:opacity-100 transition-opacity text-muted-foreground"
+            className="text-faint-foreground hover:text-foreground transition-colors"
           >
             Sign up
           </Link>
@@ -93,7 +93,7 @@ export default function SharePull({ loaderData }: Route.ComponentProps) {
 
       <main className="max-w-2xl mx-auto px-6 py-16 space-y-10 text-center">
         {handle && (
-          <p className="text-xs tracking-widest uppercase opacity-40 text-muted-foreground">
+          <p className="type-label">
             @{handle} drew
           </p>
         )}
@@ -132,7 +132,7 @@ export default function SharePull({ loaderData }: Route.ComponentProps) {
             className="w-8 h-px mx-auto opacity-50"
             style={{ background: `var(--color-rarity-${rarityLabel?.toLowerCase()})` }}
           />
-          <p className="text-sm leading-relaxed max-w-xs mx-auto opacity-80 text-muted-foreground font-serif">
+          <p className="type-body-serif max-w-xs mx-auto">
             {description}
           </p>
         </div>
@@ -146,14 +146,14 @@ export default function SharePull({ loaderData }: Route.ComponentProps) {
           />
           <Link
             to={`/collection/${cardSlug(card)}`}
-            className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity text-muted-foreground"
+            className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase text-faint-foreground hover:text-foreground transition-colors"
           >
             View card <ArrowRight weight="light" size={13} aria-hidden />
           </Link>
         </div>
 
         <div className="py-8 space-y-4 border-t border-border">
-          <p className="text-sm opacity-50 text-muted-foreground font-serif">
+          <p className="type-body-serif">
             The cards await your question.
           </p>
           <Link

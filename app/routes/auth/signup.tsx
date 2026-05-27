@@ -68,7 +68,7 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
           <Link to="/" className="text-2xl tracking-widest text-primary font-serif block">
             ARKHANA
           </Link>
-          <p className="text-xs tracking-widest uppercase opacity-60">
+          <p className="type-caption">
             Create your account
           </p>
         </div>
@@ -128,9 +128,9 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
           </button>
         </Form>
 
-        <p className="text-center text-xs opacity-60">
+        <p className="text-center type-caption">
           Already a keeper?{" "}
-          <Link to="/auth/signin" className="opacity-80 hover:opacity-100 transition-opacity underline">
+          <Link to="/auth/signin" className="hover:opacity-100 transition-opacity underline">
             Sign in
           </Link>
         </p>

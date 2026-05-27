@@ -90,7 +90,7 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
           <Link to="/" className="text-2xl tracking-widest text-primary font-serif block">
             ARKHANA
           </Link>
-          <p className="text-xs tracking-widest uppercase opacity-60">
+          <p className="type-caption">
             Return to your arkhive
           </p>
         </div>
@@ -126,7 +126,7 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
           <div className="flex justify-end">
             <Link
               to="/auth/forgot-password"
-              className="text-xs opacity-50 hover:opacity-80 transition-opacity"
+              className="type-caption hover:opacity-80 transition-opacity"
             >
               Forgot password?
             </Link>
@@ -142,7 +142,7 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
 
             <div className="flex items-center gap-3 opacity-30">
               <div className="flex-1 border-t border-border" />
-              <span className="text-[10px] tracking-widest uppercase">or</span>
+              <span className="type-ghost">or</span>
               <div className="flex-1 border-t border-border" />
             </div>
 
@@ -160,9 +160,9 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
           </div>
         </Form>
 
-        <p className="text-center text-xs opacity-60">
+        <p className="text-center type-caption">
           No account yet?{" "}
-          <Link to="/auth/signup" className="opacity-80 hover:opacity-100 transition-opacity underline">
+          <Link to="/auth/signup" className="hover:opacity-100 transition-opacity underline">
             Create one
           </Link>
         </p>

@@ -25,6 +25,8 @@
 
   --color-muted:               var(--muted);
   --color-muted-foreground:    var(--muted-foreground);
+  --color-faint-foreground:    var(--faint-foreground);
+  --color-ghost-foreground:    var(--ghost-foreground);
 
   --color-border:              var(--border);
   --color-ring:                var(--ring);
@@ -56,6 +58,21 @@ body {
   font-family: var(--font-sans);
   scroll-behavior: smooth;
 }
+
+/* ─── Typography presets ─── */
+/* Page title — large serif, light weight */
+.type-page-title  { font-family: var(--font-serif); font-weight: 300; letter-spacing: 0.025em; color: var(--primary); }
+/* Section heading — uppercase sans label */
+.type-label       { font-size: 1rem; line-height: 1.5rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint-foreground); }
+/* Body prose — serif reading text (bumped to 1.125rem to match sans x-height) */
+.type-body-serif  { font-family: var(--font-serif); font-size: 1.125rem; line-height: 1.6; color: var(--foreground); }
+/* Body sans — default reading text */
+.type-body        { font-size: 1rem; line-height: 1.625; color: var(--muted-foreground); }
+/* Caption — helper/metadata */
+.type-caption     { font-size: 0.8125rem; line-height: 1.25rem; color: var(--faint-foreground); }
+.type-caption.font-serif { font-size: 0.9375rem; }
+/* Ghost — decorative labels, barely-there annotations */
+.type-ghost       { font-size: 0.8125rem; line-height: 1.25rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ghost-foreground); }
 
 /* ─── Light mode paper grain ─── */
 body::before {

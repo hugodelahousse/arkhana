@@ -75,7 +75,7 @@ export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) 
             </div>
 
             <div className="space-y-3">
-              <p className="text-xs tracking-widest uppercase opacity-40 text-muted-foreground">
+              <p className="type-label">
                 {milestone}-day milestone
               </p>
               <h2
@@ -88,13 +88,13 @@ export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) 
 
             <div className="w-12 h-px mx-auto opacity-20 bg-border" />
 
-            <p className="text-base leading-relaxed opacity-80 text-muted-foreground font-serif">
+            <p className="type-body-serif text-base">
               {copy.body}
             </p>
 
             <button
               onClick={dismiss}
-              className="mt-4 text-xs tracking-widest uppercase opacity-30 hover:opacity-60 transition-opacity text-muted-foreground"
+              className="mt-4 text-xs tracking-widest uppercase text-faint-foreground hover:text-foreground transition-colors"
             >
               Continue
             </button>
