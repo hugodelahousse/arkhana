@@ -209,10 +209,10 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
 
           {/* Header */}
           <div className="text-center space-y-2">
-            <p className="text-xs tracking-widest uppercase opacity-30 text-secondary">
+            <p className="type-label">
               Practice
             </p>
-            <h1 className="text-3xl font-light tracking-wide text-primary font-serif">
+            <h1 className="type-page-title text-3xl">
               Moon Cycle
             </h1>
           </div>
@@ -230,17 +230,17 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
             <div className="text-center space-y-1">
               {currentStreak > 0 ? (
                 <>
-                  <p className="text-sm opacity-60 text-secondary font-serif">
+                  <p className="type-body-serif">
                     Day {todayLunarIndex + 1} of the moon · {currentStreak} day streak
                   </p>
                   {graceRemaining > 0 && (
-                    <p className="text-xs opacity-25 text-secondary">
+                    <p className="text-xs text-ghost-foreground">
                       {graceRemaining === 2 ? "Two grace nights remain" : "One grace night remains"} this cycle
                     </p>
                   )}
                 </>
               ) : (
-                <p className="text-sm opacity-40 text-secondary font-serif">
+                <p className="type-body-serif">
                   Pull your first card to begin
                 </p>
               )}
@@ -248,20 +248,19 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
           </div>
 
           {/* Stats row */}
-          <div className="grid grid-cols-3 gap-px bg-elevated rounded-sm overflow-hidden">
+          <div className="grid grid-cols-3 gap-px bg-muted rounded-sm overflow-hidden">
             {[
               { label: "Streak", value: currentStreak },
               { label: "Longest", value: longestStreak },
               { label: "Total", value: totalPulls },
             ].map(({ label, value }) => (
-              <div key={label} className="bg-surface px-4 py-5 text-center space-y-1">
+              <div key={label} className="bg-card px-4 py-5 text-center space-y-1">
                 <p
-                  className="text-2xl font-light font-serif"
-                  style={{ color: "var(--color-text-secondary)" }}
+                  className="text-2xl font-light font-serif text-muted-foreground"
                 >
                   {value}
                 </p>
-                <p className="text-xs tracking-widest uppercase opacity-30 text-secondary">
+                <p className="type-label">
                   {label}
                 </p>
               </div>
@@ -271,7 +270,7 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
           {/* Milestones */}
           {longestStreak > 0 && (
             <section className="space-y-4">
-              <h2 className="text-xs tracking-widest uppercase opacity-30 text-secondary">
+              <h2 className="type-label">
                 Milestones
               </h2>
               <div className="flex gap-3">
@@ -287,16 +286,16 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
                       className="flex flex-col items-center gap-2.5 flex-1 py-5 border rounded-sm"
                       style={{
                         borderColor: reached
-                          ? "var(--color-rarity-mystic)"
-                          : "var(--color-border-default)",
+                          ? "var(--accent)"
+                          : "var(--border)",
                         opacity: reached ? 1 : 0.3,
                         color: reached
-                          ? "var(--color-rarity-mystic)"
-                          : "var(--color-text-secondary)",
+                          ? "var(--accent)"
+                          : "var(--muted-foreground)",
                       }}
                     >
                       <Icon weight="thin" size={22} aria-hidden />
-                      <p className="text-xs font-light font-serif text-secondary opacity-70">
+                      <p className="text-xs font-light font-serif text-muted-foreground">
                         {days}
                       </p>
                     </div>
@@ -313,7 +312,7 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
             const totalPast = month.days.filter((d) => !d.isFuture).length;
             return (
               <section className="space-y-4">
-                <h2 className="text-xs tracking-widest uppercase opacity-30 text-secondary">
+                <h2 className="type-label">
                   Practice history
                 </h2>
 
@@ -328,10 +327,10 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
                     <CaretLeft weight="thin" size={16} />
                   </button>
                   <div className="flex-1 flex items-baseline justify-between min-w-0">
-                    <p className="text-xs opacity-30 text-secondary font-serif truncate">
+                    <p className="type-caption font-serif truncate">
                       {formatLunarMonthLabel(month.newMoonDate, month.days)}
                     </p>
-                    <p className="text-xs opacity-20 text-secondary tabular-nums ml-3 shrink-0">
+                    <p className="type-caption tabular-nums ml-3 shrink-0">
                       {pulledCount}/{totalPast}
                     </p>
                   </div>
@@ -376,13 +375,13 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
 
           {currentStreak === 0 && (
             <div className="text-center py-8 space-y-4">
-              <p className="text-sm opacity-40 text-secondary font-serif">
+              <p className="type-body-serif">
                 Your lunar practice hasn't begun yet.
               </p>
               <Link
                 to="/"
                 onClick={(e) => { e.preventDefault(); goBack(); }}
-                className="inline-flex items-center gap-2 text-xs tracking-widest uppercase opacity-50 hover:opacity-80 transition-opacity text-secondary"
+                className="inline-flex items-center gap-2 text-xs tracking-widest uppercase text-faint-foreground hover:opacity-80 transition-opacity"
               >
                 Draw today's card
               </Link>
@@ -406,21 +405,21 @@ function LunarDayCell({ day }: { day: LunarDay }) {
   let filter: string | undefined;
 
   if (isToday && day.pulled) {
-    color = "var(--color-rarity-mystic)";
+    color = "var(--accent)";
     opacity = 1;
-    filter = "drop-shadow(0 0 3px var(--color-rarity-mystic))";
+    filter = "drop-shadow(0 0 3px var(--accent))";
   } else if (isToday) {
-    color = "var(--color-text-secondary)";
+    color = "var(--muted-foreground)";
     opacity = 0.6;
-    filter = "drop-shadow(0 0 2px var(--color-text-secondary))";
+    filter = "drop-shadow(0 0 2px var(--muted-foreground))";
   } else if (isFuture) {
-    color = "var(--color-text-secondary)";
+    color = "var(--muted-foreground)";
     opacity = 0.08;
   } else if (day.pulled) {
-    color = "var(--color-text-secondary)";
+    color = "var(--muted-foreground)";
     opacity = 0.75;
   } else {
-    color = "var(--color-text-secondary)";
+    color = "var(--muted-foreground)";
     opacity = 0.15;
   }
 

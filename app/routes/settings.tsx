@@ -1,12 +1,13 @@
-import { redirect, data, Form, useNavigation, useRevalidator } from "react-router";
+import { redirect, data, Form, useNavigation, useRevalidator, useFetcher } from "react-router";
 import { useState, useEffect } from "react";
 import type { Route } from "./+types/settings";
 import { Nav } from "../components/layout/nav";
 import { db } from "../../db/index.js";
 import { user, passkey as passkeyTable } from "../../db/schema/auth.js";
 import { eq, and, ne } from "drizzle-orm";
+import { getThemeFromCookie, setThemeCookie, type Theme } from "../lib/theme";
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   if (!context.user || context.user.isAnonymous) return redirect("/");
   const [profile] = await db
     .select({ username: user.username, displayUsername: user.displayUsername })
@@ -26,6 +27,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     user: context.user,
     username: profile?.displayUsername ?? profile?.username ?? "",
     passkeys,
+    theme: getThemeFromCookie(request),
   };
 }
 
@@ -34,6 +36,23 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   const form = await request.formData();
   const intent = form.get("intent");
+
+  if (intent === "set-theme") {
+    const theme = String(form.get("theme") ?? "system");
+    if (!["light", "dark", "system"].includes(theme))
+      return data({ error: "Invalid theme." }, { status: 400 });
+    const [row] = await db
+      .select({ preferences: user.preferences })
+      .from(user)
+      .where(eq(user.id, context.user.id))
+      .limit(1);
+    const prefs = { ...(row?.preferences ?? {}), theme: theme as Theme };
+    await db.update(user).set({ preferences: prefs }).where(eq(user.id, context.user.id));
+    return data(
+      { success: true },
+      { headers: { "Set-Cookie": setThemeCookie(theme as Theme) } },
+    );
+  }
 
   if (intent === "delete-passkey") {
     const passkeyId = String(form.get("passkeyId") ?? "");
@@ -89,6 +108,19 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
   const navigation = useNavigation();
   const revalidator = useRevalidator();
   const isSubmitting = navigation.state === "submitting";
+  const themeFetcher = useFetcher();
+  // Optimistic: show the in-flight value immediately while the request is live
+  const activeTheme: Theme =
+    (themeFetcher.formData?.get("theme") as Theme) ?? loaderData.theme;
+
+  function setTheme(t: Theme) {
+    // Apply class instantly for zero-latency feedback
+    const isDark =
+      t === "dark" ||
+      (t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.classList.toggle("dark", isDark);
+    themeFetcher.submit({ intent: "set-theme", theme: t }, { method: "post" });
+  }
   const error = actionData && "error" in actionData ? actionData.error : null;
   const success = actionData && "success" in actionData ? actionData.success : false;
   const [passkeyAdding, setPasskeyAdding] = useState(false);
@@ -180,19 +212,19 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
       <Nav userName={loaderData.user.name} isAnonymous={false} />
       <main className="max-w-lg mx-auto px-6 py-16 space-y-10">
         <div className="space-y-2">
-          <h1 className="text-2xl font-light tracking-wide text-primary font-serif">
+          <h1 className="type-page-title text-2xl">
             Settings
           </h1>
-          <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
+          <p className="type-caption">
             {loaderData.user.email}
           </p>
         </div>
 
-        <section className="p-6 space-y-6 border border-border bg-surface">
-          <h2 className="text-xs tracking-widest uppercase opacity-50 text-secondary">
+        <section className="p-6 space-y-6 border border-border bg-card">
+          <h2 className="type-label">
             Username
           </h2>
-          <p className="text-xs opacity-50 leading-relaxed text-secondary">
+          <p className="type-caption">
             Your username appears on your public profile at{" "}
             <span className="text-primary">
               arkhana.delaho-h.com/u/{loaderData.username || "username"}
@@ -214,7 +246,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                 pattern="[a-zA-Z0-9_-]+"
                 placeholder="your-username"
                 autoComplete="username"
-                className="flex-1 bg-transparent border border-border px-4 py-2 text-base sm:text-sm placeholder:opacity-40 focus:outline-none focus-visible:ring-1 transition-colors text-secondary"
+                className="flex-1 bg-transparent border border-border px-4 py-2 text-base sm:text-sm placeholder:opacity-40 focus:outline-none focus-visible:ring-1 transition-colors text-muted-foreground"
               />
               <button
                 type="submit"
@@ -230,18 +262,44 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
               </p>
             )}
             {success && (
-              <p className="text-xs opacity-60 tracking-widest uppercase text-secondary" role="status">
+              <p className="type-caption" role="status">
                 Saved.
               </p>
             )}
           </Form>
         </section>
 
-        <section className="p-6 space-y-6 border border-border bg-surface">
-          <h2 className="text-xs tracking-widest uppercase opacity-50 text-secondary">
+        <section className="p-6 space-y-6 border border-border bg-card">
+          <h2 className="type-label">
+            Theme
+          </h2>
+          <p className="type-caption">
+            Control the color scheme. System follows your OS preference.
+          </p>
+          <div className="flex border border-border overflow-hidden">
+            {(["system", "light", "dark"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTheme(t)}
+                aria-pressed={activeTheme === t}
+                className={`flex-1 px-4 py-2.5 text-xs tracking-widest uppercase transition-colors ${
+                  activeTheme === t
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="p-6 space-y-6 border border-border bg-card">
+          <h2 className="type-label">
             Passkeys
           </h2>
-          <p className="text-xs opacity-50 leading-relaxed text-secondary">
+          <p className="type-caption leading-relaxed">
             Passkeys let you sign in with biometrics or your device PIN instead of a password.
           </p>
 
@@ -250,11 +308,11 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
               {loaderData.passkeys.map((pk) => (
                 <li key={pk.id} className="flex items-center justify-between gap-3 py-2 border-b border-border/50 last:border-0">
                   <div className="min-w-0">
-                    <p className="text-sm text-secondary truncate">
+                    <p className="type-body truncate">
                       {pk.name || pk.deviceType || "Passkey"}
                     </p>
                     {pk.createdAt && (
-                      <p className="text-[10px] tracking-widest uppercase opacity-40">
+                      <p className="type-ghost">
                         Added {new Date(pk.createdAt).toLocaleDateString()}
                       </p>
                     )}
@@ -264,7 +322,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                     <input type="hidden" name="passkeyId" value={pk.id} />
                     <button
                       type="submit"
-                      className="text-[10px] tracking-widest uppercase opacity-40 hover:opacity-80 hover:text-rarity-arcane transition-all"
+                      className="type-ghost hover:opacity-80 hover:text-rarity-arcane transition-all"
                     >
                       Remove
                     </button>
@@ -282,17 +340,17 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
             type="button"
             onClick={handleAddPasskey}
             disabled={passkeyAdding}
-            className="w-full px-4 py-3 text-xs tracking-widest uppercase border border-border text-secondary hover:text-primary hover:border-primary disabled:opacity-40 transition-all"
+            className="w-full px-4 py-3 text-xs tracking-widest uppercase border border-border text-muted-foreground hover:text-primary hover:border-primary disabled:opacity-40 transition-all"
           >
             {passkeyAdding ? "…" : "Add passkey"}
           </button>
         </section>
         {pushSupported && (
-          <section className="p-6 space-y-6 border border-border bg-surface">
-            <h2 className="text-xs tracking-widest uppercase opacity-50 text-secondary">
+          <section className="p-6 space-y-6 border border-border bg-card">
+            <h2 className="type-label">
               Notifications
             </h2>
-            <p className="text-xs opacity-50 leading-relaxed text-secondary">
+            <p className="type-caption leading-relaxed">
               Get a daily reminder when you haven't drawn your card, plus streak milestones
               and celestial events.
             </p>
@@ -306,7 +364,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                 type="button"
                 onClick={handlePushToggle}
                 disabled={pushLoading}
-                className="w-full px-4 py-3 text-xs tracking-widest uppercase border border-border text-secondary hover:text-primary hover:border-primary disabled:opacity-40 transition-all"
+                className="w-full px-4 py-3 text-xs tracking-widest uppercase border border-border text-muted-foreground hover:text-primary hover:border-primary disabled:opacity-40 transition-all"
               >
                 {pushLoading ? "…" : pushSubscribed ? "Disable notifications" : "Enable notifications"}
               </button>

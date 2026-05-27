@@ -51,13 +51,13 @@ function PositionCardReveal({
       <div className="space-y-2">
         <p
           className="text-xs tracking-widest uppercase opacity-30"
-          style={{ color: "var(--color-text-primary)" }}
+          style={{ color: "var(--foreground)" }}
         >
           {position + 1} of {totalPositions}
         </p>
         <h2
           className="text-3xl font-light tracking-wide"
-          style={{ color: "var(--color-rarity-mystic)", fontFamily: "var(--font-serif)" }}
+          style={{ color: "var(--accent)", fontFamily: "var(--font-serif)" }}
         >
           {positionLabel}
         </h2>
@@ -92,20 +92,20 @@ function PositionCardReveal({
             </p>
             <h3
               className="text-2xl font-light"
-              style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+              style={{ color: "var(--foreground)", fontFamily: "var(--font-serif)" }}
             >
               {card.card.name}
             </h3>
             <p
               className="text-sm leading-relaxed opacity-80"
-              style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+              style={{ color: "var(--foreground)", fontFamily: "var(--font-serif)" }}
             >
               {getCardDescription(card.card, card.rarityScore, card.isReversed)}
             </p>
             <button
               onClick={onAdvance}
               className="px-6 py-2 text-[0.7rem] tracking-[0.15em] uppercase cursor-pointer border bg-transparent hover:opacity-80 transition-opacity"
-              style={{ color: "var(--color-text-primary)", borderColor: "var(--color-rarity-mystic)" }}
+              style={{ color: "var(--foreground)", borderColor: "var(--accent)" }}
             >
               {isLast ? "See your reading" : `Continue to ${nextLabel}`}
             </button>
@@ -169,20 +169,20 @@ export default function SpreadLab() {
   return (
     <div
       className="min-h-screen p-8"
-      style={{ background: "var(--color-bg-base)" }}
+      style={{ background: "var(--background)" }}
     >
       <div className="max-w-2xl mx-auto space-y-10">
         {/* Header */}
         <div className="space-y-1">
           <h1
             className="text-2xl font-light tracking-widest"
-            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+            style={{ color: "var(--foreground)", fontFamily: "var(--font-serif)" }}
           >
             Spread Lab
           </h1>
           <p
             className="text-xs tracking-widest uppercase opacity-40"
-            style={{ color: "var(--color-text-primary)" }}
+            style={{ color: "var(--foreground)" }}
           >
             Test spread ceremonies &amp; layouts
           </p>
@@ -191,12 +191,12 @@ export default function SpreadLab() {
         {/* Spread selector */}
         <div
           className="p-5 space-y-5 border"
-          style={{ background: "var(--color-bg-surface)", borderColor: "var(--color-bg-elevated)" }}
+          style={{ background: "var(--card)", borderColor: "var(--muted)" }}
         >
           <div className="flex flex-wrap gap-5 items-end">
             <label
               className="flex flex-col gap-1 text-[0.65rem] tracking-[0.12em] uppercase"
-              style={{ color: "var(--color-text-primary)" }}
+              style={{ color: "var(--foreground)" }}
             >
               Spread type
               <select
@@ -204,9 +204,9 @@ export default function SpreadLab() {
                 onChange={(e) => handleSpreadChange(e.target.value)}
                 className="min-w-[220px] px-[0.6rem] py-[0.4rem] text-[0.8rem] tracking-[0.05em] border outline-none cursor-pointer"
                 style={{
-                  background: "var(--color-bg-elevated)",
-                  color: "var(--color-text-primary)",
-                  borderColor: "var(--color-border-default)",
+                  background: "var(--muted)",
+                  color: "var(--foreground)",
+                  borderColor: "var(--border)",
                   fontFamily: "var(--font-serif)",
                 }}
               >
@@ -220,7 +220,7 @@ export default function SpreadLab() {
             <button
               onClick={startCeremony}
               className="px-6 py-2 text-[0.7rem] tracking-[0.15em] uppercase cursor-pointer border bg-transparent hover:opacity-80 transition-opacity"
-              style={{ color: "var(--color-text-primary)", borderColor: "var(--color-rarity-mystic)", fontFamily: "var(--font-serif)" }}
+              style={{ color: "var(--foreground)", borderColor: "var(--accent)", fontFamily: "var(--font-serif)" }}
             >
               Run ceremony
             </button>
@@ -228,7 +228,7 @@ export default function SpreadLab() {
               <button
                 onClick={() => { setPhase({ phase: "idle" }); setRunKey((k) => k + 1); }}
                 className="px-4 py-2 text-[0.7rem] tracking-[0.15em] uppercase cursor-pointer border bg-transparent opacity-50 hover:opacity-80 transition-opacity"
-                style={{ color: "var(--color-text-primary)", borderColor: "var(--color-border-default)" }}
+                style={{ color: "var(--foreground)", borderColor: "var(--border)" }}
               >
                 Reset
               </button>
@@ -243,17 +243,17 @@ export default function SpreadLab() {
                 <div
                   key={pos.index}
                   className="flex flex-wrap gap-4 items-end p-3 border"
-                  style={{ background: "var(--color-bg-base)", borderColor: "var(--color-bg-elevated)" }}
+                  style={{ background: "var(--background)", borderColor: "var(--muted)" }}
                 >
                   <span
                     className="text-xs tracking-widest uppercase w-14 pt-5"
-                    style={{ color: "var(--color-rarity-mystic)" }}
+                    style={{ color: "var(--accent)" }}
                   >
                     {pos.label}
                   </span>
                   <label
                     className="flex flex-col gap-1 text-[0.65rem] tracking-[0.12em] uppercase"
-                    style={{ color: "var(--color-text-primary)" }}
+                    style={{ color: "var(--foreground)" }}
                   >
                     Card
                     <select
@@ -261,9 +261,9 @@ export default function SpreadLab() {
                       onChange={(e) => updateConfig(i, { cardId: Number(e.target.value) })}
                       className="min-w-[160px] px-[0.6rem] py-[0.4rem] text-[0.8rem] tracking-[0.05em] border outline-none cursor-pointer"
                       style={{
-                        background: "var(--color-bg-elevated)",
-                        color: "var(--color-text-primary)",
-                        borderColor: "var(--color-border-default)",
+                        background: "var(--muted)",
+                        color: "var(--foreground)",
+                        borderColor: "var(--border)",
                         fontFamily: "var(--font-serif)",
                       }}
                     >
@@ -276,7 +276,7 @@ export default function SpreadLab() {
                   </label>
                   <label
                     className="flex flex-col gap-1 text-[0.65rem] tracking-[0.12em] uppercase"
-                    style={{ color: "var(--color-text-primary)" }}
+                    style={{ color: "var(--foreground)" }}
                   >
                     Rarity
                     <select
@@ -284,9 +284,9 @@ export default function SpreadLab() {
                       onChange={(e) => updateConfig(i, { rarityScore: Number(e.target.value) as RarityScore })}
                       className="px-[0.6rem] py-[0.4rem] text-[0.8rem] tracking-[0.05em] border outline-none cursor-pointer"
                       style={{
-                        background: "var(--color-bg-elevated)",
-                        color: "var(--color-text-primary)",
-                        borderColor: "var(--color-border-default)",
+                        background: "var(--muted)",
+                        color: "var(--foreground)",
+                        borderColor: "var(--border)",
                         fontFamily: "var(--font-serif)",
                       }}
                     >
@@ -297,27 +297,27 @@ export default function SpreadLab() {
                   </label>
                   <label
                     className="flex flex-row items-center gap-2 text-[0.65rem] tracking-[0.12em] uppercase cursor-pointer"
-                    style={{ color: "var(--color-text-primary)" }}
+                    style={{ color: "var(--foreground)" }}
                   >
                     <input
                       type="checkbox"
                       checked={cfg.isRadiant}
                       onChange={(e) => updateConfig(i, { isRadiant: e.target.checked })}
                       className="w-[0.9rem] h-[0.9rem]"
-                      style={{ accentColor: "var(--color-border-default)" }}
+                      style={{ accentColor: "var(--border)" }}
                     />
                     Radiant ✦
                   </label>
                   <label
                     className="flex flex-row items-center gap-2 text-[0.65rem] tracking-[0.12em] uppercase cursor-pointer"
-                    style={{ color: "var(--color-text-primary)" }}
+                    style={{ color: "var(--foreground)" }}
                   >
                     <input
                       type="checkbox"
                       checked={cfg.isReversed}
                       onChange={(e) => updateConfig(i, { isReversed: e.target.checked })}
                       className="w-[0.9rem] h-[0.9rem]"
-                      style={{ accentColor: "var(--color-border-default)" }}
+                      style={{ accentColor: "var(--border)" }}
                     />
                     Reversed
                   </label>
@@ -330,7 +330,7 @@ export default function SpreadLab() {
         {/* Preview pane */}
         <div
           className="p-6 min-h-96 border"
-          style={{ background: "var(--color-bg-surface)", borderColor: "var(--color-bg-elevated)" }}
+          style={{ background: "var(--card)", borderColor: "var(--muted)" }}
         >
           <AnimatePresence mode="wait">
             {phase.phase === "idle" && (
@@ -343,7 +343,7 @@ export default function SpreadLab() {
               >
                 <p
                   className="text-sm opacity-40"
-                  style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                  style={{ color: "var(--foreground)", fontFamily: "var(--font-serif)" }}
                 >
                   Configure cards above, then click "Run ceremony" to preview the spread flow.
                 </p>
@@ -351,13 +351,13 @@ export default function SpreadLab() {
                   <>
                     <p
                       className="text-lg font-light"
-                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                      style={{ color: "var(--foreground)", fontFamily: "var(--font-serif)" }}
                     >
                       {spreadDef.name}
                     </p>
                     <p
                       className="text-sm opacity-60 max-w-sm mx-auto"
-                      style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                      style={{ color: "var(--foreground)", fontFamily: "var(--font-serif)" }}
                     >
                       {spreadDef.description}
                     </p>
@@ -377,20 +377,20 @@ export default function SpreadLab() {
               >
                 <h2
                   className="text-4xl font-light"
-                  style={{ color: "var(--color-rarity-mystic)", fontFamily: "var(--font-serif)" }}
+                  style={{ color: "var(--accent)", fontFamily: "var(--font-serif)" }}
                 >
                   {positions[phase.position]?.label}
                 </h2>
                 <p
                   className="text-sm italic opacity-70 max-w-xs mx-auto"
-                  style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                  style={{ color: "var(--foreground)", fontFamily: "var(--font-serif)" }}
                 >
                   {positions[phase.position]?.contemplationPrompt}
                 </p>
                 <button
                   onClick={() => setPhase({ phase: "revealing", position: phase.position })}
                   className="px-6 py-2 text-[0.7rem] tracking-[0.15em] uppercase cursor-pointer border bg-transparent hover:opacity-80 transition-opacity"
-                  style={{ color: "var(--color-text-primary)", borderColor: "var(--color-rarity-mystic)" }}
+                  style={{ color: "var(--foreground)", borderColor: "var(--accent)" }}
                 >
                   I am ready
                 </button>
@@ -421,7 +421,7 @@ export default function SpreadLab() {
               >
                 <p
                   className="text-center text-xs tracking-widest uppercase opacity-40"
-                  style={{ color: "var(--color-text-primary)" }}
+                  style={{ color: "var(--foreground)" }}
                 >
                   {spreadDef?.subtitle}
                 </p>
@@ -433,7 +433,7 @@ export default function SpreadLab() {
                       <div key={card.position} className="flex flex-col items-center gap-3">
                         <p
                           className="text-xs tracking-widest uppercase opacity-40"
-                          style={{ color: "var(--color-text-primary)" }}
+                          style={{ color: "var(--foreground)" }}
                         >
                           {pos?.label}
                         </p>
@@ -454,7 +454,7 @@ export default function SpreadLab() {
                           </p>
                           <p
                             className="text-sm font-light"
-                            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+                            style={{ color: "var(--foreground)", fontFamily: "var(--font-serif)" }}
                           >
                             {card.card.name}
                             {card.isReversed && <span className="ml-1 text-xs opacity-50">(reversed)</span>}
