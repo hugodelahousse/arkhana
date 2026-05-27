@@ -92,7 +92,7 @@ export function Nav({ userName: _userName, isAnonymous }: { userName: string; is
       {!isAnonymous && (
         <nav
           aria-label="Main navigation"
-          className="sm:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-sm"
+          className="sm:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background"
           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
           <div className="flex">

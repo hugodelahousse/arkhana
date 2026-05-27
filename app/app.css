@@ -11,6 +11,9 @@
 @theme {
   --font-serif: "Cormorant Garamond Variable", Georgia, serif;
   --font-sans: "DM Sans Variable", system-ui, sans-serif;
+  /* dvh tracks the visual viewport (shrinks when browser chrome appears),
+     preventing content from extending into iOS Safari's transparent address bar */
+  --height-screen: 100dvh;
 }
 
 /* ── Map semantic CSS vars into Tailwind utilities via @theme inline ── */
