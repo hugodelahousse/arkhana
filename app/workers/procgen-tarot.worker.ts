@@ -1,8 +1,9 @@
 import { generateCard, CARD_DATA } from "../lib/procgen-tarot";
+import type { GenOptions } from "../lib/procgen-tarot";
 
 export type WorkerRequest =
-  | { type: "generate-one"; cardId: number; deckSeed: number }
-  | { type: "generate-all"; deckSeed: number };
+  | { type: "generate-one"; cardId: number; deckSeed: number; opts?: GenOptions }
+  | { type: "generate-all"; deckSeed: number; opts?: GenOptions };
 
 export type WorkerResponse =
   | { type: "card-done"; cardId: number; svg: string; ms: number }
@@ -14,14 +15,14 @@ self.onmessage = (e: MessageEvent<WorkerRequest>) => {
   try {
     if (req.type === "generate-one") {
       const t = performance.now();
-      const svg = generateCard(req.cardId, req.deckSeed);
+      const svg = generateCard(req.cardId, req.deckSeed, req.opts);
       const ms = Math.round(performance.now() - t);
       self.postMessage({ type: "card-done", cardId: req.cardId, svg, ms } satisfies WorkerResponse);
     } else if (req.type === "generate-all") {
       const t0 = performance.now();
       for (let id = 0; id < CARD_DATA.length; id++) {
         const t = performance.now();
-        const svg = generateCard(id, req.deckSeed);
+        const svg = generateCard(id, req.deckSeed, req.opts);
         const ms = Math.round(performance.now() - t);
         self.postMessage({ type: "card-done", cardId: id, svg, ms } satisfies WorkerResponse);
       }

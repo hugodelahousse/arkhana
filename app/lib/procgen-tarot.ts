@@ -1597,23 +1597,30 @@ const CARD_DATA: CardInfo[] = [
     .map((n, i) => ({ id: 64 + i, name: `${n} of Pentacles`, arcana: "minor" as const, suit: "pentacles", number: i + 1 })),
 ];
 
-function generateCard(cardId: number, deckSeed: number): string {
+export type GenOptions = {
+  palette?: string;
+  minThickness?: number;
+  maxThickness?: number;
+};
+
+function generateCard(cardId: number, deckSeed: number, opts: GenOptions = {}): string {
   const seed = deckSeed + cardId * 1000;
   const rng = new RNG(seed);
 
   const card = CARD_DATA[cardId];
   if (!card) throw new Error(`Unknown card id ${cardId}`);
 
-  // Pick palette
+  // Pick palette — always consume the RNG roll so structure stays consistent
   const paletteNames = Object.keys(PALETTES);
-  const paletteName = paletteNames[rng.int0(paletteNames.length)];
+  const autoIdx = rng.int0(paletteNames.length);
+  const paletteName = (opts.palette && PALETTES[opts.palette]) ? opts.palette : paletteNames[autoIdx];
   const { palette, paper } = PALETTES[paletteName];
 
   const strokeColor = medianDarkColor(palette);
 
   const style: SketcherStyle = {
-    minThickness: 1,
-    maxThickness: 3,
+    minThickness: opts.minThickness ?? 1,
+    maxThickness: opts.maxThickness ?? 3,
     colors: palette,
   };
 
@@ -1864,4 +1871,4 @@ function generatePipPositions(n: number, rng: RNG): Vec2[] {
 
 
 export { generateCard, CARD_DATA };
-export type { CardInfo };
+export type { CardInfo, GenOptions };
