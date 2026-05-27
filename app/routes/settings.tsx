@@ -132,7 +132,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
           <p className="text-xs opacity-50 leading-relaxed text-secondary">
             Your username appears on your public profile at{" "}
             <span className="text-primary">
-              arkhana.app/u/{loaderData.username || "username"}
+              arkhana.delaho-h.com/u/{loaderData.username || "username"}
             </span>
             .
           </p>

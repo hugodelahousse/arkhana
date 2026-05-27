@@ -111,9 +111,7 @@ jobs:
             NODE_ENV=production \
             BETTER_AUTH_SECRET="${{ secrets.BETTER_AUTH_SECRET }}" \
             BETTER_AUTH_URL="https://${{ env.DOMAIN }}" \
-            SMTP_HOST="${{ secrets.SMTP_HOST || '172.17.0.1' }}" \
-            SMTP_PORT="${{ secrets.SMTP_PORT || '25' }}" \
-            EMAIL_FROM="${{ secrets.EMAIL_FROM || 'noreply@arkhana.app' }}"
+            RESEND_API_KEY="${{ secrets.RESEND_API_KEY }}"
 
       - name: Setup domain and SSL
         run: |

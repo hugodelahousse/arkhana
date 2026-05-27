@@ -1,18 +1,7 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { config } from "../config/index.js";
 
-const hasAuth = config.smtpUser && config.smtpPass;
-
-const transporter = config.smtpHost
-  ? nodemailer.createTransport({
-      host: config.smtpHost,
-      port: config.smtpPort,
-      secure: config.smtpPort === 465,
-      ...(hasAuth ? { auth: { user: config.smtpUser, pass: config.smtpPass } } : {}),
-      tls: { rejectUnauthorized: hasAuth },
-      ...(!hasAuth ? { ignoreTLS: true } : {}),
-    })
-  : null;
+const resend = config.resendApiKey ? new Resend(config.resendApiKey) : null;
 
 export async function sendEmail(opts: {
   to: string;
@@ -20,10 +9,21 @@ export async function sendEmail(opts: {
   text: string;
   html?: string;
 }) {
-  if (!transporter) {
-    console.warn("[email] SMTP not configured — would have sent:", opts.subject, "to", opts.to);
+  if (!resend) {
+    console.warn("[email] RESEND_API_KEY not configured — would have sent:", opts.subject, "to", opts.to);
     console.warn("[email] URL/content:", opts.text);
     return;
   }
-  await transporter.sendMail({ from: config.emailFrom, ...opts });
+
+  const { error } = await resend.emails.send({
+    from: config.emailFrom,
+    to: opts.to,
+    subject: opts.subject,
+    text: opts.text,
+    html: opts.html,
+  });
+
+  if (error) {
+    throw new Error(`[email] Resend error: ${error.message}`);
+  }
 }
