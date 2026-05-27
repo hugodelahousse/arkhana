@@ -211,7 +211,7 @@ function SpreadContemplateReveal({
       className="text-center space-y-4 sm:space-y-6 pt-2 sm:pt-8 flex flex-col items-center"
     >
       <div className="space-y-2">
-        <p className="text-xs tracking-widest uppercase opacity-30 text-secondary">
+        <p className="text-xs tracking-widest uppercase opacity-30 text-muted-foreground">
           {position + 1} of {positions.length}
         </p>
         <h2
@@ -243,7 +243,7 @@ function SpreadContemplateReveal({
             pointerEvents: cardRevealed ? "none" : "auto",
           }}
         >
-          <p className="text-sm leading-relaxed opacity-80 italic text-secondary font-serif">
+          <p className="text-sm leading-relaxed opacity-80 italic text-muted-foreground font-serif">
             {positions[position]?.contemplationPrompt}
           </p>
         </div>
@@ -263,17 +263,17 @@ function SpreadContemplateReveal({
             {card.isRadiant && " ✦"}
             {card.isReversed && " · Reversed"}
           </p>
-          <h3 className="text-xl font-light tracking-wide text-secondary font-serif">
+          <h3 className="text-xl font-light tracking-wide text-muted-foreground font-serif">
             {card.card.name}
           </h3>
-          <p className="text-sm leading-relaxed opacity-85 text-secondary font-serif">
+          <p className="text-sm leading-relaxed opacity-85 text-muted-foreground font-serif">
             {getCardDescription(card.card, card.rarityScore, card.isReversed)}
           </p>
           <button
             onClick={onAdvance}
             className="mt-2 px-8 py-2.5 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80"
             style={{
-              color: "var(--color-text-secondary)",
+              color: "var(--muted-foreground)",
               borderColor: "var(--color-rarity-mystic)",
               opacity: showContinue ? 1 : 0,
               pointerEvents: showContinue ? "auto" : "none",
@@ -364,21 +364,21 @@ function DailyCardReveal({
                 {isReversed && " · Reversed"}
               </span>
             </p>
-            <h2 className="text-2xl font-light tracking-wide text-secondary font-serif">
+            <h2 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
               {card.name}
             </h2>
-            <p className="text-sm leading-relaxed opacity-85 text-secondary font-serif max-w-xs mx-auto">
+            <p className="text-sm leading-relaxed opacity-85 text-muted-foreground font-serif max-w-xs mx-auto">
               {briefEnergy}
             </p>
             {previousPullDate && (
-              <p className="text-xs opacity-30 text-secondary font-serif">
+              <p className="text-xs opacity-30 text-muted-foreground font-serif">
                 You've drawn this card before —{" "}
                 {DateTime.fromISO(previousPullDate, { zone: "utc" }).toFormat("LLLL d, yyyy")}
               </p>
             )}
             <button
               onClick={() => setShowFullMeaning(true)}
-              className="text-xs tracking-widest uppercase transition-opacity hover:opacity-80 text-secondary"
+              className="text-xs tracking-widest uppercase transition-opacity hover:opacity-80 text-muted-foreground"
               style={{
                 opacity: showExpandHint ? 0.5 : 0,
                 pointerEvents: showExpandHint ? "auto" : "none",
@@ -407,22 +407,22 @@ function DailyCardReveal({
                 {isReversed && " · Reversed"}
               </span>
             </p>
-            <h2 className="text-2xl font-light tracking-wide text-secondary font-serif">
+            <h2 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
               {card.name}
             </h2>
-            <p className="text-sm leading-relaxed opacity-85 text-secondary font-serif max-w-xs mx-auto">
+            <p className="text-sm leading-relaxed opacity-85 text-muted-foreground font-serif max-w-xs mx-auto">
               {fullMeaning}
             </p>
 
             {/* Reflection prompt */}
-            <div className="pt-2 border-t border-elevated max-w-xs mx-auto">
-              <p className="text-xs opacity-40 text-secondary font-serif italic leading-relaxed">
+            <div className="pt-2 border-t border-muted max-w-xs mx-auto">
+              <p className="text-xs opacity-40 text-muted-foreground font-serif italic leading-relaxed">
                 {reflection}
               </p>
             </div>
 
             {previousPullDate && (
-              <p className="text-xs opacity-25 text-secondary font-serif">
+              <p className="text-xs opacity-25 text-muted-foreground font-serif">
                 Previously drawn{" "}
                 {DateTime.fromISO(previousPullDate, { zone: "utc" }).toFormat("LLLL d, yyyy")}
               </p>
@@ -432,7 +432,7 @@ function DailyCardReveal({
               <a
                 href={`/collection/${cardSlug(card)}`}
                 onClick={(e) => { e.preventDefault(); onNavigateToCard(cardSlug(card)); }}
-                className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity text-secondary"
+                className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity text-muted-foreground"
               >
                 Card history <ArrowRight weight="light" size={13} aria-hidden />
               </a>
@@ -491,23 +491,23 @@ function PushPermissionAsk({ onDismiss }: { onDismiss: () => void }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 8 }}
       transition={{ duration: 0.4 }}
-      className="flex flex-col items-center gap-4 py-4 border-t border-elevated"
+      className="flex flex-col items-center gap-4 py-4 border-t border-muted"
     >
-      <p className="text-xs opacity-50 text-secondary font-serif text-center max-w-xs">
+      <p className="text-xs opacity-50 text-muted-foreground font-serif text-center max-w-xs">
         A card has been holding your name.
       </p>
       <div className="flex items-center gap-4">
         <button
           onClick={requestPermission}
           disabled={asking}
-          className="text-xs tracking-widest uppercase px-5 py-2 border transition-opacity hover:opacity-80 text-secondary"
+          className="text-xs tracking-widest uppercase px-5 py-2 border transition-opacity hover:opacity-80 text-muted-foreground"
           style={{ borderColor: "var(--color-rarity-mystic)" }}
         >
           {asking ? "…" : "Allow reminders"}
         </button>
         <button
           onClick={onDismiss}
-          className="text-xs opacity-30 hover:opacity-50 transition-opacity text-secondary tracking-widest uppercase"
+          className="text-xs opacity-30 hover:opacity-50 transition-opacity text-muted-foreground tracking-widest uppercase"
         >
           Not now
         </button>
@@ -588,7 +588,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   if (!loaderData.user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-sm opacity-40 tracking-widest uppercase text-secondary">The arkhive stirs…</p>
+        <p className="text-sm opacity-40 tracking-widest uppercase text-muted-foreground">The arkhive stirs…</p>
       </div>
     );
   }
@@ -640,22 +640,22 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     className="text-center space-y-8 pt-4"
                   >
                     <div className="space-y-3">
-                      <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
+                      <p className="text-xs tracking-widest uppercase opacity-40 text-muted-foreground">
                         {spreadDef.subtitle}
                       </p>
-                      <h2 className="text-3xl font-light tracking-wide text-secondary font-serif">
+                      <h2 className="text-3xl font-light tracking-wide text-muted-foreground font-serif">
                         {spreadDef.name}
                       </h2>
                     </div>
                     <div className="w-16 h-px mx-auto opacity-20 bg-secondary" />
-                    <p className="text-base leading-relaxed opacity-80 max-w-sm mx-auto text-secondary font-serif">
+                    <p className="text-base leading-relaxed opacity-80 max-w-sm mx-auto text-muted-foreground font-serif">
                       {spreadDef.description}
                     </p>
                     <div className="flex flex-wrap items-center justify-center gap-3">
                       {positions.map((pos) => (
                         <span
                           key={pos.index}
-                          className="text-xs tracking-widest uppercase opacity-30 px-3 py-1 border border-elevated text-secondary"
+                          className="text-xs tracking-widest uppercase opacity-30 px-3 py-1 border border-muted text-muted-foreground"
                         >
                           {pos.label}
                         </span>
@@ -666,7 +666,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                         setSundayPhase({ phase: "drawing" });
                         fetcher.submit({ _action: "spread" }, { method: "post" });
                       }}
-                      className="px-8 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80 text-secondary"
+                      className="px-8 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80 text-muted-foreground"
                       style={{ borderColor: "var(--color-rarity-mystic)" }}
                     >
                       Begin the reading
@@ -684,15 +684,15 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     className="text-center space-y-8 pt-8"
                   >
                     <div className="space-y-3">
-                      <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
+                      <p className="text-xs tracking-widest uppercase opacity-40 text-muted-foreground">
                         {spreadDef.subtitle}
                       </p>
-                      <h2 className="text-3xl font-light tracking-wide text-secondary font-serif">
+                      <h2 className="text-3xl font-light tracking-wide text-muted-foreground font-serif">
                         {spreadDef.name}
                       </h2>
                     </div>
                     <div className="w-16 h-px mx-auto opacity-20 bg-secondary" />
-                    <p className="text-sm opacity-50 animate-pulse text-secondary font-serif">
+                    <p className="text-sm opacity-50 animate-pulse text-muted-foreground font-serif">
                       The cards are gathering…
                     </p>
                   </motion.div>
@@ -725,10 +725,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     className="space-y-10"
                   >
                     <div className="text-center space-y-3">
-                      <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
+                      <p className="text-xs tracking-widest uppercase opacity-40 text-muted-foreground">
                         {spreadDef.subtitle}
                       </p>
-                      <h2 className="text-2xl font-light tracking-wide text-secondary font-serif">
+                      <h2 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
                         {spreadDef.name}
                       </h2>
                     </div>
@@ -756,10 +756,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     className="space-y-8"
                   >
                     <div className="text-center space-y-3">
-                      <h2 className="text-sm tracking-widest uppercase opacity-50 text-secondary">
+                      <h2 className="text-sm tracking-widest uppercase opacity-50 text-muted-foreground">
                         Sunday Reading
                       </h2>
-                      <p className="text-2xl font-light text-secondary font-serif">
+                      <p className="text-2xl font-light text-muted-foreground font-serif">
                         {spreadDef.name}
                       </p>
                     </div>
@@ -781,7 +781,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             </section>
           ) : (
             <section className="space-y-6 text-center">
-              <h2 className="text-sm sm:text-xs tracking-widest uppercase opacity-50 text-secondary">
+              <h2 className="text-sm sm:text-xs tracking-widest uppercase opacity-50 text-muted-foreground">
                 Today
               </h2>
 
@@ -821,10 +821,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                         {todayPull.isReversed && " · Reversed"}
                       </span>
                     </p>
-                    <p className="text-xl font-light text-secondary font-serif">
+                    <p className="text-xl font-light text-muted-foreground font-serif">
                       {todayCard.name}
                     </p>
-                    <p className="text-sm leading-relaxed max-w-xs mx-auto opacity-70 text-secondary font-serif">
+                    <p className="text-sm leading-relaxed max-w-xs mx-auto opacity-70 text-muted-foreground font-serif">
                       {getCardDescription(todayCard, todayPull.rarityScore, todayPull.isReversed)}
                     </p>
                     <div className="flex justify-center pt-2">
@@ -839,7 +839,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <p className="text-xl opacity-80 text-secondary font-serif">
+                  <p className="text-xl opacity-80 text-muted-foreground font-serif">
                     {isPulling ? "The fates are turning…" : "The cards await your question."}
                   </p>
                   <div className={`flex justify-center ${isPulling ? "animate-pulse pointer-events-none" : ""}`}>
@@ -861,16 +861,16 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
           {/* Stats + streak — always visible, not ceremony */}
           {!isCeremonyActive && (
-            <section className="border-t border-elevated pt-6 space-y-6">
+            <section className="border-t border-muted pt-6 space-y-6">
               {/* Discovered count */}
               <div className="flex items-center justify-between">
-                <p className="text-xs tracking-widest uppercase opacity-30 text-secondary">
+                <p className="text-xs tracking-widest uppercase opacity-30 text-muted-foreground">
                   Collection
                 </p>
                 <p className="whitespace-nowrap font-serif text-sm">
                   <span className="text-primary opacity-80">{totalUnique}</span>
                   <span className="opacity-30 text-primary">/78</span>
-                  <span className="text-xs tracking-widest uppercase opacity-30 ml-2 text-secondary">discovered</span>
+                  <span className="text-xs tracking-widest uppercase opacity-30 ml-2 text-muted-foreground">discovered</span>
                 </p>
               </div>
 
@@ -881,18 +881,18 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 aria-label={`Moon cycle: day ${lunarMonthInfo.todayLunarIndex + 1}, ${displayStreakCount} day streak.`}
               >
                 <div className="space-y-0.5">
-                  <p className="text-xs tracking-widest uppercase opacity-30 text-secondary">
+                  <p className="text-xs tracking-widest uppercase opacity-30 text-muted-foreground">
                     Moon Cycle
                   </p>
                   {displayStreakCount > 0 ? (
-                    <p className="text-sm font-serif text-secondary opacity-70">
+                    <p className="text-sm font-serif text-muted-foreground opacity-70">
                       Day {lunarMonthInfo.todayLunarIndex + 1} of the moon
                       <span className="ml-2 opacity-40">
                         · {displayStreakCount} day streak
                       </span>
                     </p>
                   ) : (
-                    <p className="text-sm font-serif text-secondary opacity-30">
+                    <p className="text-sm font-serif text-muted-foreground opacity-30">
                       Begin your practice
                     </p>
                   )}
@@ -922,7 +922,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
           {!dailyResult && !isCeremonyActive && recentPulls.length > 0 && (
             <section className="space-y-4">
-              <h2 className="text-xs tracking-widest uppercase opacity-50 text-secondary">
+              <h2 className="text-xs tracking-widest uppercase opacity-50 text-muted-foreground">
                 Recent
               </h2>
               <div className="space-y-2">
@@ -934,9 +934,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       key={pull.id}
                       href={`/collection/${slug}`}
                       onClick={(e) => { e.preventDefault(); navigateToCard(slug); }}
-                      className="flex items-center justify-between py-3 border-b border-elevated opacity-70 hover:opacity-100 transition-opacity"
+                      className="flex items-center justify-between py-3 border-b border-muted opacity-70 hover:opacity-100 transition-opacity"
                     >
-                      <span className="text-secondary font-serif">
+                      <span className="text-muted-foreground font-serif">
                         {card?.name ?? "Unknown"}
                         {pull.isReversed && (
                           <span className="ml-2 text-xs opacity-50">(reversed)</span>
@@ -958,7 +958,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               </div>
               <Link
                 to="/history"
-                className="inline-flex items-center justify-center gap-1.5 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-2 text-secondary"
+                className="inline-flex items-center justify-center gap-1.5 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-2 text-muted-foreground"
               >
                 Full history <ArrowRight weight="light" size={13} aria-hidden />
               </Link>

@@ -183,16 +183,16 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
           <h1 className="text-2xl font-light tracking-wide text-primary font-serif">
             Settings
           </h1>
-          <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
+          <p className="text-xs tracking-widest uppercase opacity-40 text-muted-foreground">
             {loaderData.user.email}
           </p>
         </div>
 
-        <section className="p-6 space-y-6 border border-border bg-surface">
-          <h2 className="text-xs tracking-widest uppercase opacity-50 text-secondary">
+        <section className="p-6 space-y-6 border border-border bg-card">
+          <h2 className="text-xs tracking-widest uppercase opacity-50 text-muted-foreground">
             Username
           </h2>
-          <p className="text-xs opacity-50 leading-relaxed text-secondary">
+          <p className="text-xs opacity-50 leading-relaxed text-muted-foreground">
             Your username appears on your public profile at{" "}
             <span className="text-primary">
               arkhana.delaho-h.com/u/{loaderData.username || "username"}
@@ -214,7 +214,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                 pattern="[a-zA-Z0-9_-]+"
                 placeholder="your-username"
                 autoComplete="username"
-                className="flex-1 bg-transparent border border-border px-4 py-2 text-base sm:text-sm placeholder:opacity-40 focus:outline-none focus-visible:ring-1 transition-colors text-secondary"
+                className="flex-1 bg-transparent border border-border px-4 py-2 text-base sm:text-sm placeholder:opacity-40 focus:outline-none focus-visible:ring-1 transition-colors text-muted-foreground"
               />
               <button
                 type="submit"
@@ -230,18 +230,18 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
               </p>
             )}
             {success && (
-              <p className="text-xs opacity-60 tracking-widest uppercase text-secondary" role="status">
+              <p className="text-xs opacity-60 tracking-widest uppercase text-muted-foreground" role="status">
                 Saved.
               </p>
             )}
           </Form>
         </section>
 
-        <section className="p-6 space-y-6 border border-border bg-surface">
-          <h2 className="text-xs tracking-widest uppercase opacity-50 text-secondary">
+        <section className="p-6 space-y-6 border border-border bg-card">
+          <h2 className="text-xs tracking-widest uppercase opacity-50 text-muted-foreground">
             Passkeys
           </h2>
-          <p className="text-xs opacity-50 leading-relaxed text-secondary">
+          <p className="text-xs opacity-50 leading-relaxed text-muted-foreground">
             Passkeys let you sign in with biometrics or your device PIN instead of a password.
           </p>
 
@@ -250,7 +250,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
               {loaderData.passkeys.map((pk) => (
                 <li key={pk.id} className="flex items-center justify-between gap-3 py-2 border-b border-border/50 last:border-0">
                   <div className="min-w-0">
-                    <p className="text-sm text-secondary truncate">
+                    <p className="text-sm text-muted-foreground truncate">
                       {pk.name || pk.deviceType || "Passkey"}
                     </p>
                     {pk.createdAt && (
@@ -282,17 +282,17 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
             type="button"
             onClick={handleAddPasskey}
             disabled={passkeyAdding}
-            className="w-full px-4 py-3 text-xs tracking-widest uppercase border border-border text-secondary hover:text-primary hover:border-primary disabled:opacity-40 transition-all"
+            className="w-full px-4 py-3 text-xs tracking-widest uppercase border border-border text-muted-foreground hover:text-primary hover:border-primary disabled:opacity-40 transition-all"
           >
             {passkeyAdding ? "…" : "Add passkey"}
           </button>
         </section>
         {pushSupported && (
-          <section className="p-6 space-y-6 border border-border bg-surface">
-            <h2 className="text-xs tracking-widest uppercase opacity-50 text-secondary">
+          <section className="p-6 space-y-6 border border-border bg-card">
+            <h2 className="text-xs tracking-widest uppercase opacity-50 text-muted-foreground">
               Notifications
             </h2>
-            <p className="text-xs opacity-50 leading-relaxed text-secondary">
+            <p className="text-xs opacity-50 leading-relaxed text-muted-foreground">
               Get a daily reminder when you haven't drawn your card, plus streak milestones
               and celestial events.
             </p>
@@ -306,7 +306,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                 type="button"
                 onClick={handlePushToggle}
                 disabled={pushLoading}
-                className="w-full px-4 py-3 text-xs tracking-widest uppercase border border-border text-secondary hover:text-primary hover:border-primary disabled:opacity-40 transition-all"
+                className="w-full px-4 py-3 text-xs tracking-widest uppercase border border-border text-muted-foreground hover:text-primary hover:border-primary disabled:opacity-40 transition-all"
               >
                 {pushLoading ? "…" : pushSubscribed ? "Disable notifications" : "Enable notifications"}
               </button>

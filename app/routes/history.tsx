@@ -85,13 +85,13 @@ export default function History({ loaderData }: Route.ComponentProps) {
             <h1 className="text-2xl font-light tracking-widest text-primary font-serif">
               History
             </h1>
-            <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
+            <p className="text-xs tracking-widest uppercase opacity-40 text-muted-foreground">
               All your pulls, in order
             </p>
           </div>
 
           {entries.length === 0 ? (
-            <p className="text-sm opacity-40 text-center py-12 text-secondary font-serif">
+            <p className="text-sm opacity-40 text-center py-12 text-muted-foreground font-serif">
               No readings yet. Draw your first card.
             </p>
           ) : (
@@ -121,7 +121,7 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
         transition={{ duration: 0.4 }}
         className="space-y-3"
       >
-        <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
+        <p className="text-xs tracking-widest uppercase opacity-40 text-muted-foreground">
           {date}
         </p>
         <div className="flex flex-col items-center gap-5">
@@ -144,10 +144,10 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
               {entry.isRadiant && " ✦"}
               {entry.isReversed && " · Reversed"}
             </p>
-            <p className="text-lg font-light text-secondary font-serif">
+            <p className="text-lg font-light text-muted-foreground font-serif">
               {card.name}
             </p>
-            <p className="text-sm leading-relaxed opacity-70 text-secondary font-serif">
+            <p className="text-sm leading-relaxed opacity-70 text-muted-foreground font-serif">
               {getCardDescription(card, entry.rarityScore as Rarity, entry.isReversed)}
             </p>
           </div>
@@ -170,17 +170,17 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
       className="space-y-6"
     >
       <div className="space-y-1">
-        <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
+        <p className="text-xs tracking-widest uppercase opacity-40 text-muted-foreground">
           {date}
         </p>
-        <p className="text-lg font-light text-secondary font-serif">
+        <p className="text-lg font-light text-muted-foreground font-serif">
           {name}
         </p>
       </div>
       <SpreadSummaryGrid cards={entry.cards} positions={positions} />
       <Link
         to={`/spread/${entry.spreadType}/${entry.spreadDate}`}
-        className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity text-secondary"
+        className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity text-muted-foreground"
       >
         View full reading <ArrowRight weight="light" size={13} aria-hidden />
       </Link>

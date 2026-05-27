@@ -122,7 +122,7 @@ function SpreadCardCell({
   const rarityLabel = RARITY_LABELS[card.rarityScore]?.toLowerCase();
   return (
     <div className="flex flex-col items-center gap-3">
-      <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
+      <p className="text-xs tracking-widest uppercase opacity-40 text-muted-foreground">
         {posLabel}
       </p>
       <motion.div
@@ -148,7 +148,7 @@ function SpreadCardCell({
           {RARITY_LABELS[card.rarityScore]}
           {card.isRadiant && " ✦"}
         </p>
-        <p className="text-sm font-light text-secondary font-serif">
+        <p className="text-sm font-light text-muted-foreground font-serif">
           {card.card.name}
           {card.isReversed && (
             <span className="ml-1 text-xs opacity-50">(reversed)</span>

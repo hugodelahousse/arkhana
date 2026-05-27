@@ -65,7 +65,7 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
         <div className="flex items-center gap-3 sm:gap-6 text-xs tracking-widest uppercase">
           <Link
             to="/auth/signup"
-            className="opacity-60 hover:opacity-100 transition-opacity text-secondary"
+            className="opacity-60 hover:opacity-100 transition-opacity text-muted-foreground"
           >
             Sign up
           </Link>
@@ -75,13 +75,13 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
       <main className="max-w-2xl mx-auto px-6 py-16 space-y-12">
         <div className="space-y-6">
           <div className="space-y-3">
-            <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
+            <p className="text-xs tracking-widest uppercase opacity-40 text-muted-foreground">
               Keeper of the Arkhive
             </p>
             <h1 className="text-4xl font-light text-primary font-serif">
               @{handle}
             </h1>
-            <p className="text-xs opacity-40 text-secondary">
+            <p className="text-xs opacity-40 text-muted-foreground">
               Keeper since {joinYear}
             </p>
           </div>
@@ -94,14 +94,14 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
           />
         </div>
 
-        <section className="p-6 space-y-6 border border-border bg-surface">
+        <section className="p-6 space-y-6 border border-border bg-card">
           <div className="flex gap-10">
             <div>
               <p className="text-3xl font-light text-primary font-serif">
                 {stats.uniqueCards}
                 <span className="text-base opacity-40">/78</span>
               </p>
-              <p className="text-xs tracking-widest uppercase opacity-40 mt-1 text-secondary">
+              <p className="text-xs tracking-widest uppercase opacity-40 mt-1 text-muted-foreground">
                 Cards discovered
               </p>
             </div>
@@ -109,14 +109,14 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
               <p className="text-3xl font-light text-primary font-serif">
                 {stats.totalPulls}
               </p>
-              <p className="text-xs tracking-widest uppercase opacity-40 mt-1 text-secondary">
+              <p className="text-xs tracking-widest uppercase opacity-40 mt-1 text-muted-foreground">
                 Total pulls
               </p>
             </div>
           </div>
 
           <div className="space-y-2">
-            <div className="h-1 rounded-full overflow-hidden bg-elevated">
+            <div className="h-1 rounded-full overflow-hidden bg-muted">
               <div
                 className="h-full rounded-full transition-all"
                 style={{
@@ -132,7 +132,7 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
                 }}
               />
             </div>
-            <p className="text-xs opacity-30 tracking-widest uppercase text-secondary">
+            <p className="text-xs opacity-30 tracking-widest uppercase text-muted-foreground">
               {pct}% of the arkhive unlocked
             </p>
           </div>
@@ -140,7 +140,7 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
 
         {stats.recentCards.length > 0 && (
           <section className="space-y-4">
-            <h2 className="text-xs tracking-widest uppercase opacity-50 text-secondary">
+            <h2 className="text-xs tracking-widest uppercase opacity-50 text-muted-foreground">
               Recent pulls
             </h2>
             <div className="space-y-2">
@@ -150,9 +150,9 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
                 return (
                   <div
                     key={i}
-                    className="flex items-center justify-between py-3 border-b border-elevated opacity-70"
+                    className="flex items-center justify-between py-3 border-b border-muted opacity-70"
                   >
-                    <span className="text-secondary font-serif">
+                    <span className="text-muted-foreground font-serif">
                       {card?.name ?? "Unknown"}
                     </span>
                     <span
@@ -169,7 +169,7 @@ export default function PublicProfile({ loaderData }: Route.ComponentProps) {
         )}
 
         <div className="text-center py-8 space-y-4 border-t border-border">
-          <p className="text-sm opacity-60 text-secondary font-serif">
+          <p className="text-sm opacity-60 text-muted-foreground font-serif">
             The cards await your question.
           </p>
           <Link

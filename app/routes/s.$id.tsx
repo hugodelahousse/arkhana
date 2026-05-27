@@ -80,7 +80,7 @@ export default function SpreadByIdRoute({ loaderData }: Route.ComponentProps) {
         </Link>
         <Link
           to="/"
-          className="text-xs tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity text-secondary"
+          className="text-xs tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity text-muted-foreground"
         >
           Draw your card
         </Link>
@@ -89,7 +89,7 @@ export default function SpreadByIdRoute({ loaderData }: Route.ComponentProps) {
       <main className="max-w-lg mx-auto px-6 py-12 space-y-10 text-center">
         <div className="space-y-3">
           {handle && (
-            <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
+            <p className="text-xs tracking-widest uppercase opacity-40 text-muted-foreground">
               {username ? (
                 <Link to={`/u/${username}`} className="hover:opacity-100 transition-opacity">
                   @{handle}
@@ -99,10 +99,10 @@ export default function SpreadByIdRoute({ loaderData }: Route.ComponentProps) {
               )}
             </p>
           )}
-          <h1 className="text-2xl font-light tracking-wide text-secondary font-serif">
+          <h1 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
             {name}
           </h1>
-          <p className="text-xs opacity-30 tracking-widest uppercase text-secondary">
+          <p className="text-xs opacity-30 tracking-widest uppercase text-muted-foreground">
             {subtitle}
           </p>
         </div>
@@ -119,7 +119,7 @@ export default function SpreadByIdRoute({ loaderData }: Route.ComponentProps) {
         </div>
 
         <div className="py-8 space-y-4 border-t border-border">
-          <p className="text-sm opacity-50 text-secondary font-serif">
+          <p className="text-sm opacity-50 text-muted-foreground font-serif">
             The cards await your question.
           </p>
           <Link

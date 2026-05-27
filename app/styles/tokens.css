@@ -1,40 +1,78 @@
-:root {
-  /* Primitives */
-  --primitive-black-950: #0a0a0f;
-  --primitive-black-900: #13131a;
-  --primitive-black-800: #1e1e2e;
-  --primitive-bone-100: #e8e4de;
-  --primitive-bone-400: #b0aca6;
-  --primitive-stone-800: #303038;
-  --primitive-rarity-1: #9ca3af;
-  --primitive-rarity-2: #60a5fa;
-  --primitive-rarity-3: #a855f7;
-  --primitive-rarity-4: #f97316;
-  --primitive-rarity-5: #eab308;
-  --primitive-purple-500: #a855f7;
-  --primitive-font-serif: "Cormorant Garamond Variable", Georgia, serif;
-  --primitive-font-sans: "DM Sans Variable", system-ui, sans-serif;
+/* ════════════════════════════════════════════════════════
+   DESIGN TOKENS — two layers
+   1. Primitives   — raw OKLCH values, no semantic meaning
+   2. Semantics    — purpose-named, reference primitives
+   Dark mode: override semantics in .dark { ... }
+   ════════════════════════════════════════════════════════ */
 
-  /* Semantic */
-  --color-bg-base: var(--primitive-black-950);
-  --color-bg-surface: var(--primitive-black-900);
-  --color-bg-elevated: var(--primitive-black-800);
-  --color-text-primary: var(--primitive-bone-100);
-  --color-text-secondary: var(--primitive-bone-400);
-  --color-border-default: var(--primitive-stone-800);
-  --color-rarity-mundane: var(--primitive-rarity-1);
-  --color-rarity-wandering: var(--primitive-rarity-2);
-  --color-rarity-mystic: var(--primitive-rarity-3);
-  --color-rarity-arcane: var(--primitive-rarity-4);
-  --color-rarity-primordial: var(--primitive-rarity-5);
-  --color-card-back-accent: var(--primitive-purple-500);
-  --color-accent: var(--primitive-purple-500);
-  --font-serif: var(--primitive-font-serif);
+:root {
+  /* ── Primitives: dark scale (deep navy-blacks) ── */
+  --black-950: oklch(0.055 0.006 270);
+  --black-900: oklch(0.090 0.009 270);
+  --black-800: oklch(0.150 0.020 270);
+
+  /* ── Primitives: bone / warm neutral ── */
+  --bone-100: oklch(0.918 0.010 78);
+  --bone-400: oklch(0.715 0.009 78);
+
+  /* ── Primitives: stone (dark UI divider) ── */
+  --stone-800: oklch(0.228 0.011 265);
+
+  /* ── Primitives: rarity spectrum ── */
+  --rarity-1: oklch(0.686 0.009 247);   /* mundane   — slate    */
+  --rarity-2: oklch(0.694 0.148 237);   /* wandering — blue     */
+  --rarity-3: oklch(0.627 0.231 299);   /* mystic    — purple   */
+  --rarity-4: oklch(0.690 0.185 46);    /* arcane    — orange   */
+  --rarity-5: oklch(0.795 0.174 87);    /* primordial — gold    */
+
+  /* ── Primitives: accent (purple) ── */
+  --purple-500: oklch(0.627 0.231 299);
 }
 
+/* ── Semantic tokens ── */
+/* These are the authoritative names consumed by components.
+   Override these blocks (not primitives) when theming. */
+:root {
+  --background:          var(--black-950);
+  --foreground:          var(--bone-100);
+
+  --card:                var(--black-900);
+  --card-foreground:     var(--bone-100);
+
+  --muted:               var(--black-800);
+  --muted-foreground:    var(--bone-400);
+
+  --border:              var(--stone-800);
+  --ring:                var(--purple-500);
+
+  /* primary = bone-100: the high-emphasis UI color for this dark-fantasy palette */
+  --primary:             var(--bone-100);
+  --primary-foreground:  var(--black-950);
+
+  --accent:              var(--purple-500);
+  --accent-foreground:   var(--bone-100);
+
+  /* Rarity semantic aliases */
+  --rarity-mundane:    var(--rarity-1);
+  --rarity-wandering:  var(--rarity-2);
+  --rarity-mystic:     var(--rarity-3);
+  --rarity-arcane:     var(--rarity-4);
+  --rarity-primordial: var(--rarity-5);
+}
+
+/* ── Light theme override (infrastructure for future toggle) ── */
+/* When a light theme is added, put new :root values here
+   and override this block for dark. For now all defaults are dark. */
+.dark {
+}
+
+/* ════════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ════════════════════════════════════════════════════════ */
+
 @keyframes radiant-shimmer {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
@@ -49,11 +87,11 @@
   border-radius: inherit;
   background: conic-gradient(
     from 0deg,
-    var(--color-rarity-primordial),
-    var(--color-rarity-arcane),
-    var(--color-rarity-mystic),
-    var(--color-rarity-wandering),
-    var(--color-rarity-primordial)
+    var(--rarity-primordial),
+    var(--rarity-arcane),
+    var(--rarity-mystic),
+    var(--rarity-wandering),
+    var(--rarity-primordial)
   );
   background-size: 200% 200%;
   animation: radiant-shimmer 3s linear infinite;

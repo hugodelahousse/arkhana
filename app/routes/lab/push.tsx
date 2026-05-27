@@ -154,7 +154,7 @@ export default function PushLab({ loaderData }: Route.ComponentProps) {
   ];
 
   return (
-    <div className="min-h-screen p-8 bg-base">
+    <div className="min-h-screen p-8 bg-background">
       <div className="max-w-lg mx-auto space-y-6">
         <div className="space-y-1">
           <h1 className="text-2xl font-light tracking-widest text-primary font-serif">
@@ -166,7 +166,7 @@ export default function PushLab({ loaderData }: Route.ComponentProps) {
         </div>
 
         {/* Status */}
-        <div className="p-5 border border-elevated bg-surface space-y-4">
+        <div className="p-5 border border-muted bg-card space-y-4">
           <p className="text-[0.6rem] tracking-[0.15em] uppercase opacity-40 text-primary">
             Status
           </p>
@@ -238,7 +238,7 @@ export default function PushLab({ loaderData }: Route.ComponentProps) {
 
         {/* Test buttons */}
         {status === "subscribed" && (
-          <div className="p-5 border border-elevated bg-surface space-y-4">
+          <div className="p-5 border border-muted bg-card space-y-4">
             <p className="text-[0.6rem] tracking-[0.15em] uppercase opacity-40 text-primary">
               Send Test
             </p>
@@ -253,7 +253,7 @@ export default function PushLab({ loaderData }: Route.ComponentProps) {
                   <span className="text-[0.7rem] tracking-[0.12em] uppercase text-primary font-serif">
                     {label}
                   </span>
-                  <span className="text-[0.6rem] text-secondary opacity-60">
+                  <span className="text-[0.6rem] text-muted-foreground opacity-60">
                     {description}
                   </span>
                 </button>
@@ -264,11 +264,11 @@ export default function PushLab({ loaderData }: Route.ComponentProps) {
 
         {/* Log */}
         {log.length > 0 && (
-          <div className="p-5 border border-elevated bg-surface space-y-2">
+          <div className="p-5 border border-muted bg-card space-y-2">
             <p className="text-[0.6rem] tracking-[0.15em] uppercase opacity-40 text-primary">
               Log
             </p>
-            <div className="space-y-1 font-mono text-xs text-secondary opacity-70 max-h-48 overflow-y-auto">
+            <div className="space-y-1 font-mono text-xs text-muted-foreground opacity-70 max-h-48 overflow-y-auto">
               {log.map((entry, i) => (
                 <p key={i}>{entry}</p>
               ))}

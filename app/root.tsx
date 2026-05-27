@@ -78,28 +78,28 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="min-h-screen bg-base flex flex-col items-center justify-center px-6 text-center">
+    <main className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center">
       <div className="max-w-md space-y-6">
         {isOffline && (
-          <div className="w-32 mx-auto mb-2 rounded border border-default overflow-hidden bg-surface">
+          <div className="w-32 mx-auto mb-2 rounded border border-border overflow-hidden bg-card">
             <img src="/cards/moon.jpg" alt="The Moon" className="w-full opacity-85" />
           </div>
         )}
         <p className="text-6xl font-light tracking-widest text-primary font-serif">
           {message}
         </p>
-        <p className="text-sm tracking-wide opacity-60 text-secondary font-serif">
+        <p className="text-sm tracking-wide opacity-60 text-muted-foreground font-serif">
           {details}
         </p>
         <a
           href={isOffline ? undefined : "/"}
           onClick={isOffline ? () => history.back() : undefined}
-          className="inline-block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-4 text-secondary cursor-pointer"
+          className="inline-block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-4 text-muted-foreground cursor-pointer"
         >
           ← Return home
         </a>
         {stack && (
-          <pre className="w-full p-4 overflow-x-auto text-left text-xs mt-8 opacity-50 bg-surface text-secondary">
+          <pre className="w-full p-4 overflow-x-auto text-left text-xs mt-8 opacity-50 bg-card text-muted-foreground">
             <code>{stack}</code>
           </pre>
         )}

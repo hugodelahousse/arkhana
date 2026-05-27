@@ -111,7 +111,7 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
             required
             placeholder="your@email.com"
             autoComplete="username webauthn"
-            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-secondary"
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-muted-foreground"
           />
           <label htmlFor="password" className="sr-only">Password</label>
           <input
@@ -121,7 +121,7 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
             required
             placeholder="Password"
             autoComplete="current-password webauthn"
-            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-secondary"
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-muted-foreground"
           />
           <div className="flex justify-end">
             <Link
@@ -153,7 +153,7 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
               type="button"
               onClick={handlePasskeySignIn}
               disabled={passkeyLoading}
-              className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-secondary hover:text-primary disabled:opacity-40 transition-all"
+              className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-muted-foreground hover:text-primary disabled:opacity-40 transition-all"
             >
               {passkeyLoading ? "…" : "Sign in with passkey"}
             </button>

@@ -111,18 +111,18 @@ export const MoonCycle = memo(function MoonCycle({
           filter = `url(#glow-${filterId})`;
         } else if (isToday) {
           // Today, not yet pulled — soft ring highlight
-          fill = "var(--color-text-secondary)";
+          fill = "var(--muted-foreground)";
           opacity = 0.45;
           filter = `url(#glow-${filterId})`;
         } else if (pulled) {
-          fill = "var(--color-text-secondary)";
+          fill = "var(--muted-foreground)";
           opacity = 0.5;
         } else if (isFuture) {
-          fill = "var(--color-border-default)";
+          fill = "var(--border)";
           opacity = 0.18;
         } else {
           // Past, not pulled
-          fill = "var(--color-border-default)";
+          fill = "var(--border)";
           opacity = 0.28;
         }
 
@@ -154,7 +154,7 @@ export const MoonCycle = memo(function MoonCycle({
           <g
             key={frac}
             transform={`translate(${pos.x - glyphPx / 2}, ${pos.y - glyphPx / 2}) scale(${scale})`}
-            color="var(--color-text-secondary)"
+            color="var(--muted-foreground)"
             opacity={0.28}
           >
             <circle cx={50} cy={50} r={45} fill="none" stroke="currentColor" strokeWidth={3} />
@@ -172,7 +172,7 @@ export const MoonCycle = memo(function MoonCycle({
         dominantBaseline="middle"
         fontSize={cfg.numSize}
         fontFamily="var(--font-serif)"
-        fill="var(--color-text-secondary)"
+        fill="var(--muted-foreground)"
         opacity={currentStreak > 0 ? 0.95 : 0.25}
         filter={currentStreak > 0 ? `url(#glow-soft-${filterId})` : undefined}
       >
@@ -184,8 +184,8 @@ export const MoonCycle = memo(function MoonCycle({
         textAnchor="middle"
         dominantBaseline="middle"
         fontSize={cfg.labelSize}
-        fontFamily="var(--primitive-font-sans, system-ui)"
-        fill="var(--color-text-secondary)"
+        fontFamily="var(--font-sans, system-ui)"
+        fill="var(--muted-foreground)"
         opacity={0.35}
         letterSpacing="2.5"
       >

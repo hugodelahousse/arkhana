@@ -73,7 +73,7 @@ export function Nav({ userName: _userName, isAnonymous }: { userName: string; is
       </nav>
 
       {isAnonymous && (
-        <div className="flex items-center justify-between gap-4 px-4 sm:px-6 py-2 border-b border-border bg-surface text-xs tracking-widest">
+        <div className="flex items-center justify-between gap-4 px-4 sm:px-6 py-2 border-b border-border bg-card text-xs tracking-widest">
           <p className="uppercase opacity-40">Your reading is ephemeral — create an account to save it</p>
           <div className="flex items-center gap-4 shrink-0">
             <Link to="/auth/signup" className={buttonClass("sm")}>
@@ -92,7 +92,7 @@ export function Nav({ userName: _userName, isAnonymous }: { userName: string; is
       {!isAnonymous && (
         <nav
           aria-label="Main navigation"
-          className="sm:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-base/95 backdrop-blur-sm"
+          className="sm:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-sm"
           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
           <div className="flex">

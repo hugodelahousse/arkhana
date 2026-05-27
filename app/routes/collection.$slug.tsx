@@ -86,7 +86,7 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
             </Link>
             <Link
               to="/auth/signup"
-              className="text-xs tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity text-secondary"
+              className="text-xs tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity text-muted-foreground"
             >
               Sign up
             </Link>
@@ -97,11 +97,11 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
             <a
               href={user ? "/collection" : "/"}
               onClick={goBack}
-              className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-30 hover:opacity-60 transition-opacity mb-4 text-secondary"
+              className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-30 hover:opacity-60 transition-opacity mb-4 text-muted-foreground"
             >
               <ArrowLeft weight="light" size={13} aria-hidden />{user ? "Collection" : "Home"}
             </a>
-            <p className="text-xs tracking-widest uppercase opacity-50 text-secondary">
+            <p className="text-xs tracking-widest uppercase opacity-50 text-muted-foreground">
               {card.arcana === "major"
                 ? "Major Arcana"
                 : `${card.suit} · Minor Arcana`}
@@ -136,7 +136,7 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
 
           {user && history.length > 0 ? (
             <section className="space-y-6">
-              <h2 className="text-xs tracking-widest uppercase opacity-50 text-secondary">
+              <h2 className="text-xs tracking-widest uppercase opacity-50 text-muted-foreground">
                 Your pulls ({history.length})
               </h2>
               <div className="space-y-4">
@@ -156,7 +156,7 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
                       key={pull.id}
                       type="button"
                       onClick={() => setActivePull(pull.id)}
-                      className="w-full text-left p-6 border space-y-3 transition-opacity bg-surface"
+                      className="w-full text-left p-6 border space-y-3 transition-opacity bg-card"
                       style={{
                         borderColor: `var(--color-rarity-${rarityLabel})`,
                         opacity: isActive ? 1 : 0.5,
@@ -182,11 +182,11 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
                             {pull.isReversed && " · Reversed"}
                           </span>
                         </span>
-                        <span className="text-xs opacity-40 text-secondary">
+                        <span className="text-xs opacity-40 text-muted-foreground">
                           {formattedDate}
                         </span>
                       </div>
-                      <p className="text-sm leading-relaxed opacity-85 text-secondary font-serif">
+                      <p className="text-sm leading-relaxed opacity-85 text-muted-foreground font-serif">
                         {description}
                       </p>
                     </button>
@@ -195,20 +195,20 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
               </div>
             </section>
           ) : user ? (
-            <section className="p-6 text-center space-y-3 border border-border bg-surface">
-              <p className="text-sm opacity-50 text-secondary font-serif">
+            <section className="p-6 text-center space-y-3 border border-border bg-card">
+              <p className="text-sm opacity-50 text-muted-foreground font-serif">
                 You haven't drawn this card yet.
               </p>
               <Link
                 to="/"
-                className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity text-secondary"
+                className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity text-muted-foreground"
               >
                 Pull today's card <ArrowRight weight="light" size={13} aria-hidden />
               </Link>
             </section>
           ) : (
             <div className="text-center pt-4 space-y-4 border-t border-border">
-              <p className="text-sm opacity-50 text-secondary font-serif">
+              <p className="text-sm opacity-50 text-muted-foreground font-serif">
                 Pull your own card to reveal its meaning.
               </p>
               <Link

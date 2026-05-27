@@ -3,32 +3,56 @@
 @import "@fontsource-variable/cormorant-garamond";
 @import "@fontsource-variable/dm-sans";
 
+/* ── Dark variant — enables dark: utilities via .dark class on <html> ── */
+@custom-variant dark (&:is(.dark *));
+
+/* ── Tailwind theme: font families ── */
+/* Plain @theme so font-serif / font-sans utilities reference var() at runtime */
 @theme {
-  --font-serif: var(--primitive-font-serif);
-  --font-sans: var(--primitive-font-sans);
-  --color-primary: var(--primitive-bone-100);
-  --color-secondary: var(--primitive-bone-400);
-  --color-base: var(--primitive-black-950);
-  --color-surface: var(--primitive-black-900);
-  --color-elevated: var(--primitive-black-800);
-  --color-border: var(--primitive-stone-800);
-  --color-rarity-mundane: var(--primitive-rarity-1);
-  --color-rarity-wandering: var(--primitive-rarity-2);
-  --color-rarity-mystic: var(--primitive-rarity-3);
-  --color-rarity-arcane: var(--primitive-rarity-4);
-  --color-rarity-primordial: var(--primitive-rarity-5);
-  --color-accent: var(--primitive-purple-500);
+  --font-serif: "Cormorant Garamond Variable", Georgia, serif;
+  --font-sans: "DM Sans Variable", system-ui, sans-serif;
 }
 
+/* ── Map semantic CSS vars into Tailwind utilities via @theme inline ── */
+/* Each entry becomes bg-*, text-*, border-* etc. AND retains the CSS
+   custom property for direct var() use in custom CSS / inline styles. */
+@theme inline {
+  --color-background:          var(--background);
+  --color-foreground:          var(--foreground);
+
+  --color-card:                var(--card);
+  --color-card-foreground:     var(--card-foreground);
+
+  --color-muted:               var(--muted);
+  --color-muted-foreground:    var(--muted-foreground);
+
+  --color-border:              var(--border);
+  --color-ring:                var(--ring);
+
+  --color-primary:             var(--primary);
+  --color-primary-foreground:  var(--primary-foreground);
+
+  --color-accent:              var(--accent);
+  --color-accent-foreground:   var(--accent-foreground);
+
+  /* Rarity — also accessible as var(--color-rarity-*) in JS */
+  --color-rarity-mundane:    var(--rarity-mundane);
+  --color-rarity-wandering:  var(--rarity-wandering);
+  --color-rarity-mystic:     var(--rarity-mystic);
+  --color-rarity-arcane:     var(--rarity-arcane);
+  --color-rarity-primordial: var(--rarity-primordial);
+}
+
+/* ── Base styles ── */
 html,
 body {
-  background-color: var(--color-bg-base);
+  background-color: var(--background);
   background-image: radial-gradient(
     ellipse 120% 45% at 50% 0%,
-    color-mix(in srgb, var(--color-accent) 6%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 6%, transparent) 0%,
     transparent 100%
   );
-  color: var(--color-text-secondary);
+  color: var(--muted-foreground);
   font-family: var(--font-sans);
   color-scheme: dark;
   scroll-behavior: smooth;
