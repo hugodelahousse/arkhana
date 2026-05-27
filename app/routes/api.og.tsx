@@ -159,11 +159,6 @@ function CardOG({
   const CARD_W = 365;
   const CARD_H = 630;
 
-  const arcanaLabel =
-    card.arcana === "major"
-      ? "Major Arcana"
-      : `Minor Arcana / ${card.suit ? card.suit.charAt(0).toUpperCase() + card.suit.slice(1) : ""}`;
-
   const description = getCardDescription(card, rarity, isReversed);
 
   const drewByLine = username ? `@${username}` : null;
