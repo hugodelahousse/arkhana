@@ -54,7 +54,6 @@ body {
   );
   color: var(--muted-foreground);
   font-family: var(--font-sans);
-  color-scheme: dark;
   scroll-behavior: smooth;
 }
 

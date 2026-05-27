@@ -5,12 +5,14 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useRouteLoaderData,
 } from "react-router";
 import { useEffect } from "react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
 import { OrientationProvider } from "./lib/orientation";
+import { getThemeFromCookie, THEME_SCRIPT, type Theme } from "./lib/theme";
 
 export const links: Route.LinksFunction = () => [
   { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -18,18 +20,34 @@ export const links: Route.LinksFunction = () => [
   { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
 ];
 
+export async function loader({ request }: Route.LoaderArgs) {
+  return { theme: getThemeFromCookie(request) };
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
+  const data = useRouteLoaderData<typeof loader>("root");
+  const theme = data?.theme ?? "system";
+
+  // theme-color matches the resolved background color
+  const themeColor = theme === "light" ? "#ede8e0" : "#0a0a0f";
+
+  // suppressHydrationWarning: the blocking script intentionally mutates
+  // document.documentElement.classList before React hydrates — not a bug.
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <meta name="theme-color" content="#0a0a0f" />
+        <meta name="theme-color" content={themeColor} />
         <link rel="manifest" href="/site.webmanifest" />
         <Meta />
         <Links />
       </head>
       <body>
+        {/* Blocking script: must be first in <body> so it runs before any content
+            is painted. Reads the theme cookie, falls back to matchMedia for
+            'system', and toggles .dark on <html>. No flash possible. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -49,6 +67,31 @@ function ServiceWorkerRegister() {
 }
 
 export default function App() {
+  const data = useRouteLoaderData<typeof loader>("root");
+  const theme = data?.theme ?? "system";
+
+  // Keep .dark in sync with theme and OS preference after hydration.
+  // The blocking script handles initial load; this effect handles:
+  //   1. Theme changes triggered by the settings page
+  //   2. OS-level prefers-color-scheme changes while theme is 'system'
+  useEffect(() => {
+    function apply(t: Theme) {
+      const isDark =
+        t === "dark" ||
+        (t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.classList.toggle("dark", isDark);
+    }
+
+    apply(theme);
+
+    if (theme === "system") {
+      const mql = window.matchMedia("(prefers-color-scheme: dark)");
+      const onChange = () => apply("system");
+      mql.addEventListener("change", onChange);
+      return () => mql.removeEventListener("change", onChange);
+    }
+  }, [theme]);
+
   return (
     <OrientationProvider>
       <Outlet />

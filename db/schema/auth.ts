@@ -8,6 +8,7 @@ export const user = pgTable("user", {
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
   isAnonymous: boolean("is_anonymous").default(false),
+  theme: text("theme").default("system").notNull(),
   username: text("username").unique(),
   displayUsername: text("display_username"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

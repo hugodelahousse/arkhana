@@ -2,7 +2,7 @@
    DESIGN TOKENS — two layers
    1. Primitives   — raw OKLCH values, no semantic meaning
    2. Semantics    — purpose-named, reference primitives
-   Dark mode: override semantics in .dark { ... }
+   Theme: light by default; .dark overrides to dark palette
    ════════════════════════════════════════════════════════ */
 
 :root {
@@ -15,39 +15,45 @@
   --bone-100: oklch(0.918 0.010 78);
   --bone-400: oklch(0.715 0.009 78);
 
-  /* ── Primitives: stone (dark UI divider) ── */
-  --stone-800: oklch(0.228 0.011 265);
+  /* ── Primitives: parchment (light mode surfaces) ── */
+  --parchment-50: oklch(0.975 0.010 78);
+
+  /* ── Primitives: stone scale ── */
+  --stone-800: oklch(0.228 0.011 265);   /* dark divider          */
+  --stone-600: oklch(0.430 0.012 265);   /* muted text on light   */
+  --stone-300: oklch(0.780 0.012 265);   /* border on light       */
+  --stone-100: oklch(0.920 0.008 265);   /* muted surface on light */
 
   /* ── Primitives: rarity spectrum ── */
-  --rarity-1: oklch(0.686 0.009 247);   /* mundane   — slate    */
-  --rarity-2: oklch(0.694 0.148 237);   /* wandering — blue     */
-  --rarity-3: oklch(0.627 0.231 299);   /* mystic    — purple   */
-  --rarity-4: oklch(0.690 0.185 46);    /* arcane    — orange   */
-  --rarity-5: oklch(0.795 0.174 87);    /* primordial — gold    */
+  --rarity-1: oklch(0.686 0.009 247);   /* mundane    — slate    */
+  --rarity-2: oklch(0.694 0.148 237);   /* wandering  — blue     */
+  --rarity-3: oklch(0.627 0.231 299);   /* mystic     — purple   */
+  --rarity-4: oklch(0.690 0.185 46);    /* arcane     — orange   */
+  --rarity-5: oklch(0.795 0.174 87);    /* primordial — gold     */
 
   /* ── Primitives: accent (purple) ── */
   --purple-500: oklch(0.627 0.231 299);
 }
 
-/* ── Semantic tokens ── */
-/* These are the authoritative names consumed by components.
-   Override these blocks (not primitives) when theming. */
+/* ── Light mode (default :root semantics) ── */
 :root {
-  --background:          var(--black-950);
-  --foreground:          var(--bone-100);
+  color-scheme: light;
 
-  --card:                var(--black-900);
-  --card-foreground:     var(--bone-100);
+  --background:          var(--bone-100);
+  --foreground:          var(--black-950);
 
-  --muted:               var(--black-800);
-  --muted-foreground:    var(--bone-400);
+  --card:                var(--parchment-50);
+  --card-foreground:     var(--black-950);
 
-  --border:              var(--stone-800);
+  --muted:               var(--stone-100);
+  --muted-foreground:    var(--stone-600);
+
+  --border:              var(--stone-300);
   --ring:                var(--purple-500);
 
-  /* primary = bone-100: the high-emphasis UI color for this dark-fantasy palette */
-  --primary:             var(--bone-100);
-  --primary-foreground:  var(--black-950);
+  /* primary = near-black in light: high-contrast CTA on parchment */
+  --primary:             var(--black-950);
+  --primary-foreground:  var(--bone-100);
 
   --accent:              var(--purple-500);
   --accent-foreground:   var(--bone-100);
@@ -60,10 +66,24 @@
   --rarity-primordial: var(--rarity-5);
 }
 
-/* ── Dark theme overrides (stub — defaults are already dark) ── */
-/* When a light mode default is added, put light values in :root and
-   dark overrides here. Currently all :root values are dark. */
+/* ── Dark mode overrides ── */
 .dark {
+  color-scheme: dark;
+
+  --background:          var(--black-950);
+  --foreground:          var(--bone-100);
+
+  --card:                var(--black-900);
+  --card-foreground:     var(--bone-100);
+
+  --muted:               var(--black-800);
+  --muted-foreground:    var(--bone-400);
+
+  --border:              var(--stone-800);
+
+  /* primary = bone-100 in dark: high-emphasis off-white on deep background */
+  --primary:             var(--bone-100);
+  --primary-foreground:  var(--black-950);
 }
 
 /* ════════════════════════════════════════════════════════

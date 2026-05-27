@@ -1,10 +1,11 @@
-import { redirect, data, Form, useNavigation, useRevalidator } from "react-router";
+import { redirect, data, Form, useNavigation, useRevalidator, useFetcher } from "react-router";
 import { useState, useEffect } from "react";
 import type { Route } from "./+types/settings";
 import { Nav } from "../components/layout/nav";
 import { db } from "../../db/index.js";
 import { user, passkey as passkeyTable } from "../../db/schema/auth.js";
 import { eq, and, ne } from "drizzle-orm";
+import { getThemeFromCookie, setThemeCookie, type Theme } from "../lib/theme";
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (!context.user || context.user.isAnonymous) return redirect("/");
@@ -26,6 +27,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     user: context.user,
     username: profile?.displayUsername ?? profile?.username ?? "",
     passkeys,
+    theme: getThemeFromCookie(request),
   };
 }
 
@@ -34,6 +36,17 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   const form = await request.formData();
   const intent = form.get("intent");
+
+  if (intent === "set-theme") {
+    const theme = String(form.get("theme") ?? "system");
+    if (!["light", "dark", "system"].includes(theme))
+      return data({ error: "Invalid theme." }, { status: 400 });
+    await db.update(user).set({ theme }).where(eq(user.id, context.user.id));
+    return data(
+      { success: true },
+      { headers: { "Set-Cookie": setThemeCookie(theme as Theme) } },
+    );
+  }
 
   if (intent === "delete-passkey") {
     const passkeyId = String(form.get("passkeyId") ?? "");
@@ -89,6 +102,19 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
   const navigation = useNavigation();
   const revalidator = useRevalidator();
   const isSubmitting = navigation.state === "submitting";
+  const themeFetcher = useFetcher();
+  // Optimistic: show the in-flight value immediately while the request is live
+  const activeTheme: Theme =
+    (themeFetcher.formData?.get("theme") as Theme) ?? loaderData.theme;
+
+  function setTheme(t: Theme) {
+    // Apply class instantly for zero-latency feedback
+    const isDark =
+      t === "dark" ||
+      (t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.classList.toggle("dark", isDark);
+    themeFetcher.submit({ intent: "set-theme", theme: t }, { method: "post" });
+  }
   const error = actionData && "error" in actionData ? actionData.error : null;
   const success = actionData && "success" in actionData ? actionData.success : false;
   const [passkeyAdding, setPasskeyAdding] = useState(false);
@@ -235,6 +261,32 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
               </p>
             )}
           </Form>
+        </section>
+
+        <section className="p-6 space-y-6 border border-border bg-card">
+          <h2 className="text-xs tracking-widest uppercase opacity-50 text-muted-foreground">
+            Theme
+          </h2>
+          <p className="text-xs opacity-50 leading-relaxed text-muted-foreground">
+            Control the color scheme. System follows your OS preference.
+          </p>
+          <div className="flex border border-border overflow-hidden">
+            {(["system", "light", "dark"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTheme(t)}
+                aria-pressed={activeTheme === t}
+                className={`flex-1 px-4 py-2.5 text-xs tracking-widest uppercase transition-colors ${
+                  activeTheme === t
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
         </section>
 
         <section className="p-6 space-y-6 border border-border bg-card">
