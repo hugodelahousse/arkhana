@@ -915,14 +915,23 @@ class Painter {
     if (cur.end.y < cur.start.y) cur = cur.invert();
 
     const shape: Vec2[] = [cur.start.clone()];
+    const curKey1 = this.ptKey(cur.start);
+    const curKey2 = this.ptKey(cur.end);
 
-    for (let iter = 0; iter < this.allStrokes.length + 1; iter++) {
-      // At cur.end, find next stroke by minimum signed angle (rightmost turn)
+    // Max polygon vertices: no shape should need more than ~200 edges
+    const MAX_SHAPE = 200;
+
+    for (let iter = 0; iter < MAX_SHAPE; iter++) {
+      // At cur.end, find next stroke by minimum signed angle (rightmost turn).
+      // Exclude cur itself (matched by both endpoints) but allow other strokes
+      // that share cur.start — those are valid candidates at a junction.
       const endKey = this.ptKey(cur.end);
+      const ck1 = this.ptKey(cur.start);
+      const ck2 = endKey;
       const candidates = (this.pt2stroke.get(endKey) || []).filter(s => {
         const k1 = this.ptKey(s.start), k2 = this.ptKey(s.end);
-        const curStartKey = this.ptKey(cur.start);
-        return k1 !== curStartKey && k2 !== curStartKey;
+        // Exclude cur and its inverse
+        return !((k1 === ck1 && k2 === ck2) || (k1 === ck2 && k2 === ck1));
       });
 
       if (candidates.length === 0) break;
@@ -948,12 +957,16 @@ class Painter {
       shape.push(cur.end.clone());
       cur = next;
 
+      // Closed polygon
       if (this.ptKey(cur.end) === this.ptKey(shape[0])) break;
 
-      // Detect loop: find innermost loop if shape visits same point twice
-      if (shape.length > this.allStrokes.length) {
-        // Return what we have
-        break;
+      // Detect repeated vertex → extract innermost loop
+      if (shape.length > 3) {
+        const lastKey = this.ptKey(shape[shape.length - 1]);
+        const loopStart = shape.findIndex((p, i) => i < shape.length - 1 && this.ptKey(p) === lastKey);
+        if (loopStart !== -1) {
+          return shape.slice(loopStart, shape.length);
+        }
       }
     }
 
