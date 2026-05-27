@@ -11,6 +11,7 @@ export interface CardMotionConfig {
   springStiffness: number;
   springDamping: number;
   maxRotateYDeg?: number; // when set, clamps rotateY to ±this value (prevents front face from showing)
+  overrideRotateY?: number; // when set, locks rotateY to this value (disables idle/hover/touch Y)
 }
 
 export const DEFAULT_MOTION_CONFIG: CardMotionConfig = {
@@ -87,15 +88,20 @@ export function useCardMotion(
     const loop = (ts: number) => {
       if (!isDraggingRef.current && !isHoveringRef.current && !isDeceleratingRef.current) {
         const t = ts / 1000;
-        const { idleAmplitude: amp, idleSpeed: spd } = cfgRef.current;
+        const { idleAmplitude: amp, idleSpeed: spd, overrideRotateY } = cfgRef.current;
         const ny = Math.sin(t * spd * 0.87)         * amp
                  + Math.sin(t * spd * 0.23 + 1.4)   * amp * 0.22;
         const nx = Math.cos(t * spd * 0.53)         * amp * 0.6
                  + Math.cos(t * spd * 0.17 + 2.1)   * amp * 0.18;
         rotateX.set(-ny);
-        rotateY.set(nx);
-        const safeAmp = Math.max(0.01, amp);
-        setCSSVars(nx / safeAmp, ny / safeAmp);
+        if (overrideRotateY !== undefined) {
+          rotateY.set(overrideRotateY);
+          setCSSVars(Math.sin(overrideRotateY / 180 * Math.PI), ny / Math.max(0.01, amp));
+        } else {
+          rotateY.set(nx);
+          const safeAmp = Math.max(0.01, amp);
+          setCSSVars(nx / safeAmp, ny / safeAmp);
+        }
       }
       rafId = requestAnimationFrame(loop);
     };
@@ -221,12 +227,14 @@ export function useCardMotion(
     }
     if (!isDraggingRef.current) return;
 
-    const { touchHScale, touchVMax, maxRotateYDeg } = cfgRef.current;
+    const { touchHScale, touchVMax, maxRotateYDeg, overrideRotateY } = cfgRef.current;
     const degsPerPx = touchHScale / cardWidthRef.current;
 
     // Horizontal: accumulation from gesture base, clamped if maxRotateYDeg is set
-    const rawY = baseRotYRef.current + dx * degsPerPx;
-    rotateY.set(maxRotateYDeg !== undefined ? Math.max(-maxRotateYDeg, Math.min(maxRotateYDeg, rawY)) : rawY);
+    if (overrideRotateY === undefined) {
+      const rawY = baseRotYRef.current + dx * degsPerPx;
+      rotateY.set(maxRotateYDeg !== undefined ? Math.max(-maxRotateYDeg, Math.min(maxRotateYDeg, rawY)) : rawY);
+    }
 
     // Vertical: clamped give
     const { height } = ref.current.getBoundingClientRect();
@@ -262,7 +270,9 @@ export function useCardMotion(
     const nx = ((e.clientX - left) / width)  * 2 - 1;
     const ny = ((e.clientY - top)  / height) * 2 - 1;
     rotateX.set(-ny * 15);
-    rotateY.set(nx * 15);
+    if (cfgRef.current.overrideRotateY === undefined) {
+      rotateY.set(nx * 15);
+    }
     ref.current.style.setProperty("--ratio-x", String((nx + 1) / 2));
     ref.current.style.setProperty("--ratio-y", String((ny + 1) / 2));
     ref.current.style.setProperty("--glow-x",  String((e.clientX - left) / width));

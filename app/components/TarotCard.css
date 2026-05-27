@@ -126,34 +126,65 @@
 
 .card-scene[data-revealed] .card-flipper { transform: rotateY(180deg); }
 
-/* ─── Edges — 3 CSS-px depth, perpendicular to the card faces ─── */
-/* At 1px the edge was invisible at typical tilt angles; 3px is the minimum
-   that shows at ~10°+ rotation. Gradient mimics a real card's thin core. */
+/* ─── Edges — proper 3D cuboid sides connecting front & back faces ─── */
+/* Rotate into position, then translateZ pushes outward in the face's
+   local space.  transform-origin at the card perimeter so we don't
+   need to know the card's pixel dimensions. */
 .card-edge {
   position: absolute;
-  top: 0;
-  height: 100%;
-  width: 3px;
   pointer-events: none;
   background: linear-gradient(
     to right,
-    rgba(0, 0, 0, 0.9)  0%,
-    rgba(55, 55, 55, 0.7) 45%,
-    rgba(55, 55, 55, 0.7) 55%,
-    rgba(0, 0, 0, 0.9)  100%
+    color-mix(in srgb, var(--color-card-back-accent) 15%, var(--color-bg-surface)) 0%,
+    color-mix(in srgb, var(--color-card-back-accent) 25%, var(--color-bg-surface)) 45%,
+    color-mix(in srgb, var(--color-card-back-accent) 25%, var(--color-bg-surface)) 55%,
+    color-mix(in srgb, var(--color-card-back-accent) 15%, var(--color-bg-surface)) 100%
   );
+}
+
+.card-edge-l,
+.card-edge-r {
+  top: 0;
+  height: 100%;
+  width: var(--card-thickness, 3px);
 }
 
 .card-edge-l {
   left: 0;
   transform-origin: left center;
-  transform: rotateY(-90deg);
+  transform: rotateY(-90deg) translateX(calc(var(--card-thickness, 3px) / -2));
 }
 
 .card-edge-r {
   right: 0;
   transform-origin: right center;
-  transform: rotateY(90deg);
+  transform: rotateY(90deg) translateX(calc(var(--card-thickness, 3px) / 2));
+}
+
+.card-edge-t,
+.card-edge-b {
+  left: 0;
+  width: 100%;
+  height: var(--card-thickness, 3px);
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-card-back-accent) 15%, var(--color-bg-surface)) 0%,
+    color-mix(in srgb, var(--color-card-back-accent) 25%, var(--color-bg-surface)) 45%,
+    color-mix(in srgb, var(--color-card-back-accent) 25%, var(--color-bg-surface)) 55%,
+    color-mix(in srgb, var(--color-card-back-accent) 15%, var(--color-bg-surface)) 100%
+  );
+}
+
+.card-edge-t {
+  top: 0;
+  transform-origin: center top;
+  transform: rotateX(90deg) translateY(calc(var(--card-thickness, 3px) / -2));
+}
+
+.card-edge-b {
+  bottom: 0;
+  transform-origin: center bottom;
+  transform: rotateX(-90deg) translateY(calc(var(--card-thickness, 3px) / 2));
 }
 
 /* ─── Faces ─── */
@@ -166,6 +197,7 @@
 }
 
 .card-back {
+  transform: translateZ(calc(var(--card-thickness, 3px) / 2));
   background:
     radial-gradient(
       ellipse at calc(var(--glow-x, .5) * 100%) calc(var(--glow-y, .5) * 100%),
@@ -221,7 +253,7 @@
 .card-scene[data-size="lg"] .card-back-sigil { font-size: 3rem; }
 
 
-.card-front { transform: rotateY(180deg); border-radius: 0; }
+.card-front { transform: rotateY(180deg) translateZ(calc(var(--card-thickness, 3px) / 2)); border-radius: 0; }
 
 .card-front img {
   width: 100%;

@@ -67,6 +67,9 @@ export default function CardLab() {
   const [drawn, setDrawn] = useState(false);
   const [drawKey, setDrawKey] = useState(0);
 
+  // Manual rotation override (undefined = disabled)
+  const [manualRotateY, setManualRotateY] = useState<number | undefined>(undefined);
+
   // Motion config state
   const [idleAmplitude, setIdleAmplitude] = useState(DEFAULT_MOTION_CONFIG.idleAmplitude);
   const [idleSpeed, setIdleSpeed]         = useState(DEFAULT_MOTION_CONFIG.idleSpeed);
@@ -89,6 +92,7 @@ export default function CardLab() {
     spinFriction,
     springStiffness: debouncedStiffness,
     springDamping: debouncedDamping,
+    overrideRotateY: manualRotateY,
   };
 
   const [revealed, revealNow] = useAutoReveal(drawn, 800);
@@ -294,6 +298,26 @@ export default function CardLab() {
             >
               spring changes apply after 350 ms
             </p>
+          </div>
+
+          <div className="border-t border-elevated pt-4 flex flex-wrap gap-x-8 gap-y-4 items-end">
+            <label className="flex flex-row items-center gap-2 text-[0.6rem] tracking-[0.12em] uppercase cursor-pointer text-primary">
+              <input
+                type="checkbox"
+                checked={manualRotateY !== undefined}
+                onChange={(e) => setManualRotateY(e.target.checked ? 0 : undefined)}
+                className="w-[0.9rem] h-[0.9rem] accent-border"
+              />
+              Manual H Rotation
+            </label>
+            {manualRotateY !== undefined && (
+              <SliderControl
+                label="Rotate Y"
+                value={manualRotateY}
+                min={-180} max={180} step={1} unit="°"
+                onChange={setManualRotateY}
+              />
+            )}
           </div>
         </div>
 

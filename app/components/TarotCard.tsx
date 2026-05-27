@@ -113,6 +113,8 @@ export const TarotCard = memo(function TarotCard({
       <motion.div className="card-tilt" style={tilt.style}>
         <div className="card-edge card-edge-l" aria-hidden="true" />
         <div className="card-edge card-edge-r" aria-hidden="true" />
+        <div className="card-edge card-edge-t" aria-hidden="true" />
+        <div className="card-edge card-edge-b" aria-hidden="true" />
         <div className="card-flipper">
 
           <div className="card-face card-back">
