@@ -70,40 +70,40 @@ export default function Lab() {
   const doneCount = Object.values(cards).filter(s => s.status === "done").length;
 
   return (
-    <div className="min-h-screen bg-[#0a0a12] text-white font-mono">
+    <div className="min-h-screen bg-background text-foreground font-mono">
       {/* Header */}
-      <div className="border-b border-white/10 px-6 py-4 flex items-center gap-6">
-        <span className="text-white/40 text-xs uppercase tracking-widest">Arkhana</span>
-        <span className="text-white/20">/</span>
+      <div className="border-b border-border px-6 py-4 flex items-center gap-6">
+        <span className="text-ghost-foreground text-xs uppercase tracking-widest">Arkhana</span>
+        <span className="text-ghost-foreground">/</span>
         <span className="text-xs uppercase tracking-widest">Procgen Tarot Lab</span>
       </div>
 
       <div className="flex h-[calc(100vh-57px)]">
         {/* Sidebar */}
-        <aside className="w-64 border-r border-white/10 flex flex-col overflow-hidden">
+        <aside className="w-64 border-r border-border flex flex-col overflow-hidden">
           {/* Controls */}
-          <div className="p-4 border-b border-white/10 space-y-3">
+          <div className="p-4 border-b border-border space-y-3">
             <label className="block">
-              <span className="text-white/40 text-xs uppercase tracking-wider">Deck seed</span>
+              <span className="text-ghost-foreground text-xs uppercase tracking-wider">Deck seed</span>
               <input
                 type="number"
                 value={seed}
                 onChange={e => setSeed(Number(e.target.value))}
-                className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-white/30"
+                className="mt-1 w-full bg-muted border border-border rounded px-2 py-1.5 text-sm text-foreground focus:outline-none focus:border-ring"
               />
             </label>
             <div className="flex gap-2">
               <button
                 onClick={() => generateOne(selectedId)}
                 disabled={currentState.status === "generating" || allStatus === "running"}
-                className="flex-1 text-xs py-1.5 px-2 bg-white/10 hover:bg-white/15 rounded disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 py-1.5 px-2 text-[0.65rem] tracking-[0.12em] uppercase cursor-pointer border border-border bg-transparent text-primary font-serif hover:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Generate card
               </button>
               <button
                 onClick={generateAll}
                 disabled={allStatus === "running"}
-                className="flex-1 text-xs py-1.5 px-2 bg-indigo-600/60 hover:bg-indigo-600/80 rounded disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 py-1.5 px-2 text-[0.65rem] tracking-[0.12em] uppercase cursor-pointer border border-primary bg-transparent text-primary font-serif hover:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {allStatus === "running"
                   ? `${doneCount}/78`
@@ -128,14 +128,14 @@ export default function Lab() {
                   className={[
                     "w-full text-left px-4 py-2 text-xs flex items-center gap-2 transition-colors",
                     selectedId === card.id
-                      ? "bg-white/10 text-white"
-                      : "text-white/50 hover:bg-white/5 hover:text-white/80",
+                      ? "bg-muted text-foreground"
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
                   ].join(" ")}
                 >
                   <StatusDot state={state} />
                   <span className="truncate">{card.name}</span>
                   {state.status === "done" && (
-                    <span className="ml-auto text-white/25 shrink-0">{state.ms}ms</span>
+                    <span className="ml-auto text-ghost-foreground shrink-0">{state.ms}ms</span>
                   )}
                 </button>
               );
@@ -146,10 +146,10 @@ export default function Lab() {
         {/* Main panel */}
         <main className="flex-1 flex flex-col overflow-hidden">
           {/* Card header */}
-          <div className="px-6 py-3 border-b border-white/10 flex items-center gap-4">
+          <div className="px-6 py-3 border-b border-border flex items-center gap-4">
             <div>
-              <div className="text-sm font-semibold">{currentCard.name}</div>
-              <div className="text-xs text-white/40 capitalize">
+              <div className="text-sm font-semibold text-foreground">{currentCard.name}</div>
+              <div className="text-xs text-muted-foreground capitalize">
                 {currentCard.arcana === "major"
                   ? `Major Arcana · ${currentCard.number}`
                   : `${currentCard.suit} · ${currentCard.number}`}
@@ -157,11 +157,11 @@ export default function Lab() {
             </div>
             {currentState.status === "done" && (
               <div className="ml-auto flex gap-3 items-center">
-                <span className="text-xs text-white/30">{currentState.ms}ms</span>
+                <span className="text-xs text-ghost-foreground">{currentState.ms}ms</span>
                 <a
                   href={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(currentState.svg)}`}
                   download={`${currentCard.name.toLowerCase().replace(/\s+/g, "-")}.svg`}
-                  className="text-xs px-3 py-1 bg-white/10 hover:bg-white/20 rounded transition-colors"
+                  className="text-[0.65rem] tracking-[0.1em] uppercase px-3 py-1 border border-border bg-transparent text-primary font-serif hover:opacity-80 transition-opacity"
                 >
                   Download SVG
                 </a>
@@ -170,12 +170,12 @@ export default function Lab() {
           </div>
 
           {/* Preview */}
-          <div className="flex-1 overflow-auto flex items-center justify-center p-8 bg-[#06060e]">
+          <div className="flex-1 overflow-auto flex items-center justify-center p-8 bg-card">
             {currentState.status === "idle" && (
-              <div className="text-white/20 text-sm">Select a card or click Generate</div>
+              <div className="text-ghost-foreground text-sm">Select a card or click Generate</div>
             )}
             {currentState.status === "generating" && (
-              <div className="text-white/40 text-sm animate-pulse">Generating…</div>
+              <div className="text-muted-foreground text-sm animate-pulse">Generating…</div>
             )}
             {currentState.status === "done" && (
               <div
@@ -198,5 +198,5 @@ function StatusDot({ state }: { state: CardState }) {
   if (state.status === "done") {
     return <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />;
   }
-  return <span className="w-1.5 h-1.5 rounded-full bg-white/15 shrink-0" />;
+  return <span className="w-1.5 h-1.5 rounded-full bg-border shrink-0" />;
 }

@@ -468,12 +468,11 @@ function zeroFlow(): Flow {
 }
 
 function flowIsZero(flow: Flow): boolean {
-  const z = new Vec2();
   return (
-    flow.value.equals(z) &&
-    flow.opposite.equals(z) &&
-    flow.left.equals(z) &&
-    flow.right.equals(z)
+    flow.value.x === 0 && flow.value.y === 0 &&
+    flow.opposite.x === 0 && flow.opposite.y === 0 &&
+    flow.left.x === 0 && flow.left.y === 0 &&
+    flow.right.x === 0 && flow.right.y === 0
   );
 }
 
@@ -577,35 +576,39 @@ class TensionField extends FlowField {
 
   initTension(mask: Mask, power: number, rng: RNG): void {
     const radius = Math.min(FIELD_WIDTH, FIELD_HEIGHT) / 4;
+    const cw = FIELD_WIDTH / FIELD_COLS;
+    const ch = FIELD_HEIGHT / FIELD_ROWS;
 
     for (let i = 0; i < FIELD_ROWS; i++) {
       for (let j = 0; j < FIELD_COLS; j++) {
-        const force = new Vec2();
+        let fx = 0;
+        let fy = 0;
         const m = mask.values[i][j];
-        const pos = this.cellCenter(j, i);
+        const posX = (j + 0.5) * cw;
+        const posY = (i + 0.5) * ch;
 
         for (let k = 0; k < 100; k++) {
           const length = 0.5 + rng.normal() * radius;
-          const offset = Vec2.polar(length, rng.float() * 2 * Math.PI);
-          const sample = pos.add(offset);
-          if (
-            sample.x >= 0 &&
-            sample.x < FIELD_WIDTH &&
-            sample.y >= 0 &&
-            sample.y < FIELD_HEIGHT
-          ) {
-            if (mask.get(sample) !== m) {
+          const angle = rng.float() * 2 * Math.PI;
+          const ox = Math.cos(angle) * length;
+          const oy = Math.sin(angle) * length;
+          const sx = posX + ox;
+          const sy = posY + oy;
+          if (sx >= 0 && sx < FIELD_WIDTH && sy >= 0 && sy < FIELD_HEIGHT) {
+            const cx = (sx / FIELD_WIDTH) * FIELD_COLS | 0;
+            const cy = (sy / FIELD_HEIGHT) * FIELD_ROWS | 0;
+            if (mask.values[cy][cx] !== m) {
               const f = 1 / length;
-              force.x += offset.x * f;
-              force.y += offset.y * f;
+              fx += ox * f;
+              fy += oy * f;
             }
           }
         }
 
         const f1 = (3 * (m ? -power : power)) / 100;
-        force.x *= f1;
-        force.y *= f1;
-        this.setValue(j, i, new Vec2(force.x * power, force.y * power));
+        fx *= f1;
+        fy *= f1;
+        this.setValue(j, i, new Vec2(fx * power, fy * power));
       }
     }
   }
@@ -722,6 +725,8 @@ class Stroke {
 // ---------------------------------------------------------------------------
 // Intersection helper – matches original GeomUtils.intersectLines
 // ---------------------------------------------------------------------------
+const _isect: [number, number] = [0, 0];
+
 function intersectLines(
   x1: number,
   y1: number,
@@ -731,7 +736,7 @@ function intersectLines(
   y2: number,
   dx2: number,
   dy2: number,
-): Vec2 | null {
+): [number, number] | null {
   const d = dx1 * dy2 - dy1 * dx2;
   if (d === 0) return null;
   const t2 = (dy1 * (x2 - x1) - dx1 * (y2 - y1)) / d;
@@ -739,7 +744,9 @@ function intersectLines(
     Math.abs(dx1) > Math.abs(dy1)
       ? (x2 - x1 + dx2 * t2) / dx1
       : (y2 - y1 + dy2 * t2) / dy1;
-  return new Vec2(t1, t2);
+  _isect[0] = t1;
+  _isect[1] = t2;
+  return _isect;
 }
 
 // ---------------------------------------------------------------------------
@@ -828,13 +835,14 @@ class Tracer {
   trace(flow: Flow, e: number = 0.5): Stroke {
     const rng = Tracer.rng;
     const bh = Tracer.behaviour;
+    const spd = this.speed;
 
     // Find closest force
     const forces = Tracer.forces(flow);
     let closest = forces[0];
-    let bestDot = this.speed.dot(forces[0]);
+    let bestDot = spd.x * forces[0].x + spd.y * forces[0].y;
     for (let i = 1; i < forces.length; i++) {
-      const d = this.speed.dot(forces[i]);
+      const d = spd.x * forces[i].x + spd.y * forces[i].y;
       if (d > bestDot) {
         bestDot = d;
         closest = forces[i];
@@ -842,19 +850,21 @@ class Tracer {
     }
 
     // Add closest force * e to speed
-    this.speed.x += closest.x * e;
-    this.speed.y += closest.y * e;
+    spd.x += closest.x * e;
+    spd.y += closest.y * e;
 
-    // Add perpendicular steering
-    const perp = new Vec2(-this.speed.y, this.speed.x);
+    // Add perpendicular steering (capture before mutation)
+    const perpX = -spd.y;
+    const perpY = spd.x;
     const f = this.steering * e;
-    this.speed.x += perp.x * f;
-    this.speed.y += perp.y * f;
+    spd.x += perpX * f;
+    spd.y += perpY * f;
 
     // Cap speed at 10
-    if (this.speed.length() > 10) {
-      const norm = this.speed.normalize(10);
-      this.speed = norm;
+    const l = Math.sqrt(spd.x * spd.x + spd.y * spd.y);
+    if (l > 10) {
+      spd.x = (spd.x / l) * 10;
+      spd.y = (spd.y / l) * 10;
     }
 
     // Wiggling chance
@@ -865,30 +875,29 @@ class Tracer {
         const a = this.zigzag * Math.PI;
         const sin = Math.sin(a);
         const cos = Math.cos(a);
-        this.speed = new Vec2(
-          this.speed.x * cos - this.speed.y * sin,
-          this.speed.y * cos + this.speed.x * sin,
-        );
+        const rx = spd.x * cos - spd.y * sin;
+        const ry = spd.y * cos + spd.x * sin;
+        spd.x = rx;
+        spd.y = ry;
         this.zigzag = -this.zigzag;
       } else {
         const chance1 = 1 - Math.pow(1 - bh.roughness, e);
         if (rng.float() < chance1) {
-          // Rotate by normal2() * PI
           const a1 = rng.normal2() * Math.PI;
           const sin1 = Math.sin(a1);
           const cos1 = Math.cos(a1);
-          this.speed = new Vec2(
-            this.speed.x * cos1 - this.speed.y * sin1,
-            this.speed.y * cos1 + this.speed.x * sin1,
-          );
+          const rx1 = spd.x * cos1 - spd.y * sin1;
+          const ry1 = spd.y * cos1 + spd.x * sin1;
+          spd.x = rx1;
+          spd.y = ry1;
         }
       }
     }
 
     // Step: pos + speed * e
     const newPos = new Vec2(
-      this.pos.x + this.speed.x * e,
-      this.pos.y + this.speed.y * e,
+      this.pos.x + spd.x * e,
+      this.pos.y + spd.y * e,
     );
     const s = new Stroke(this.pos, newPos, this.thickness);
     this.pos = s.end;
@@ -1313,6 +1322,12 @@ class Painter {
   private fgFlags: boolean[] = [];
   regions: { shape: Vec2[]; area: number; colors?: number[]; type?: number | null; fg?: boolean }[] = [];
 
+  private static readonly RAY_BUCKET_SIZE = 20;
+  private static readonly RAY_BUCKET_COUNT = Math.ceil(
+    FIELD_HEIGHT / Painter.RAY_BUCKET_SIZE,
+  );
+  private rayBuckets: Stroke[][] = [];
+
   constructor(
     svgBuilder: SVGBuilder,
     strokes: Stroke[],
@@ -1343,17 +1358,39 @@ class Painter {
       if (!this.pt2stroke.has(s.end)) this.pt2stroke.set(s.end, []);
       this.pt2stroke.get(s.end)!.push(s);
     }
+
+    // Build Y-bucket spatial index for ray casting
+    for (let i = 0; i < Painter.RAY_BUCKET_COUNT; i++) this.rayBuckets.push([]);
+    for (const s of strokes) {
+      const minY = Math.min(s.start.y, s.end.y);
+      const maxY = Math.max(s.start.y, s.end.y);
+      const r0 = Math.max(0, Math.floor(minY / Painter.RAY_BUCKET_SIZE));
+      const r1 = Math.min(
+        Painter.RAY_BUCKET_COUNT - 1,
+        Math.floor(maxY / Painter.RAY_BUCKET_SIZE),
+      );
+      for (let r = r0; r <= r1; r++) this.rayBuckets[r].push(s);
+    }
   }
 
   private findShape(p: Vec2): Vec2[] | null {
-    // Cast ray rightward from p, find closest stroke
+    // Cast ray rightward from p, find closest stroke via Y-bucket index
     const x = p.x;
     const y = p.y;
 
     let bestStroke: Stroke | null = null;
     let bestT = Infinity;
 
-    for (const s of this.strokes) {
+    const bucketIdx = Math.max(
+      0,
+      Math.min(
+        Painter.RAY_BUCKET_COUNT - 1,
+        Math.floor(y / Painter.RAY_BUCKET_SIZE),
+      ),
+    );
+    const bucket = this.rayBuckets[bucketIdx];
+    for (let si = 0; si < bucket.length; si++) {
+      const s = bucket[si];
       const t = intersectLines(
         x,
         y,
@@ -1364,9 +1401,9 @@ class Painter {
         s.end.x - s.start.x,
         s.end.y - s.start.y,
       );
-      if (t !== null && t.x > 0 && t.y >= 0 && t.y <= 1) {
-        if (t.x < bestT) {
-          bestT = t.x;
+      if (t !== null && t[0] > 0 && t[1] >= 0 && t[1] <= 1) {
+        if (t[0] < bestT) {
+          bestT = t[0];
           bestStroke = s;
         }
       }
@@ -1451,12 +1488,13 @@ class Painter {
   private register(
     shape: Vec2[],
   ): { shape: Vec2[]; area: number; colors?: number[]; type?: number | null; fg?: boolean } | null {
-    // Check for duplicate
+    // Check for duplicate using Set for O(1) vertex lookup
+    const shapeSet = new Set(shape);
     for (const region of this.regions) {
       const filled = region.shape;
       let duplicate = true;
       for (const v of filled) {
-        if (shape.indexOf(v) === -1) {
+        if (!shapeSet.has(v)) {
           duplicate = false;
           break;
         }
@@ -1615,7 +1653,7 @@ class Sketcher {
   private static readonly BUCKET_ROWS = Math.ceil(
     FIELD_HEIGHT / Sketcher.BUCKET_SIZE,
   );
-  private buckets: Set<number>[][] = [];
+  private buckets: number[][][] = [];
   private needsRebucket = false;
 
   constructor(
@@ -1645,7 +1683,7 @@ class Sketcher {
     for (let r = 0; r < Sketcher.BUCKET_ROWS; r++) {
       this.buckets.push([]);
       for (let c = 0; c < Sketcher.BUCKET_COLS; c++) {
-        this.buckets[r].push(new Set<number>());
+        this.buckets[r].push([]);
       }
     }
   }
@@ -1666,7 +1704,7 @@ class Sketcher {
       Math.floor(maxY / Sketcher.BUCKET_SIZE),
     );
     for (let r = r0; r <= r1; r++)
-      for (let c = c0; c <= c1; c++) this.buckets[r][c].add(idx);
+      for (let c = c0; c <= c1; c++) this.buckets[r][c].push(idx);
   }
 
   private candidatesNear(s: Stroke): Set<number> {
@@ -1686,8 +1724,10 @@ class Sketcher {
     );
     const result = new Set<number>();
     for (let r = r0; r <= r1; r++)
-      for (let c = c0; c <= c1; c++)
-        this.buckets[r][c].forEach((i) => result.add(i));
+      for (let c = c0; c <= c1; c++) {
+        const bucket = this.buckets[r][c];
+        for (let k = 0; k < bucket.length; k++) result.add(bucket[k]);
+      }
     return result;
   }
 
@@ -1750,10 +1790,10 @@ class Sketcher {
         another.end.x - another.start.x,
         another.end.y - another.start.y,
       );
-      if (t !== null && t.x > 0 && t.x <= tx && t.y >= 0 && t.y <= 1) {
+      if (t !== null && t[0] > 0 && t[0] <= tx && t[1] >= 0 && t[1] <= 1) {
         closest = another;
-        tx = t.x;
-        ty = t.y;
+        tx = t[0];
+        ty = t[1];
       }
     }
 
@@ -1793,15 +1833,19 @@ class Sketcher {
   }
 
   behind(another: Sketcher): void {
+    const toRemove = new Set<number>();
     for (let i = 0; i < FIELD_ROWS; i++) {
       for (let j = 0; j < FIELD_COLS; j++) {
         if (another.mask.values[i][j]) {
           this.mask.values[i][j] = false;
-          const idx = i * FIELD_COLS + j;
-          const pos = this.density.available.indexOf(idx);
-          if (pos !== -1) this.density.available.splice(pos, 1);
+          toRemove.add(i * FIELD_COLS + j);
         }
       }
+    }
+    if (toRemove.size > 0) {
+      this.density.available = this.density.available.filter(
+        (idx) => !toRemove.has(idx),
+      );
     }
   }
 
