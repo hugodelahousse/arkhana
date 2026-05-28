@@ -1,10 +1,9 @@
 import { redirect } from "react-router";
-import { startTransition, useState } from "react";
+import { startTransition } from "react";
 import { addTransitionType } from "react";
 import type { Route } from "./+types/streak";
 import { Link, useNavigate } from "react-router";
-import { Moon, MoonStars, Sparkle, CaretLeft, CaretRight } from "@phosphor-icons/react";
-import { motion, AnimatePresence } from "motion/react";
+import { Moon, MoonStars, Sparkle } from "@phosphor-icons/react";
 import { Nav } from "../components/layout/nav";
 import { MoonCycle } from "../components/MoonCycle";
 import { DirectionalTransition } from "../components/DirectionalTransition";
@@ -16,7 +15,6 @@ import {
   moonPhaseIconPath,
   moonPhaseOutlineOpacity,
   SYNODIC_MONTH_DAYS,
-  MS_PER_DAY,
 } from "../lib/moonphase";
 import { todayUTC } from "../lib/utils";
 import { DateTime } from "luxon";
@@ -31,80 +29,35 @@ interface LunarDay {
   isFuture: boolean;
 }
 
-interface LunarMonth {
-  newMoonDate: string; // ISO date the new moon fell on
-  days: LunarDay[];
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function buildLunarCalendar(
+const HISTORY_ROWS = 5;
+const HISTORY_LOOKBACK_DAYS = 365;
+const HISTORY_DAYS = Math.ceil(HISTORY_LOOKBACK_DAYS / HISTORY_ROWS) * HISTORY_ROWS;
+
+function buildLunarHistory(
   today: string,
   pullDateSet: Set<string>,
-  count: number
-): LunarMonth[] {
-  const todayDate = new Date(today + "T12:00:00Z");
-  const age = getMoonAge(todayDate);
-  const currentNewMoonMs = todayDate.getTime() - age * MS_PER_DAY;
+  dayCount: number
+): LunarDay[] {
+  const end = DateTime.fromISO(today, { zone: "utc" });
+  const start = end.minus({ days: dayCount - 1 });
+  const days: LunarDay[] = [];
 
-  const months: LunarMonth[] = [];
+  for (let i = 0; i < dayCount; i++) {
+    const dt = start.plus({ days: i });
+    const date = dt.toISODate()!;
 
-  for (let i = 0; i < count; i++) {
-    const newMoonMs = currentNewMoonMs - i * SYNODIC_MONTH_DAYS * MS_PER_DAY;
-    const nextNewMoonMs = newMoonMs + SYNODIC_MONTH_DAYS * MS_PER_DAY;
-
-    const nmDate = new Date(newMoonMs);
-    const startDt = DateTime.utc(
-      nmDate.getUTCFullYear(),
-      nmDate.getUTCMonth() + 1,
-      nmDate.getUTCDate()
-    );
-
-    const nnmDate = new Date(nextNewMoonMs);
-    const endDt = DateTime.utc(
-      nnmDate.getUTCFullYear(),
-      nnmDate.getUTCMonth() + 1,
-      nnmDate.getUTCDate()
-    );
-
-    const daysInMonth = Math.max(29, Math.min(30, Math.round(endDt.diff(startDt, "days").days)));
-    const newMoonDateStr = startDt.toISODate()!;
-
-    // Skip months that haven't started yet
-    if (newMoonDateStr > today) continue;
-
-    const days: LunarDay[] = [];
-    for (let d = 0; d < daysInMonth; d++) {
-      const dt = startDt.plus({ days: d });
-      const dateStr = dt.toISODate()!;
-      const lunarAge = getMoonAge(dt.toJSDate());
-
-      days.push({
-        date: dateStr,
-        lunarAge,
-        pulled: pullDateSet.has(dateStr),
-        isToday: dateStr === today,
-        isFuture: dateStr > today,
-      });
-    }
-
-    months.push({ newMoonDate: newMoonDateStr, days });
+    days.push({
+      date,
+      lunarAge: getMoonAge(dt.toJSDate()),
+      pulled: pullDateSet.has(date),
+      isToday: date === today,
+      isFuture: false,
+    });
   }
 
-  return months;
-}
-
-function formatLunarMonthLabel(newMoonDate: string, days: LunarDay[]): string {
-  const last = days[days.length - 1];
-  const start = DateTime.fromISO(newMoonDate, { zone: "utc" });
-  const end = DateTime.fromISO(last.date, { zone: "utc" });
-  if (start.year === end.year && start.month === end.month) {
-    return `${start.toFormat("MMM d")}–${end.toFormat("d, yyyy")}`;
-  }
-  if (start.year === end.year) {
-    return `${start.toFormat("MMM d")} – ${end.toFormat("MMM d, yyyy")}`;
-  }
-  return `${start.toFormat("MMM d, yyyy")} – ${end.toFormat("MMM d, yyyy")}`;
+  return days;
 }
 
 // ─── SVG Moon Phase Glyph ─────────────────────────────────────────────────────
@@ -197,24 +150,8 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
   const graceRemaining = 2 - graceNightsUsed;
 
   const pullDateSet = new Set(pullDates);
-  const calendarMonths = buildLunarCalendar(today, pullDateSet, 6);
+  const historyDays = buildLunarHistory(today, pullDateSet, HISTORY_DAYS);
   const totalPulls = pullDates.length;
-
-  const [activeMonth, setActiveMonth] = useState(0);
-  const [slideDir, setSlideDir] = useState(0);
-
-  const slideVariants = {
-    enter: (dir: number) => ({ x: dir > 0 ? 40 : -40, opacity: 0 }),
-    center: { x: 0, opacity: 1, transition: { duration: 0.32, ease: [0.16, 1, 0.3, 1] } },
-    exit: (dir: number) => ({ x: dir > 0 ? -40 : 40, opacity: 0, transition: { duration: 0.16 } }),
-  };
-
-  function goNewer() {
-    if (activeMonth > 0) { setSlideDir(1); setActiveMonth((m) => m - 1); }
-  }
-  function goOlder() {
-    if (activeMonth < calendarMonths.length - 1) { setSlideDir(-1); setActiveMonth((m) => m + 1); }
-  }
 
   function goBack() {
     startTransition(() => {
@@ -344,68 +281,30 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
           )}
 
           {/* Lunar calendar */}
-          {calendarMonths.length > 0 && (() => {
-            const month = calendarMonths[activeMonth];
-            const pulledCount = month.days.filter((d) => !d.isFuture && d.pulled).length;
-            const totalPast = month.days.filter((d) => !d.isFuture).length;
+          {historyDays.length > 0 && (() => {
+            const firstDate = historyDays[0]!.date;
+            const lastDate = historyDays[historyDays.length - 1]!.date;
+            const rangeStart = DateTime.fromISO(firstDate, { zone: "utc" });
+            const rangeEnd = DateTime.fromISO(lastDate, { zone: "utc" });
+            const pulledCount = historyDays.filter((d) => d.pulled).length;
+            const totalPast = historyDays.length;
             return (
               <section className="space-y-4">
                 <h2 className="type-label">
                   Practice history
                 </h2>
 
-                {/* Navigation row */}
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={goOlder}
-                    disabled={activeMonth >= calendarMonths.length - 1}
-                    className="opacity-60 hover:opacity-90 disabled:opacity-20 transition-opacity"
-                    aria-label="Previous month"
-                  >
-                    <CaretLeft weight="thin" size={16} />
-                  </button>
-                  <div className="flex-1 flex items-baseline justify-between min-w-0">
-                    <p className="type-caption font-serif truncate">
-                      {formatLunarMonthLabel(month.newMoonDate, month.days)}
-                    </p>
-                    <p className="type-caption tabular-nums ml-3 shrink-0">
-                      {pulledCount}/{totalPast}
-                    </p>
-                  </div>
-                  <button
-                    onClick={goNewer}
-                    disabled={activeMonth === 0}
-                    className="opacity-60 hover:opacity-90 disabled:opacity-20 transition-opacity"
-                    aria-label="Next month"
-                  >
-                    <CaretRight weight="thin" size={16} />
-                  </button>
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="type-caption font-serif truncate">
+                    {rangeStart.toFormat("MMM d")} – {rangeEnd.toFormat("MMM d, yyyy")}
+                  </p>
+                  <p className="type-caption tabular-nums shrink-0">
+                    {pulledCount}/{totalPast}
+                  </p>
                 </div>
 
-                {/* Animated grid */}
-                <div className="overflow-hidden">
-                  <AnimatePresence custom={slideDir} mode="wait" initial={false}>
-                    <motion.div
-                      key={month.newMoonDate}
-                      custom={slideDir}
-                      variants={slideVariants}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
-                    >
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: `repeat(${month.days.length}, 1fr)`,
-                          gap: "2px",
-                        }}
-                      >
-                        {month.days.map((day) => (
-                          <LunarDayCell key={day.date} day={day} />
-                        ))}
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
+                <div className="flex justify-end overflow-hidden">
+                  <LunarHistoryGrid days={historyDays} />
                 </div>
               </section>
             );
@@ -433,6 +332,25 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
 }
 
 // ─── Calendar cell ────────────────────────────────────────────────────────────
+
+function LunarHistoryGrid({ days }: { days: LunarDay[] }) {
+  return (
+    <div
+      className="w-max shrink-0"
+      style={{
+        display: "grid",
+        gridAutoFlow: "column",
+        gridTemplateRows: `repeat(${HISTORY_ROWS}, clamp(8px, 1.9vw, 12px))`,
+        gridAutoColumns: "clamp(8px, 1.9vw, 12px)",
+        gap: "clamp(3px, 0.65vw, 4px)",
+      }}
+    >
+      {days.map((day) => (
+        <LunarDayCell key={day.date} day={day} />
+      ))}
+    </div>
+  );
+}
 
 function LunarDayCell({ day }: { day: LunarDay }) {
   const isToday = day.isToday;
