@@ -899,6 +899,18 @@
   aspect-ratio: 376 / 634;
 }
 
+.card-scene[data-procgen] .card-front {
+  border-radius: var(--card-radius);
+  overflow: hidden;
+}
+
+.card-scene[data-procgen] .card-shine,
+.card-scene[data-procgen] .card-shine::before,
+.card-scene[data-procgen] .card-shine::after,
+.card-scene[data-procgen] .card-glare {
+  border-radius: var(--card-radius);
+}
+
 .card-scene[data-procgen][data-revealed] [data-layer="fg"] {
   transform: translateZ(var(--procgen-parallax, 8px));
 }
