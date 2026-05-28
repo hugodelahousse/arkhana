@@ -892,7 +892,7 @@
 }
 
 .card-scene[data-procgen] {
-  --card-radius: 5.3%;
+  --card-radius: 12px;
 }
 
 .card-scene[data-procgen] .card-flipper {
