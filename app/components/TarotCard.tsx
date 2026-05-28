@@ -58,9 +58,10 @@ export const TarotCard = memo(function TarotCard({
   const isMajor = card.arcana === "major";
   const cardHasTopMask = isMajor && hasTopMask(card.id);
   const cardHasNameMask = hasNameMask(card.id);
+  const isProcgen = !!(imageUrl || svgContent);
   const imgSrc = imageUrl ?? cardImageUrl(card.id);
 
-  const baseImgMask = hasTextLayers && cardHasNameMask ? (() => {
+  const baseImgMask = !isProcgen && hasTextLayers && cardHasNameMask ? (() => {
     const masks = [
       ...(cardHasTopMask ? [`url(${cardTopMaskUrl(card.id)})`] : []),
       `url(${cardNameMaskUrl(card.id)})`,
@@ -93,11 +94,11 @@ export const TarotCard = memo(function TarotCard({
       data-revealed={revealed || undefined}
       data-reversed={isReversed || undefined}
       data-radiant={isRadiant || undefined}
-      data-procgen={svgContent || frontImageUrl ? "" : undefined}
+      data-procgen={isProcgen ? "" : undefined}
       style={{
         "--rarity-color": `var(--color-rarity-${rarityLabel})`,
-        ...((svgContent || frontImageUrl) ? { "--procgen-parallax": `${procgenParallax}px` } : {}),
-        ...(hasSubjectMask && !frontImageUrl ? {
+        ...(isProcgen ? { "--procgen-parallax": `${procgenParallax}px` } : {}),
+        ...(!isProcgen && hasSubjectMask ? {
           "--mask-url": `url(${cardMaskUrl(card.id)})`,
           ...(cardHasNameMask ? { "--name-mask-url": `url(${cardNameMaskUrl(card.id)})` } : {}),
           ...(cardHasTopMask ? { "--top-mask-url": `url(${cardTopMaskUrl(card.id)})` } : {}),
@@ -174,7 +175,7 @@ export const TarotCard = memo(function TarotCard({
                         style={{ maskImage: `url(${cardMaskUrl(card.id)})`, WebkitMaskImage: `url(${cardMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
                       />
                     )}
-                    {rarityScore >= 5 && (
+                    {!isProcgen && rarityScore >= 5 && (
                       <>
                         {cardHasNameMask && (
                           <img
@@ -194,8 +195,8 @@ export const TarotCard = memo(function TarotCard({
                     )}
                   </>
                 )}
-                {hasSubjectMask && cardHasNameMask && <div className="card-name-foil" aria-hidden="true" />}
-                {hasSubjectMask && cardHasTopMask && <div className="card-top-foil" aria-hidden="true" />}
+                {!isProcgen && hasSubjectMask && cardHasNameMask && <div className="card-name-foil" aria-hidden="true" />}
+                {!isProcgen && hasSubjectMask && cardHasTopMask && <div className="card-top-foil" aria-hidden="true" />}
               </>
             )}
             <div className="card-shine" />
