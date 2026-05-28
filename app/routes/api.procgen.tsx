@@ -7,7 +7,8 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const rawId = parseInt(url.searchParams.get("id") ?? "0", 10);
   const cardId = Number.isNaN(rawId) || rawId < 0 || rawId > 77 ? 0 : rawId;
-  const seed = parseInt(url.searchParams.get("seed") ?? "12345", 10) || 12345;
+  const seedParam = url.searchParams.get("seed");
+  const seed = seedParam ? (parseInt(seedParam, 10) || 12345) : Math.floor(Math.random() * 2147483647);
   const palette = url.searchParams.get("palette") ?? undefined;
   const width = Math.min(1200, Math.max(100, parseInt(url.searchParams.get("w") ?? "376", 10) || 376));
 
