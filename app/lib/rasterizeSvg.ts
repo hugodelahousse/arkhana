@@ -2,8 +2,8 @@ const W = 376 * 2;
 const H = 634 * 2;
 
 const LAYER_CSS: Record<string, string> = {
-  back: `[data-layer="fg"],[data-layer="text"]{display:none}`,
-  front: `[data-layer="bg"],[data-layer="strokes"],[data-layer="border"]{display:none}` +
+  back: `[data-layer="fg"]{display:none}`,
+  front: `[data-layer="bg"],[data-layer="strokes"],[data-layer="border"],[data-layer="text"]{display:none}` +
     `svg>rect{display:none}`,
 };
 
