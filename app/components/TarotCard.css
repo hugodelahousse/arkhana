@@ -891,6 +891,10 @@
   overflow: visible;
 }
 
+.card-scene[data-procgen] {
+  --card-radius: 5.3%;
+}
+
 .card-scene[data-procgen] .card-flipper {
   aspect-ratio: 376 / 634;
 }
