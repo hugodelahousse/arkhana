@@ -1161,19 +1161,21 @@ class SVGBuilder {
   ): void {
     const hex = intToHex(color);
     const escapedName = name.replace(/&/g, "&amp;").replace(/</g, "&lt;");
-    const titleY = MARGIN + FIELD_HEIGHT + 18;
+    const font = "'Cormorant Garamond', Georgia, serif";
+    const titleY = MARGIN + FIELD_HEIGHT + TITLE_HEIGHT / 2;
     this.overlayElements.push(
       `<text x="${CARD_WIDTH / 2}" y="${titleY}" ` +
-        `text-anchor="middle" font-family="serif" font-size="18" fill="${hex}" ` +
+        `text-anchor="middle" dominant-baseline="central" ` +
+        `font-family="${font}" font-size="18" fill="${hex}" ` +
         `style="letter-spacing:0.05em">${escapedName}</text>`,
     );
     if (majorNumber !== undefined) {
       const roman = toRoman(majorNumber);
-      const numY = MARGIN + 18;
+      const numY = MARGIN + 16;
       const numHex = intToHex(paperColor);
       this.overlayElements.push(
         `<text x="${CARD_WIDTH / 2}" y="${numY}" ` +
-          `text-anchor="middle" font-family="serif" font-size="18" fill="${numHex}">${roman}</text>`,
+          `text-anchor="middle" font-family="${font}" font-size="18" fill="${numHex}">${roman}</text>`,
       );
     }
   }
