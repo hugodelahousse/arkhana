@@ -1,5 +1,5 @@
 import { memo, useId } from "react";
-import { moonPhaseIconPath } from "../lib/moonphase";
+import { moonPhaseIconPath, moonPhaseOutlineOpacity } from "../lib/moonphase";
 
 interface MoonCycleProps {
   currentStreak: number;
@@ -49,8 +49,9 @@ export const MoonCycle = memo(function MoonCycle({
     >
       <defs>
         <filter id={`glow-${filterId}`} x="-60%" y="-60%" width="220%" height="220%">
-          <feGaussianBlur stdDeviation="2.5" result="blur" />
+          <feGaussianBlur stdDeviation="4" result="blur" />
           <feMerge>
+            <feMergeNode in="blur" />
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
@@ -73,15 +74,18 @@ export const MoonCycle = memo(function MoonCycle({
         const isFuture = i > todayLunarIndex;
         const phase = i / lunarMonthLength;
         const litPath = moonPhaseIconPath(phase);
-        const isNew = litPath === "new";
+        const outlineOpacity = moonPhaseOutlineOpacity(phase);
         const deg = (i * 360) / lunarMonthLength - 90;
         const pos = polarToCartesian(cx, cy, cfg.radius, deg);
+        const litFill = isToday ? "currentColor" : "var(--moon-phase-lit)";
+        const shadowFill = isToday ? "var(--moon-phase-active-shadow)" : "currentColor";
+        const glowMaskId = `moon-glow-mask-${filterId}-${i}`;
 
         let color: string;
         let opacity: number;
 
         if (isToday && todayPulled) {
-          color = "var(--accent)";
+          color = "var(--moon-phase-active)";
           opacity = 1;
         } else if (isToday) {
           // Today, not yet pulled — soft ring highlight
@@ -92,7 +96,7 @@ export const MoonCycle = memo(function MoonCycle({
           opacity = 0.68;
         } else if (isFuture) {
           color = "var(--muted-foreground)";
-          opacity = 0.26;
+          opacity = 0.38;
         } else {
           // Past, not pulled
           color = "var(--muted-foreground)";
@@ -107,12 +111,32 @@ export const MoonCycle = memo(function MoonCycle({
             opacity={opacity}
           >
             {isToday && (
-              <circle
-                r={cfg.moonSize * 0.76}
-                fill="currentColor"
-                opacity={todayPulled ? 0.24 : 0.14}
-                filter={`url(#glow-${filterId})`}
-              />
+              <>
+                <mask
+                  id={glowMaskId}
+                  maskUnits="userSpaceOnUse"
+                  x={-cfg.moonSize * 2}
+                  y={-cfg.moonSize * 2}
+                  width={cfg.moonSize * 4}
+                  height={cfg.moonSize * 4}
+                >
+                  <rect
+                    x={-cfg.moonSize * 2}
+                    y={-cfg.moonSize * 2}
+                    width={cfg.moonSize * 4}
+                    height={cfg.moonSize * 4}
+                    fill="white"
+                  />
+                  <circle r={cfg.moonSize * 0.5} fill="black" />
+                </mask>
+                <circle
+                  r={cfg.moonSize * 0.76}
+                  fill="currentColor"
+                  opacity={todayPulled ? 0.32 : 0.18}
+                  filter={`url(#glow-${filterId})`}
+                  mask={`url(#${glowMaskId})`}
+                />
+              </>
             )}
             <g
               transform={`translate(${-cfg.moonSize / 2}, ${-cfg.moonSize / 2}) scale(${
@@ -123,16 +147,16 @@ export const MoonCycle = memo(function MoonCycle({
                 cx={50}
                 cy={50}
                 r={45}
-                fill="currentColor"
-                stroke="currentColor"
+                fill={shadowFill}
+                stroke={shadowFill}
                 strokeWidth={5}
-                opacity={0.2}
+                opacity="var(--moon-phase-shadow-opacity)"
               />
               {litPath === "full" && (
-                <circle cx={50} cy={50} r={45} fill="currentColor" />
+                <circle cx={50} cy={50} r={45} fill={litFill} />
               )}
               {litPath !== "new" && litPath !== "full" && (
-                <path d={litPath} fill="currentColor" />
+                <path d={litPath} fill={litFill} />
               )}
               <circle
                 cx={50}
@@ -141,7 +165,8 @@ export const MoonCycle = memo(function MoonCycle({
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={5}
-                opacity={isNew ? 0.55 : 1}
+                opacity={outlineOpacity}
+                filter={isToday ? `url(#glow-${filterId})` : undefined}
               />
             </g>
           </g>

@@ -64,6 +64,10 @@
   --accent:              var(--gold-300);
   --accent-foreground:   var(--black-950);
   --accent-text:         color-mix(in srgb, var(--gold-400) 55%, var(--black-950));
+  --moon-phase-lit:      var(--background);
+  --moon-phase-shadow-opacity: 0.98;
+  --moon-phase-active:   color-mix(in srgb, var(--gold-300) 42%, var(--background));
+  --moon-phase-active-shadow: color-mix(in srgb, var(--stone-500) 58%, var(--background));
 
 
   /* Rarity semantic aliases */
@@ -98,6 +102,10 @@
   --accent:              var(--purple-500);
   --accent-foreground:   var(--bone-100);
   --accent-text:         var(--purple-500);
+  --moon-phase-lit:      currentColor;
+  --moon-phase-shadow-opacity: 0.2;
+  --moon-phase-active:   var(--purple-500);
+  --moon-phase-active-shadow: color-mix(in srgb, var(--bone-400) 35%, var(--black-950));
 
   --rarity-mundane:    var(--rarity-1);
   --rarity-wandering:  var(--rarity-2);

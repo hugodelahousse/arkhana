@@ -126,7 +126,7 @@ export function moonIlluminatedPath(age: number): "new" | "full" | string {
 export function moonPhaseIconPath(phase: number): "new" | "full" | string {
   const normalized = ((phase % 1) + 1) % 1;
 
-  if (normalized < 0.03 || normalized > 0.97) return "new";
+  if (normalized < 0.05 || normalized > 0.95) return "new";
   if (normalized > 0.47 && normalized < 0.53) return "full";
 
   const radius = 45;
@@ -153,6 +153,14 @@ export function moonPhaseIconPath(phase: number): "new" | "full" | string {
     `A ${terminatorRadius} ${radius} 0 0 ${terminatorSweep ? 0 : 1} ${top}`,
     "Z",
   ].join(" ");
+}
+
+export function moonPhaseOutlineOpacity(phase: number): number {
+  const normalized = ((phase % 1) + 1) % 1;
+  const distanceFromNew = Math.min(normalized, 1 - normalized);
+
+  if (distanceFromNew >= 0.1) return 1;
+  return 0.55 + (distanceFromNew / 0.1) * 0.45;
 }
 
 export function getUpcomingCelestialEvents(fromDate: Date, days: number): CelestialEvent[] {

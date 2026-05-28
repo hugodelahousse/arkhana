@@ -14,6 +14,7 @@ import {
   getMoonAge,
   getLunarMonthInfo,
   moonPhaseIconPath,
+  moonPhaseOutlineOpacity,
   SYNODIC_MONTH_DAYS,
   MS_PER_DAY,
 } from "../lib/moonphase";
@@ -108,9 +109,12 @@ function formatLunarMonthLabel(newMoonDate: string, days: LunarDay[]): string {
 
 // ─── SVG Moon Phase Glyph ─────────────────────────────────────────────────────
 
-function MoonGlyph({ age }: { age: number }) {
-  const path = moonPhaseIconPath(age / SYNODIC_MONTH_DAYS);
-  const isNew = path === "new";
+function MoonGlyph({ age, active = false }: { age: number; active?: boolean }) {
+  const phase = age / SYNODIC_MONTH_DAYS;
+  const path = moonPhaseIconPath(phase);
+  const outlineOpacity = moonPhaseOutlineOpacity(phase);
+  const litFill = active ? "currentColor" : "var(--moon-phase-lit)";
+  const shadowFill = active ? "var(--moon-phase-active-shadow)" : "currentColor";
 
   return (
     <svg
@@ -120,11 +124,19 @@ function MoonGlyph({ age }: { age: number }) {
       aria-hidden
       style={{ display: "block" }}
     >
-      <circle cx={50} cy={50} r={45} fill="currentColor" stroke="currentColor" strokeWidth={5} opacity={0.2} />
+      <circle
+        cx={50}
+        cy={50}
+        r={45}
+        fill={shadowFill}
+        stroke={shadowFill}
+        strokeWidth={5}
+        opacity="var(--moon-phase-shadow-opacity)"
+      />
       {path === "full" ? (
-        <circle cx={50} cy={50} r={45} fill="currentColor" />
+        <circle cx={50} cy={50} r={45} fill={litFill} />
       ) : path !== "new" ? (
-        <path d={path} fill="currentColor" />
+        <path d={path} fill={litFill} />
       ) : null}
       <circle
         cx={50}
@@ -133,28 +145,8 @@ function MoonGlyph({ age }: { age: number }) {
         fill="none"
         stroke="currentColor"
         strokeWidth={5}
-        opacity={isNew ? 0.55 : 1}
-      />
-    </svg>
-  );
-}
-
-function MoonGlyphHalo() {
-  return (
-    <svg
-      width="100%"
-      height="100%"
-      viewBox="0 0 100 100"
-      aria-hidden
-      style={{ display: "block" }}
-    >
-      <circle
-        cx={50}
-        cy={50}
-        r={47}
-        fill="currentColor"
-        opacity={0.2}
-        filter="drop-shadow(0 0 18px currentColor)"
+        opacity={outlineOpacity}
+        filter={active ? "drop-shadow(0 0 12px currentColor)" : undefined}
       />
     </svg>
   );
@@ -448,16 +440,13 @@ function LunarDayCell({ day }: { day: LunarDay }) {
 
   let color: string;
   let opacity: number;
-  let halo = false;
 
   if (isToday && day.pulled) {
-    color = "var(--accent)";
+    color = "var(--moon-phase-active)";
     opacity = 1;
-    halo = true;
   } else if (isToday) {
     color = "var(--muted-foreground)";
     opacity = 0.78;
-    halo = true;
   } else if (isFuture) {
     color = "var(--muted-foreground)";
     opacity = 0.16;
@@ -475,13 +464,8 @@ function LunarDayCell({ day }: { day: LunarDay }) {
       className="relative aspect-square"
       style={{ color, opacity }}
     >
-      {halo && (
-        <div className="absolute inset-0">
-          <MoonGlyphHalo />
-        </div>
-      )}
       <div className="relative">
-        <MoonGlyph age={day.lunarAge} />
+        <MoonGlyph age={day.lunarAge} active={isToday} />
       </div>
     </div>
   );
