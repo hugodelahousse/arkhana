@@ -1,5 +1,5 @@
 import { redirect } from "react-router";
-import { startTransition } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { addTransitionType } from "react";
 import type { Route } from "./+types/streak";
 import { Link, useNavigate } from "react-router";
@@ -58,6 +58,14 @@ function buildLunarHistory(
   }
 
   return days;
+}
+
+function formatHistoryRange(start: DateTime, end: DateTime) {
+  if (start.hasSame(end, "year")) {
+    return `${start.toFormat("MMM d")} – ${end.toFormat("MMM d, yyyy")}`;
+  }
+
+  return `${start.toFormat("MMM d, yyyy")} – ${end.toFormat("MMM d, yyyy")}`;
 }
 
 // ─── SVG Moon Phase Glyph ─────────────────────────────────────────────────────
@@ -280,35 +288,7 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
             </section>
           )}
 
-          {/* Lunar calendar */}
-          {historyDays.length > 0 && (() => {
-            const firstDate = historyDays[0]!.date;
-            const lastDate = historyDays[historyDays.length - 1]!.date;
-            const rangeStart = DateTime.fromISO(firstDate, { zone: "utc" });
-            const rangeEnd = DateTime.fromISO(lastDate, { zone: "utc" });
-            const pulledCount = historyDays.filter((d) => d.pulled).length;
-            const totalPast = historyDays.length;
-            return (
-              <section className="space-y-4">
-                <h2 className="type-label">
-                  Practice history
-                </h2>
-
-                <div className="flex items-baseline justify-between gap-3">
-                  <p className="type-caption font-serif truncate">
-                    {rangeStart.toFormat("MMM d")} – {rangeEnd.toFormat("MMM d, yyyy")}
-                  </p>
-                  <p className="type-caption tabular-nums shrink-0">
-                    {pulledCount}/{totalPast}
-                  </p>
-                </div>
-
-                <div className="flex justify-end overflow-hidden">
-                  <LunarHistoryGrid days={historyDays} />
-                </div>
-              </section>
-            );
-          })()}
+          <PracticeHistory days={historyDays} />
 
           {currentStreak === 0 && (
             <div className="text-center py-8 space-y-4">
@@ -333,21 +313,93 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
 
 // ─── Calendar cell ────────────────────────────────────────────────────────────
 
-function LunarHistoryGrid({ days }: { days: LunarDay[] }) {
+function PracticeHistory({ days }: { days: LunarDay[] }) {
+  const [visibleRange, setVisibleRange] = useState(() => ({
+    firstDate: days[0]?.date ?? null,
+    lastDate: days.at(-1)?.date ?? null,
+  }));
+
+  if (days.length === 0 || !visibleRange.firstDate || !visibleRange.lastDate) {
+    return null;
+  }
+
+  const rangeStart = DateTime.fromISO(visibleRange.firstDate, { zone: "utc" });
+  const rangeEnd = DateTime.fromISO(visibleRange.lastDate, { zone: "utc" });
+
   return (
-    <div
-      className="w-max shrink-0"
-      style={{
-        display: "grid",
-        gridAutoFlow: "column",
-        gridTemplateRows: `repeat(${HISTORY_ROWS}, clamp(8px, 1.9vw, 12px))`,
-        gridAutoColumns: "clamp(8px, 1.9vw, 12px)",
-        gap: "clamp(3px, 0.65vw, 4px)",
-      }}
-    >
-      {days.map((day) => (
-        <LunarDayCell key={day.date} day={day} />
-      ))}
+    <section className="space-y-4">
+      <h2 className="type-label">
+        Practice history
+      </h2>
+
+      <div>
+        <p className="type-caption font-serif truncate">
+          {formatHistoryRange(rangeStart, rangeEnd)}
+        </p>
+      </div>
+
+      <LunarHistoryGrid days={days} onVisibleRangeChange={setVisibleRange} />
+    </section>
+  );
+}
+
+function LunarHistoryGrid({
+  days,
+  onVisibleRangeChange,
+}: {
+  days: LunarDay[];
+  onVisibleRangeChange: (range: { firstDate: string; lastDate: string }) => void;
+}) {
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    const grid = gridRef.current;
+    if (!viewport || !grid) return;
+
+    function updateVisibleRange() {
+      const viewportBounds = viewport.getBoundingClientRect();
+      const visibleCells = Array.from(
+        grid.querySelectorAll<HTMLElement>("[data-history-date]")
+      ).filter((cell) => {
+        const cellBounds = cell.getBoundingClientRect();
+        return cellBounds.right > viewportBounds.left && cellBounds.left < viewportBounds.right;
+      });
+
+      const firstDate = visibleCells[0]?.dataset.historyDate;
+      const lastDate = visibleCells.at(-1)?.dataset.historyDate;
+      if (firstDate && lastDate) {
+        onVisibleRangeChange({ firstDate, lastDate });
+      }
+    }
+
+    updateVisibleRange();
+
+    const resizeObserver = new ResizeObserver(updateVisibleRange);
+    resizeObserver.observe(viewport);
+    resizeObserver.observe(grid);
+
+    return () => resizeObserver.disconnect();
+  }, [days, onVisibleRangeChange]);
+
+  return (
+    <div ref={viewportRef} className="flex justify-end overflow-hidden">
+      <div
+        ref={gridRef}
+        className="w-max shrink-0"
+        style={{
+          display: "grid",
+          gridAutoFlow: "column",
+          gridTemplateRows: `repeat(${HISTORY_ROWS}, clamp(8px, 1.9vw, 12px))`,
+          gridAutoColumns: "clamp(8px, 1.9vw, 12px)",
+          gap: "clamp(3px, 0.65vw, 4px)",
+        }}
+      >
+        {days.map((day) => (
+          <LunarDayCell key={day.date} day={day} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -379,6 +431,7 @@ function LunarDayCell({ day }: { day: LunarDay }) {
   return (
     <div
       title={day.date}
+      data-history-date={day.date}
       className="relative aspect-square"
       style={{ color, opacity }}
     >
