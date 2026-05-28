@@ -132,15 +132,24 @@ export default function ProcgenLab() {
           {/* Controls */}
           <div className="p-4 border-b border-border space-y-4">
             {/* Seed */}
-            <label className="block">
+            <div>
               <span className="text-ghost-foreground text-[10px] uppercase tracking-wider">Deck seed</span>
-              <input
-                type="number"
-                value={seed}
-                onChange={e => setSeed(Number(e.target.value))}
-                className="mt-1 w-full bg-muted border border-border rounded px-2 py-1.5 text-sm text-foreground focus:outline-none focus:border-ring"
-              />
-            </label>
+              <div className="mt-1 flex gap-1">
+                <input
+                  type="number"
+                  value={seed}
+                  onChange={e => setSeed(Number(e.target.value))}
+                  className="flex-1 min-w-0 bg-muted border border-border rounded px-2 py-1.5 text-sm text-foreground focus:outline-none focus:border-ring"
+                />
+                <button
+                  onClick={() => setSeed(Math.floor(Math.random() * 2147483647))}
+                  className="px-2 py-1.5 bg-muted border border-border rounded text-muted-foreground hover:text-foreground transition-colors text-sm"
+                  title="Randomize seed"
+                >
+                  ⟳
+                </button>
+              </div>
+            </div>
 
             {/* Palette */}
             <label className="block">
