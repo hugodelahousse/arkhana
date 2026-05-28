@@ -2,9 +2,11 @@ import { relations } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean, integer, index, jsonb } from "drizzle-orm/pg-core";
 
 export type Theme = "light" | "dark" | "system";
+export type CardStyle = "classic" | "procgen";
 
 export interface UserPreferences {
   theme?: Theme;
+  cardStyle?: CardStyle;
 }
 
 export const user = pgTable("user", {

@@ -4,13 +4,14 @@ import type { Route } from "./+types/settings";
 import { Nav } from "../components/layout/nav";
 import { db } from "../../db/index.js";
 import { user, passkey as passkeyTable } from "../../db/schema/auth.js";
+import type { CardStyle } from "../../db/schema/auth.js";
 import { eq, and, ne } from "drizzle-orm";
 import { getThemeFromCookie, setThemeCookie, type Theme } from "../lib/theme";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   if (!context.user || context.user.isAnonymous) return redirect("/");
   const [profile] = await db
-    .select({ username: user.username, displayUsername: user.displayUsername })
+    .select({ username: user.username, displayUsername: user.displayUsername, preferences: user.preferences })
     .from(user)
     .where(eq(user.id, context.user.id))
     .limit(1);
@@ -26,6 +27,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return {
     user: context.user,
     username: profile?.displayUsername ?? profile?.username ?? "",
+    cardStyle: (profile?.preferences?.cardStyle ?? "classic") as CardStyle,
     passkeys,
     theme: getThemeFromCookie(request),
   };
@@ -52,6 +54,20 @@ export async function action({ request, context }: Route.ActionArgs) {
       { success: true },
       { headers: { "Set-Cookie": setThemeCookie(theme as Theme) } },
     );
+  }
+
+  if (intent === "set-card-style") {
+    const style = String(form.get("cardStyle") ?? "classic");
+    if (!["classic", "procgen"].includes(style))
+      return data({ error: "Invalid card style." }, { status: 400 });
+    const [row] = await db
+      .select({ preferences: user.preferences })
+      .from(user)
+      .where(eq(user.id, context.user.id))
+      .limit(1);
+    const prefs = { ...(row?.preferences ?? {}), cardStyle: style as CardStyle };
+    await db.update(user).set({ preferences: prefs }).where(eq(user.id, context.user.id));
+    return data({ success: true });
   }
 
   if (intent === "delete-passkey") {
@@ -109,9 +125,12 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
   const revalidator = useRevalidator();
   const isSubmitting = navigation.state === "submitting";
   const themeFetcher = useFetcher();
+  const cardStyleFetcher = useFetcher();
   // Optimistic: show the in-flight value immediately while the request is live
   const activeTheme: Theme =
     (themeFetcher.formData?.get("theme") as Theme) ?? loaderData.theme;
+  const activeCardStyle: CardStyle =
+    (cardStyleFetcher.formData?.get("cardStyle") as CardStyle) ?? loaderData.cardStyle;
 
   function setTheme(t: Theme) {
     // Apply class instantly for zero-latency feedback
@@ -290,6 +309,40 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                 }`}
               >
                 {t}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="p-6 space-y-6 border border-border bg-card">
+          <h2 className="type-label">
+            Card Art
+          </h2>
+          <p className="type-caption">
+            Choose the art style for your tarot cards.
+          </p>
+          <div className="flex border border-border overflow-hidden">
+            {([
+              { value: "classic", label: "Rider-Waite-Smith" },
+              { value: "procgen", label: "Procgen" },
+            ] as const).map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() =>
+                  cardStyleFetcher.submit(
+                    { intent: "set-card-style", cardStyle: value },
+                    { method: "post" },
+                  )
+                }
+                aria-pressed={activeCardStyle === value}
+                className={`flex-1 px-4 py-2.5 text-xs tracking-widest uppercase transition-colors ${
+                  activeCardStyle === value
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                {label}
               </button>
             ))}
           </div>
