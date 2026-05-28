@@ -4,6 +4,7 @@ import cron from "node-cron";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./auth.js";
 import { db } from "../db/index.js";
+import { user as userTable } from "../db/schema/auth.js";
 import { pushSubscriptions } from "../db/schema/push-subscriptions.js";
 import { eq } from "drizzle-orm";
 import { getVapidPublicKey, testPushToUser, sendDailyReminders, sendCelestialNotification } from "../app/lib/push.js";
@@ -111,20 +112,23 @@ app.use(
       const session = await auth.api.getSession({
         headers: new Headers(req.headers as Record<string, string>),
       });
+      if (!session?.user) return { user: null };
+      const [profile] = await db
+        .select({ preferences: userTable.preferences })
+        .from(userTable)
+        .where(eq(userTable.id, session.user.id))
+        .limit(1);
       return {
-        user: session?.user
-          ? {
-              id: session.user.id,
-              name: session.user.name,
-              email: session.user.email,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              username: (session.user as any).username ?? null,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              isAnonymous: (session.user as any).isAnonymous ?? false,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              cardStyle: ((session.user as any).preferences as Record<string, unknown>)?.cardStyle ?? "classic",
-            }
-          : null,
+        user: {
+          id: session.user.id,
+          name: session.user.name,
+          email: session.user.email,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          username: (session.user as any).username ?? null,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          isAnonymous: (session.user as any).isAnonymous ?? false,
+          cardStyle: profile?.preferences?.cardStyle ?? "classic",
+        },
       };
     },
   })
