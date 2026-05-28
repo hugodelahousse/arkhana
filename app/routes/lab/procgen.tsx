@@ -4,6 +4,7 @@ import type { GenOptions } from "../../lib/procgen-tarot";
 import type { WorkerRequest, WorkerResponse } from "../../workers/procgen-tarot.worker";
 import { TarotCard } from "../../components/TarotCard";
 import { CARDS } from "../../lib/cards";
+import { rasterizeSvg } from "../../lib/rasterizeSvg";
 
 const DEFAULT_SEED = 12345;
 
@@ -18,7 +19,8 @@ const PALETTE_OPTIONS: { value: string; label: string }[] = [
 type CardState =
   | { status: "idle" }
   | { status: "generating" }
-  | { status: "done"; ms: number };
+  | { status: "rasterizing" }
+  | { status: "done"; cardUrl: string; maskUrl: string; ms: number };
 
 export function meta() {
   return [{ title: "Procgen Tarot — Lab" }];
@@ -48,9 +50,25 @@ export default function ProcgenLab() {
       if (msg.type === "card-done") {
         setCards(prev => ({
           ...prev,
-          [msg.cardId]: { status: "done", ms: msg.ms },
+          [msg.cardId]: { status: "rasterizing" },
         }));
         setSelectedId(msg.cardId);
+        const genMs = msg.ms;
+        Promise.all([
+          rasterizeSvg(msg.cardSvg),
+          rasterizeSvg(msg.maskSvg),
+        ]).then(([cardUrl, maskUrl]) => {
+          setCards(prev => {
+            const old = prev[msg.cardId];
+            if (old && old.status === "done") {
+              URL.revokeObjectURL(old.cardUrl);
+              URL.revokeObjectURL(old.maskUrl);
+            }
+            return { ...prev, [msg.cardId]: { status: "done", cardUrl, maskUrl, ms: genMs } };
+          });
+        }).catch((err) => {
+          console.error("Rasterize error:", err);
+        });
       } else if (msg.type === "all-done") {
         setAllStatus("done");
         setTotalMs(msg.ms);
@@ -253,7 +271,7 @@ export default function ProcgenLab() {
               <div className="ml-auto flex gap-3 items-center">
                 <span className="text-xs text-ghost-foreground">{currentState.ms}ms</span>
                 <a
-                  href={`/api/procgen.png?id=${selectedId}&seed=${seed}${palette ? `&palette=${palette}` : ""}&w=752`}
+                  href={currentState.cardUrl}
                   download={`${currentCard.name.toLowerCase().replace(/\s+/g, "-")}.png`}
                   className="text-[0.65rem] tracking-[0.1em] uppercase px-3 py-1 border border-border bg-transparent text-primary font-serif hover:opacity-80 transition-opacity"
                 >
@@ -268,20 +286,22 @@ export default function ProcgenLab() {
             {currentState.status === "idle" && (
               <div className="text-ghost-foreground text-sm">Select a card or click Generate</div>
             )}
-            {currentState.status === "generating" && (
-              <div className="text-muted-foreground text-sm animate-pulse">Generating...</div>
+            {(currentState.status === "generating" || currentState.status === "rasterizing") && (
+              <div className="text-muted-foreground text-sm animate-pulse">
+                {currentState.status === "generating" ? "Generating..." : "Rasterizing..."}
+              </div>
             )}
             {currentState.status === "done" && (
               <TarotCard
-                key={`${selectedId}-${seed}-${palette}`}
+                key={`${selectedId}-${currentState.cardUrl}`}
                 card={CARDS[selectedId]}
                 rarityScore={3}
                 isReversed={false}
                 isRadiant={false}
                 revealed={true}
                 size="lg"
-                imageUrl={`/api/procgen.png?id=${selectedId}&seed=${seed}${palette ? `&palette=${palette}` : ""}&w=752`}
-                maskUrl={`/api/procgen.png?id=${selectedId}&seed=${seed}${palette ? `&palette=${palette}` : ""}&w=752&type=mask`}
+                imageUrl={currentState.cardUrl}
+                maskUrl={currentState.maskUrl}
                 procgenParallax={parallax ? parallaxAmount : 0}
               />
             )}
@@ -293,7 +313,7 @@ export default function ProcgenLab() {
 }
 
 function StatusDot({ state }: { state: CardState }) {
-  if (state.status === "generating") {
+  if (state.status === "generating" || state.status === "rasterizing") {
     return <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse shrink-0" />;
   }
   if (state.status === "done") {
