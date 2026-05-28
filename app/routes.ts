@@ -10,6 +10,7 @@ export default [
   route("s/:id", "routes/s.$id.tsx"),
   route("settings", "routes/settings.tsx"),
   route("api/og.png", "routes/api.og.tsx"),
+  route("api/procgen.png", "routes/api.procgen.tsx"),
   route("spread/:type/:date", "routes/spread.$type.$date.tsx"),
   route("spread/:type", "routes/spread.$type.tsx"),
   route("streak", "routes/streak.tsx"),
