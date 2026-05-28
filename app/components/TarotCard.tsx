@@ -21,6 +21,8 @@ export interface TarotCardProps {
   size?: "sm" | "md" | "lg";
   showHint?: boolean;
   motionConfig?: Partial<CardMotionConfig>;
+  /** Override the card image URL (e.g. procgen PNG endpoint). */
+  imageUrl?: string;
   /** Procgen SVG string. When set, renders inline SVG instead of CDN image. */
   svgContent?: string;
   /** Parallax depth in px for procgen fg layer (default 8). */
@@ -37,6 +39,7 @@ export const TarotCard = memo(function TarotCard({
   size = "md",
   showHint = false,
   motionConfig,
+  imageUrl,
   svgContent,
   procgenParallax = 8,
 }: TarotCardProps) {
@@ -52,7 +55,7 @@ export const TarotCard = memo(function TarotCard({
   const isMajor = card.arcana === "major";
   const cardHasTopMask = isMajor && hasTopMask(card.id);
   const cardHasNameMask = hasNameMask(card.id);
-  const imgSrc = cardImageUrl(card.id);
+  const imgSrc = imageUrl ?? cardImageUrl(card.id);
 
   const baseImgMask = hasTextLayers && cardHasNameMask ? (() => {
     const masks = [

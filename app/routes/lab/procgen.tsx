@@ -281,13 +281,14 @@ export default function ProcgenLab() {
             )}
             {currentState.status === "done" && (
               <TarotCard
+                key={`${selectedId}-${seed}-${palette}`}
                 card={CARDS[selectedId]}
                 rarityScore={3}
                 isReversed={false}
                 isRadiant={false}
                 revealed={true}
                 size="lg"
-                svgContent={currentState.svg}
+                imageUrl={`/api/procgen.png?id=${selectedId}&seed=${seed}${palette ? `&palette=${palette}` : ""}&w=752`}
                 procgenParallax={parallax ? parallaxAmount : 0}
               />
             )}
