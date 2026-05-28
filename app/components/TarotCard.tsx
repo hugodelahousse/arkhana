@@ -54,7 +54,7 @@ export const TarotCard = memo(function TarotCard({
 
   const procgen = useProcgenProps(card.id);
   const effectiveImageUrl = imageUrl ?? procgen.imageUrl;
-  const isProcgen = !!(effectiveImageUrl || svgContent);
+  const isProcgen = !!(effectiveImageUrl || svgContent || procgen.loading);
 
   const rarityLabel = RARITY_LABELS[rarityScore]?.toLowerCase() ?? "mundane";
   const hasSubjectMask = rarityScore >= 3 || !!frontImageUrl;
@@ -144,7 +144,7 @@ export const TarotCard = memo(function TarotCard({
           </div>
 
           <div className="card-face card-front">
-            {svgContent ? (
+            {procgen.loading ? null : svgContent ? (
               <div
                 className="procgen-svg"
                 dangerouslySetInnerHTML={{ __html: svgContent }}

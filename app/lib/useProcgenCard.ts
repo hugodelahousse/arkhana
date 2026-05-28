@@ -10,7 +10,10 @@ function hashUserId(id: string): number {
   return Math.abs(h) || 1;
 }
 
-export function useProcgenProps(cardId: number): { imageUrl?: string } {
+export function useProcgenProps(cardId: number): {
+  imageUrl?: string;
+  loading: boolean;
+} {
   const { style, userId } = useCardStyle();
   const isProcgen = style === "procgen" && !!userId;
   const seed = isProcgen ? hashUserId(userId!) : 0;
@@ -23,8 +26,6 @@ export function useProcgenProps(cardId: number): { imageUrl?: string } {
     return () => { stale = true; };
   }, [isProcgen, cardId, seed]);
 
-  const effectiveUrl = isProcgen ? url : undefined;
-
-  if (!isProcgen) return {};
-  return effectiveUrl ? { imageUrl: effectiveUrl } : {};
+  if (!isProcgen) return { loading: false };
+  return url ? { imageUrl: url, loading: false } : { loading: true };
 }
