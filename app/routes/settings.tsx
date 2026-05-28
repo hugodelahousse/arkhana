@@ -7,6 +7,7 @@ import { user, passkey as passkeyTable } from "../../db/schema/auth.js";
 import type { CardStyle } from "../../db/schema/auth.js";
 import { eq, and, ne } from "drizzle-orm";
 import { getThemeFromCookie, setThemeCookie, type Theme } from "../lib/theme";
+import { setCardStyleCookie } from "../lib/cardStyle";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   if (!context.user || context.user.isAnonymous) return redirect("/");
@@ -24,13 +25,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     })
     .from(passkeyTable)
     .where(eq(passkeyTable.userId, context.user.id));
-  return {
+  const cardStyle = (profile?.preferences?.cardStyle ?? "classic") as CardStyle;
+  const headers = new Headers();
+  headers.set("Set-Cookie", setCardStyleCookie(cardStyle));
+  return data({
     user: context.user,
     username: profile?.displayUsername ?? profile?.username ?? "",
-    cardStyle: (profile?.preferences?.cardStyle ?? "classic") as CardStyle,
+    cardStyle,
     passkeys,
     theme: getThemeFromCookie(request),
-  };
+  }, { headers });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -67,7 +71,10 @@ export async function action({ request, context }: Route.ActionArgs) {
       .limit(1);
     const prefs = { ...(row?.preferences ?? {}), cardStyle: style as CardStyle };
     await db.update(user).set({ preferences: prefs }).where(eq(user.id, context.user.id));
-    return data({ success: true });
+    return data(
+      { success: true },
+      { headers: { "Set-Cookie": setCardStyleCookie(style as CardStyle) } },
+    );
   }
 
   if (intent === "delete-passkey") {

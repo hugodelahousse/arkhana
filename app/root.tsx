@@ -13,6 +13,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { OrientationProvider } from "./lib/orientation";
 import { getThemeFromCookie, THEME_SCRIPT, THEME_COLORS, type Theme } from "./lib/theme";
+import { getCardStyleFromCookie } from "./lib/cardStyle";
 import { CardStyleContext } from "./lib/CardStyleContext";
 import type { CardStyleConfig } from "./lib/CardStyleContext";
 
@@ -25,7 +26,7 @@ export const links: Route.LinksFunction = () => [
 export async function loader({ request, context }: Route.LoaderArgs) {
   return {
     theme: getThemeFromCookie(request),
-    cardStyle: context.user?.cardStyle ?? "classic",
+    cardStyle: getCardStyleFromCookie(request),
     userId: context.user?.id ?? null,
   };
 }
