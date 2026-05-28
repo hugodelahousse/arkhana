@@ -1,4 +1,5 @@
 import { Resvg } from "@resvg/resvg-js";
+import { resolve } from "node:path";
 import { generateCard, CARD_DATA } from "../lib/procgen-tarot";
 import type { Route } from "./+types/api.procgen";
 
@@ -14,12 +15,13 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const svgStr = generateCard(cardId, seed, { palette });
 
+  const fontPath = resolve(process.cwd(), "public/fonts/cormorant-garamond.ttf");
   const resvg = new Resvg(svgStr, {
     fitTo: { mode: "width", value: width },
     font: {
-      fontFiles: [],
+      fontFiles: [fontPath],
       loadSystemFonts: false,
-      defaultFontFamily: "serif",
+      defaultFontFamily: "Cormorant Garamond",
     },
   });
   const png = resvg.render().asPng() as Uint8Array;
