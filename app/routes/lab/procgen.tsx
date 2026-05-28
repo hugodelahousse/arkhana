@@ -40,6 +40,7 @@ export default function ProcgenLab() {
   const [parallax, setParallax] = useState(true);
   const [parallaxAmount, setParallaxAmount] = useState(8);
   const [showLayers, setShowLayers] = useState(false);
+  const [view, setView] = useState<"single" | "grid">("single");
   const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
@@ -244,6 +245,22 @@ export default function ProcgenLab() {
             </label>
 
             {/* Action buttons */}
+            {/* View toggle */}
+            <div className="flex gap-1">
+              <button
+                onClick={() => setView("single")}
+                className={`flex-1 py-1 text-[10px] uppercase tracking-wider rounded ${view === "single" ? "bg-muted text-foreground" : "text-ghost-foreground hover:text-muted-foreground"} transition-colors`}
+              >
+                Single
+              </button>
+              <button
+                onClick={() => setView("grid")}
+                className={`flex-1 py-1 text-[10px] uppercase tracking-wider rounded ${view === "grid" ? "bg-muted text-foreground" : "text-ghost-foreground hover:text-muted-foreground"} transition-colors`}
+              >
+                Grid
+              </button>
+            </div>
+
             <div className="flex gap-2">
               <button
                 onClick={() => generateOne(selectedId)}
@@ -322,16 +339,16 @@ export default function ProcgenLab() {
           </div>
 
           {/* Preview */}
-          <div className="flex-1 overflow-auto flex items-center justify-center p-8 bg-card">
-            {currentState.status === "idle" && (
+          <div className={`flex-1 overflow-auto p-8 bg-card ${view === "grid" ? "" : "flex items-center justify-center"}`}>
+            {view === "single" && currentState.status === "idle" && (
               <div className="text-ghost-foreground text-sm">Select a card or click Generate</div>
             )}
-            {(currentState.status === "generating" || currentState.status === "rasterizing") && (
+            {view === "single" && (currentState.status === "generating" || currentState.status === "rasterizing") && (
               <div className="text-muted-foreground text-sm animate-pulse">
                 {currentState.status === "generating" ? "Generating..." : "Rasterizing..."}
               </div>
             )}
-            {currentState.status === "done" && !showLayers && (
+            {view === "single" && currentState.status === "done" && !showLayers && (
               <TarotCard
                 key={`${selectedId}-${currentState.fullUrl}`}
                 card={CARDS[selectedId]}
@@ -345,36 +362,55 @@ export default function ProcgenLab() {
                 procgenParallax={parallax ? parallaxAmount : 0}
               />
             )}
-            {currentState.status === "done" && showLayers && (
+            {view === "single" && currentState.status === "done" && showLayers && (
               <div className="flex gap-6 items-start">
                 <div className="flex flex-col items-center gap-2">
                   <span className="text-[10px] uppercase tracking-wider text-ghost-foreground">Back</span>
-                  <img
-                    src={currentState.backUrl}
-                    alt="Back layer"
-                    className="rounded-lg shadow-lg"
-                    style={{ width: 188, height: 317 }}
-                  />
+                  <img src={currentState.backUrl} alt="Back layer" className="rounded-lg shadow-lg" style={{ width: 188, height: 317 }} />
                 </div>
                 <div className="flex flex-col items-center gap-2">
                   <span className="text-[10px] uppercase tracking-wider text-ghost-foreground">Front</span>
                   <div className="rounded-lg shadow-lg bg-[repeating-conic-gradient(#222_0%_25%,#333_0%_50%)] bg-[length:16px_16px]" style={{ width: 188, height: 317 }}>
-                    <img
-                      src={currentState.frontUrl}
-                      alt="Front layer"
-                      style={{ width: 188, height: 317 }}
-                    />
+                    <img src={currentState.frontUrl} alt="Front layer" style={{ width: 188, height: 317 }} />
                   </div>
                 </div>
                 <div className="flex flex-col items-center gap-2">
                   <span className="text-[10px] uppercase tracking-wider text-ghost-foreground">Combined</span>
-                  <img
-                    src={currentState.fullUrl}
-                    alt="Full card"
-                    className="rounded-lg shadow-lg"
-                    style={{ width: 188, height: 317 }}
-                  />
+                  <img src={currentState.fullUrl} alt="Full card" className="rounded-lg shadow-lg" style={{ width: 188, height: 317 }} />
                 </div>
+              </div>
+            )}
+            {view === "grid" && (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
+                {CARD_DATA.map(card => {
+                  const state = cards[card.id];
+                  return (
+                    <button
+                      key={card.id}
+                      onClick={() => { setSelectedId(card.id); setView("single"); }}
+                      className="flex flex-col items-center gap-1 group"
+                    >
+                      {state?.status === "done" ? (
+                        <img
+                          src={state.fullUrl}
+                          alt={card.name}
+                          className="w-full rounded shadow-md group-hover:shadow-lg transition-shadow"
+                        />
+                      ) : (
+                        <div className="w-full aspect-[376/634] rounded bg-muted flex items-center justify-center">
+                          {state?.status === "generating" || state?.status === "rasterizing" ? (
+                            <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+                          ) : (
+                            <span className="text-ghost-foreground text-[10px]">—</span>
+                          )}
+                        </div>
+                      )}
+                      <span className="text-[9px] text-muted-foreground truncate w-full text-center leading-tight">
+                        {card.name}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
