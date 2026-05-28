@@ -55,7 +55,7 @@ export default function ResetPassword({ actionData, loaderData }: Route.Componen
           <Link to="/" className="text-2xl tracking-widest text-primary font-serif block">
             ARKHANA
           </Link>
-          <p className="text-xs tracking-widest uppercase opacity-60">
+          <p className="type-caption">
             Choose a new password
           </p>
         </div>
@@ -88,7 +88,7 @@ export default function ResetPassword({ actionData, loaderData }: Route.Componen
                 minLength={8}
                 placeholder="New password (min 8 characters)"
                 autoComplete="new-password"
-                className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-secondary"
+                className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-muted-foreground"
               />
               <label htmlFor="confirmPassword" className="sr-only">Confirm new password</label>
               <input
@@ -99,7 +99,7 @@ export default function ResetPassword({ actionData, loaderData }: Route.Componen
                 minLength={8}
                 placeholder="Confirm new password"
                 autoComplete="new-password"
-                className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-secondary"
+                className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-muted-foreground"
               />
               <button
                 type="submit"
@@ -110,9 +110,9 @@ export default function ResetPassword({ actionData, loaderData }: Route.Componen
               </button>
             </Form>
 
-            <p className="text-center text-xs opacity-60">
+            <p className="text-center type-caption">
               Remember your password?{" "}
-              <Link to="/auth/signin" className="opacity-80 hover:opacity-100 transition-opacity underline">
+              <Link to="/auth/signin" className="hover:opacity-100 transition-opacity underline">
                 Sign in
               </Link>
             </p>

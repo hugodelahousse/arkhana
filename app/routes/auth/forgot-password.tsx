@@ -59,7 +59,7 @@ export default function ForgotPassword({ actionData }: Route.ComponentProps) {
           <Link to="/" className="text-2xl tracking-widest text-primary font-serif block">
             ARKHANA
           </Link>
-          <p className="text-xs tracking-widest uppercase opacity-60">
+          <p className="type-caption">
             Recover your account
           </p>
         </div>
@@ -71,7 +71,7 @@ export default function ForgotPassword({ actionData }: Route.ComponentProps) {
             </p>
             <Link
               to="/auth/signin"
-              className="inline-block text-xs opacity-60 hover:opacity-100 transition-opacity underline"
+              className="inline-block type-caption hover:opacity-100 transition-opacity underline"
             >
               Back to sign in
             </Link>
@@ -90,7 +90,7 @@ export default function ForgotPassword({ actionData }: Route.ComponentProps) {
                 required
                 placeholder="your@email.com"
                 autoComplete="email"
-                className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-secondary"
+                className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-muted-foreground"
               />
               <button
                 type="submit"
@@ -101,9 +101,9 @@ export default function ForgotPassword({ actionData }: Route.ComponentProps) {
               </button>
             </Form>
 
-            <p className="text-center text-xs opacity-60">
+            <p className="text-center type-caption">
               Remember your password?{" "}
-              <Link to="/auth/signin" className="opacity-80 hover:opacity-100 transition-opacity underline">
+              <Link to="/auth/signin" className="hover:opacity-100 transition-opacity underline">
                 Sign in
               </Link>
             </p>

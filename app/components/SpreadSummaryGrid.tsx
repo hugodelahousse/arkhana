@@ -23,7 +23,7 @@ function CardDetailOverlay({
   }, []);
 
   return createPortal(
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-50 overflow-y-auto dark">
       <motion.div
         className="fixed inset-0 bg-black/85"
         initial={{ opacity: 0 }}
@@ -46,10 +46,10 @@ function CardDetailOverlay({
       >
         <motion.p
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.7 }}
+          animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3, delay: 0.15 }}
-          className="text-xs tracking-widest uppercase text-primary"
+          className="type-ghost"
           style={{ textShadow: "0 1px 6px rgba(0,0,0,.9)" }}
         >
           {posLabel}
@@ -84,10 +84,10 @@ function CardDetailOverlay({
           <p className="text-lg text-primary font-serif">
             {card.card.name}
             {card.isReversed && (
-              <span className="ml-2 text-sm opacity-60">(reversed)</span>
+              <span className="ml-2 text-sm text-faint-foreground">(reversed)</span>
             )}
           </p>
-          <p className="text-sm leading-relaxed opacity-85 max-w-[260px] text-primary font-serif">
+          <p className="type-body-serif max-w-[260px]">
             {getCardDescription(card.card, card.rarityScore, card.isReversed)}
           </p>
         </motion.div>
@@ -122,7 +122,7 @@ function SpreadCardCell({
   const rarityLabel = RARITY_LABELS[card.rarityScore]?.toLowerCase();
   return (
     <div className="flex flex-col items-center gap-3">
-      <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
+      <p className="type-ghost">
         {posLabel}
       </p>
       <motion.div
@@ -148,10 +148,10 @@ function SpreadCardCell({
           {RARITY_LABELS[card.rarityScore]}
           {card.isRadiant && " ✦"}
         </p>
-        <p className="text-sm font-light text-secondary font-serif">
+        <p className="type-body-serif font-light">
           {card.card.name}
           {card.isReversed && (
-            <span className="ml-1 text-xs opacity-50">(reversed)</span>
+            <span className="ml-1 text-xs text-faint-foreground">(reversed)</span>
           )}
         </p>
       </div>

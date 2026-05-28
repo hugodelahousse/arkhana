@@ -83,10 +83,10 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
         <main className="max-w-4xl mx-auto px-6 py-12 space-y-12">
 
           <div className="text-center space-y-3">
-            <h1 className="text-2xl font-light tracking-widest text-primary font-serif">
+            <h1 className="type-page-title text-2xl">
               Collection
             </h1>
-            <p className="text-xs tracking-widest uppercase opacity-40 whitespace-nowrap text-secondary">
+            <p className="type-ghost whitespace-nowrap">
               {discoveredCount}/78 discovered
             </p>
             <Button size="sm" onClick={() => setHideUndiscovered((v) => !v)}>
@@ -99,10 +99,10 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
             {(!hideUndiscovered || majorDiscovered > 0) && (
               <a href="#major-arcana" className="flex flex-col items-center gap-2 group text-center">
                 <Moon weight="light" size={28} className="opacity-50 group-hover:opacity-90 transition-opacity" />
-                <p className="text-xs tracking-widest uppercase opacity-40 group-hover:opacity-70 transition-opacity text-secondary">
+                <p className="type-label group-hover:opacity-70 transition-opacity">
                   Major Arcana
                 </p>
-                <p className="text-xs opacity-30 text-secondary">
+                <p className="text-ghost-foreground text-xs">
                   {majorDiscovered}/{MAJOR_ARCANA.length}
                 </p>
               </a>
@@ -114,10 +114,10 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
               return (
                 <a key={suit} href={`#${suit}`} className="flex flex-col items-center gap-2 group text-center">
                   <Icon weight="light" size={28} className="opacity-50 group-hover:opacity-90 transition-opacity" />
-                  <p className="text-xs tracking-widest uppercase opacity-40 capitalize group-hover:opacity-70 transition-opacity text-secondary">
+                  <p className="type-label capitalize group-hover:opacity-70 transition-opacity">
                     {suit}
                   </p>
-                  <p className="text-xs opacity-30 text-secondary">
+                  <p className="text-ghost-foreground text-xs">
                     {discovered}/{cards.length}
                   </p>
                 </a>
@@ -127,9 +127,9 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
 
           {(!hideUndiscovered || majorDiscovered > 0) && (
             <section id="major-arcana" className="space-y-4">
-              <h2 className="text-xs tracking-widest uppercase opacity-50 flex items-baseline gap-2 text-secondary">
+              <h2 className="type-label flex items-baseline gap-2">
                 Major Arcana
-                <span className="opacity-60">
+                <span className="text-ghost-foreground">
                   {majorDiscovered}/{MAJOR_ARCANA.length}
                 </span>
               </h2>
@@ -145,9 +145,9 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
             const suitDiscovered = cards.filter((c) => bestByCard[c.id]).length;
             return (
               <section key={suit} id={suit} className="space-y-4">
-                <h2 className="text-xs tracking-widest uppercase opacity-50 capitalize flex items-baseline gap-2 text-secondary">
+                <h2 className="type-label capitalize flex items-baseline gap-2">
                   {suit}
-                  <span className="opacity-60">
+                  <span className="text-ghost-foreground">
                     {suitDiscovered}/{cards.length}
                   </span>
                 </h2>
@@ -191,8 +191,8 @@ const CardTile = memo(function CardTile({
       <div
         style={{
           aspectRatio: "350 / 600",
-          background: "var(--color-bg-elevated)",
-          border: "1px solid var(--color-border-default)",
+          background: "var(--muted)",
+          border: "1px solid var(--border)",
           borderRadius: "6px",
           display: "flex",
           flexDirection: "column",
@@ -208,7 +208,7 @@ const CardTile = memo(function CardTile({
             fontSize: "0.5rem",
             letterSpacing: "0.08em",
             textTransform: "uppercase",
-            color: "var(--color-text-secondary)",
+            color: "var(--muted-foreground)",
             opacity: 0.4,
             textAlign: "center",
             lineHeight: 1.2,

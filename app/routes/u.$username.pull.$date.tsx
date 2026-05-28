@@ -172,7 +172,7 @@ export default function PublicPull({ loaderData }: Route.ComponentProps) {
         </Link>
         <Link
           to="/"
-          className="text-xs tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity text-secondary"
+          className="text-xs tracking-widest uppercase text-faint-foreground hover:text-foreground transition-colors"
         >
           Draw your card
         </Link>
@@ -180,14 +180,14 @@ export default function PublicPull({ loaderData }: Route.ComponentProps) {
 
       <main className="max-w-lg mx-auto px-6 py-12 space-y-10 text-center">
         <div className="space-y-2">
-          <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
-            <Link to={`/u/${d.handle}`} className="hover:opacity-100 transition-opacity">
+          <p className="type-label">
+            <Link to={`/u/${d.handle}`} className="hover:text-foreground transition-colors">
               @{d.handle}
             </Link>
             {" · "}{d.formattedDate}
           </p>
           {d.type === "spread" && (
-            <h1 className="text-2xl font-light tracking-wide text-secondary font-serif">
+            <h1 className="type-page-title text-2xl">
               {d.spreadName}
             </h1>
           )}
@@ -209,7 +209,7 @@ export default function PublicPull({ loaderData }: Route.ComponentProps) {
         </div>
 
         <div className="py-8 space-y-4 border-t border-border">
-          <p className="text-sm opacity-50 text-secondary font-serif">
+          <p className="type-body-serif">
             The cards await your question.
           </p>
           <Link
@@ -257,7 +257,7 @@ function DailyView({ data }: { data: Extract<LoaderData, { type: "daily" }> }) {
           className="w-8 h-px mx-auto opacity-50"
           style={{ background: `var(--color-rarity-${rarityLabel?.toLowerCase()})` }}
         />
-        <p className="text-sm leading-relaxed max-w-xs mx-auto opacity-80 text-secondary font-serif">
+        <p className="type-body-serif max-w-xs mx-auto">
           {getCardDescription(card, rarity, data.pull.isReversed)}
         </p>
       </div>

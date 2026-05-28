@@ -78,14 +78,14 @@ export default function SpreadDateRoute({ loaderData, params }: Route.ComponentP
             className="space-y-10"
           >
             <div className="text-center space-y-3">
-              <p className="text-xs tracking-widest uppercase opacity-40 text-secondary">
+              <p className="type-label">
                 {isToday ? subtitle : formattedDate}
               </p>
-              <h1 className="text-2xl font-light tracking-wide text-secondary font-serif">
+              <h1 className="type-page-title text-2xl">
                 {name}
               </h1>
               {!isToday && (
-                <p className="text-xs opacity-30 tracking-widest uppercase text-secondary">
+                <p className="type-label">
                   {subtitle}
                 </p>
               )}
@@ -102,7 +102,7 @@ export default function SpreadDateRoute({ loaderData, params }: Route.ComponentP
               />
               <Link
                 to="/history"
-                className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity text-secondary"
+                className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase text-faint-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft weight="light" size={13} aria-hidden />All readings
               </Link>
