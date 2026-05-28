@@ -8,15 +8,6 @@ import type { CardStyle } from "../../db/schema/auth.js";
 import { eq, and, ne } from "drizzle-orm";
 import { getThemeFromCookie, setThemeCookie, type Theme } from "../lib/theme";
 import { setCardStyleCookie } from "../lib/cardStyle";
-import { pregenerateAll } from "../lib/procgenCache";
-
-function hashUserId(id: string): number {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) {
-    h = ((h << 5) - h + id.charCodeAt(i)) | 0;
-  }
-  return Math.abs(h) || 1;
-}
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   if (!context.user || context.user.isAnonymous) return redirect("/");
@@ -359,10 +350,6 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                     { intent: "set-card-style", cardStyle: value },
                     { method: "post" },
                   );
-                  if (value === "procgen") {
-                    const seed = hashUserId(loaderData.user.id);
-                    pregenerateAll(seed);
-                  }
                 }}
                 aria-pressed={activeCardStyle === value}
                 className={`flex-1 px-4 py-2.5 text-xs tracking-widest uppercase transition-colors ${

@@ -1,6 +1,4 @@
-import { useState, useEffect } from "react";
 import { useCardStyle } from "./CardStyleContext";
-import { getProcgenCard } from "./procgenCache";
 
 function hashUserId(id: string): number {
   let h = 0;
@@ -16,16 +14,12 @@ export function useProcgenProps(cardId: number): {
 } {
   const { style, userId } = useCardStyle();
   const isProcgen = style === "procgen" && !!userId;
-  const seed = isProcgen ? hashUserId(userId!) : 0;
-  const [url, setUrl] = useState<string | undefined>();
-
-  useEffect(() => {
-    if (!isProcgen) return;
-    let stale = false;
-    getProcgenCard(cardId, seed, (u) => { if (!stale) setUrl(u); });
-    return () => { stale = true; };
-  }, [isProcgen, cardId, seed]);
 
   if (!isProcgen) return { loading: false };
-  return url ? { imageUrl: url, loading: false } : { loading: true };
+
+  const seed = hashUserId(userId!);
+  return {
+    imageUrl: `/api/procgen.png?id=${cardId}&seed=${seed}&w=752`,
+    loading: false,
+  };
 }
