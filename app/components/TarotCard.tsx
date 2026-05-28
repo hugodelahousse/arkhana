@@ -93,14 +93,14 @@ export const TarotCard = memo(function TarotCard({
       data-revealed={revealed || undefined}
       data-reversed={isReversed || undefined}
       data-radiant={isRadiant || undefined}
-      data-procgen={svgContent ? "" : undefined}
+      data-procgen={svgContent || maskUrlProp ? "" : undefined}
       style={{
         "--rarity-color": `var(--color-rarity-${rarityLabel})`,
-        ...(svgContent ? { "--procgen-parallax": `${procgenParallax}px` } : {}),
-        ...(hasSubjectMask && !svgContent ? {
-          "--mask-url": `url(${cardMaskUrl(card.id)})`,
-          ...(cardHasNameMask ? { "--name-mask-url": `url(${cardNameMaskUrl(card.id)})` } : {}),
-          ...(cardHasTopMask ? { "--top-mask-url": `url(${cardTopMaskUrl(card.id)})` } : {}),
+        ...((svgContent || maskUrlProp) ? { "--procgen-parallax": `${procgenParallax}px` } : {}),
+        ...(hasSubjectMask ? {
+          "--mask-url": maskUrlProp ? `url(${maskUrlProp})` : `url(${cardMaskUrl(card.id)})`,
+          ...(!maskUrlProp && cardHasNameMask ? { "--name-mask-url": `url(${cardNameMaskUrl(card.id)})` } : {}),
+          ...(!maskUrlProp && cardHasTopMask ? { "--top-mask-url": `url(${cardTopMaskUrl(card.id)})` } : {}),
         } : {}),
       } as React.CSSProperties}
       onMouseMove={tilt.onMouseMove}

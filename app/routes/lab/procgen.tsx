@@ -3,7 +3,8 @@ import { CARD_DATA } from "../../lib/procgen-tarot";
 import type { GenOptions } from "../../lib/procgen-tarot";
 import type { WorkerRequest, WorkerResponse } from "../../workers/procgen-tarot.worker";
 import { TarotCard } from "../../components/TarotCard";
-import { CARDS } from "../../lib/cards";
+import { CARDS, RARITY_LABELS } from "../../lib/cards";
+import type { Rarity } from "../../lib/cards";
 import { rasterizeSvg } from "../../lib/rasterizeSvg";
 
 const DEFAULT_SEED = 12345;
@@ -35,6 +36,7 @@ export default function ProcgenLab() {
   const [cards, setCards] = useState<Record<number, CardState>>({});
   const [allStatus, setAllStatus] = useState<"idle" | "running" | "done">("idle");
   const [totalMs, setTotalMs] = useState<number | null>(null);
+  const [rarity, setRarity] = useState<Rarity>(3);
   const [parallax, setParallax] = useState(true);
   const [parallaxAmount, setParallaxAmount] = useState(8);
   const workerRef = useRef<Worker | null>(null);
@@ -177,6 +179,20 @@ export default function ProcgenLab() {
               </label>
             </div>
 
+            {/* Rarity */}
+            <label className="block">
+              <span className="text-ghost-foreground text-[10px] uppercase tracking-wider">Rarity</span>
+              <select
+                value={rarity}
+                onChange={e => setRarity(Number(e.target.value) as Rarity)}
+                className="mt-1 w-full bg-muted border border-border rounded px-2 py-1.5 text-sm text-foreground focus:outline-none focus:border-ring cursor-pointer"
+              >
+                {([1, 2, 3, 4, 5] as Rarity[]).map(r => (
+                  <option key={r} value={r}>{r} — {RARITY_LABELS[r]}</option>
+                ))}
+              </select>
+            </label>
+
             {/* Parallax */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-ghost-foreground cursor-pointer">
@@ -295,7 +311,7 @@ export default function ProcgenLab() {
               <TarotCard
                 key={`${selectedId}-${currentState.cardUrl}`}
                 card={CARDS[selectedId]}
-                rarityScore={3}
+                rarityScore={rarity}
                 isReversed={false}
                 isRadiant={false}
                 revealed={true}
