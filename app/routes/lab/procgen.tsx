@@ -253,6 +253,14 @@ export default function ProcgenLab() {
               <div className="ml-auto flex gap-3 items-center">
                 <span className="text-xs text-ghost-foreground">{currentState.ms}ms</span>
                 <a
+                  href={`/api/procgen.png?id=${selectedId}&seed=${seed}${palette ? `&palette=${palette}` : ""}&w=752`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[0.65rem] tracking-[0.1em] uppercase px-3 py-1 border border-border bg-transparent text-primary font-serif hover:opacity-80 transition-opacity"
+                >
+                  PNG
+                </a>
+                <a
                   href={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(currentState.svg)}`}
                   download={`${currentCard.name.toLowerCase().replace(/\s+/g, "-")}.svg`}
                   className="text-[0.65rem] tracking-[0.1em] uppercase px-3 py-1 border border-border bg-transparent text-primary font-serif hover:opacity-80 transition-opacity"
