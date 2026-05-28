@@ -46,10 +46,16 @@ export default function ProcgenLab() {
     w.onmessage = (e: MessageEvent<WorkerResponse>) => {
       const msg = e.data;
       if (msg.type === "card-done") {
-        setCards(prev => ({
-          ...prev,
-          [msg.cardId]: { status: "done", cardUrl: msg.cardDataUrl, maskUrl: msg.maskDataUrl, ms: msg.ms },
-        }));
+        const cardUrl = URL.createObjectURL(msg.cardBlob);
+        const maskUrl = URL.createObjectURL(msg.maskBlob);
+        setCards(prev => {
+          const old = prev[msg.cardId];
+          if (old && old.status === "done") {
+            URL.revokeObjectURL(old.cardUrl);
+            URL.revokeObjectURL(old.maskUrl);
+          }
+          return { ...prev, [msg.cardId]: { status: "done", cardUrl, maskUrl, ms: msg.ms } };
+        });
         setSelectedId(msg.cardId);
       } else if (msg.type === "all-done") {
         setAllStatus("done");
