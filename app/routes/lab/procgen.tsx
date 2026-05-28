@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CARD_DATA } from "../../lib/procgen-tarot";
 import type { GenOptions } from "../../lib/procgen-tarot";
 import type { WorkerRequest, WorkerResponse } from "../../workers/procgen-tarot.worker";
+import { ProcgenTarotCard } from "../../components/ProcgenTarotCard";
 
 const DEFAULT_SEED = 12345;
 
@@ -31,6 +32,8 @@ export default function ProcgenLab() {
   const [cards, setCards] = useState<Record<number, CardState>>({});
   const [allStatus, setAllStatus] = useState<"idle" | "running" | "done">("idle");
   const [totalMs, setTotalMs] = useState<number | null>(null);
+  const [parallax, setParallax] = useState(true);
+  const [parallaxAmount, setParallaxAmount] = useState(8);
   const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
@@ -88,39 +91,39 @@ export default function ProcgenLab() {
   const doneCount = Object.values(cards).filter(s => s.status === "done").length;
 
   return (
-    <div className="min-h-screen bg-[#0a0a12] text-white font-mono">
+    <div className="min-h-screen bg-background text-foreground font-mono">
       {/* Header */}
-      <div className="border-b border-white/10 px-6 py-4 flex items-center gap-6">
-        <span className="text-white/40 text-xs uppercase tracking-widest">Arkhana</span>
-        <span className="text-white/20">/</span>
-        <a href="/lab/cards" className="text-white/40 text-xs uppercase tracking-widest hover:text-white/60 transition-colors">Lab</a>
-        <span className="text-white/20">/</span>
+      <div className="border-b border-border px-6 py-4 flex items-center gap-6">
+        <span className="text-ghost-foreground text-xs uppercase tracking-widest">Arkhana</span>
+        <span className="text-ghost-foreground">/</span>
+        <a href="/lab/cards" className="text-ghost-foreground text-xs uppercase tracking-widest hover:text-muted-foreground transition-colors">Lab</a>
+        <span className="text-ghost-foreground">/</span>
         <span className="text-xs uppercase tracking-widest">Procgen Tarot</span>
       </div>
 
       <div className="flex h-[calc(100vh-57px)]">
         {/* Sidebar */}
-        <aside className="w-64 border-r border-white/10 flex flex-col overflow-hidden">
+        <aside className="w-64 border-r border-border flex flex-col overflow-hidden">
           {/* Controls */}
-          <div className="p-4 border-b border-white/10 space-y-4">
+          <div className="p-4 border-b border-border space-y-4">
             {/* Seed */}
             <label className="block">
-              <span className="text-white/40 text-[10px] uppercase tracking-wider">Deck seed</span>
+              <span className="text-ghost-foreground text-[10px] uppercase tracking-wider">Deck seed</span>
               <input
                 type="number"
                 value={seed}
                 onChange={e => setSeed(Number(e.target.value))}
-                className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-white/30"
+                className="mt-1 w-full bg-muted border border-border rounded px-2 py-1.5 text-sm text-foreground focus:outline-none focus:border-ring"
               />
             </label>
 
             {/* Palette */}
             <label className="block">
-              <span className="text-white/40 text-[10px] uppercase tracking-wider">Palette</span>
+              <span className="text-ghost-foreground text-[10px] uppercase tracking-wider">Palette</span>
               <select
                 value={palette}
                 onChange={e => setPalette(e.target.value)}
-                className="mt-1 w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-white/30 cursor-pointer"
+                className="mt-1 w-full bg-muted border border-border rounded px-2 py-1.5 text-sm text-foreground focus:outline-none focus:border-ring cursor-pointer"
               >
                 {PALETTE_OPTIONS.map(o => (
                   <option key={o.value} value={o.value}>{o.label}</option>
@@ -130,29 +133,55 @@ export default function ProcgenLab() {
 
             {/* Stroke thickness */}
             <div className="space-y-2">
-              <span className="text-white/40 text-[10px] uppercase tracking-wider">Stroke weight</span>
-              <label className="flex items-center gap-2 text-[11px] text-white/50">
+              <span className="text-ghost-foreground text-[10px] uppercase tracking-wider">Stroke weight</span>
+              <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
                 <span className="w-7 shrink-0">Min</span>
                 <input
                   type="range"
                   min={0.5} max={6} step={0.5}
                   value={minThickness}
                   onChange={e => setMinThickness(Number(e.target.value))}
-                  className="flex-1 accent-indigo-400"
+                  className="flex-1 accent-accent"
                 />
-                <span className="w-6 text-right tabular-nums text-white/40">{minThickness}</span>
+                <span className="w-6 text-right tabular-nums text-ghost-foreground">{minThickness}</span>
               </label>
-              <label className="flex items-center gap-2 text-[11px] text-white/50">
+              <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
                 <span className="w-7 shrink-0">Max</span>
                 <input
                   type="range"
                   min={1} max={10} step={0.5}
                   value={maxThickness}
                   onChange={e => setMaxThickness(Number(e.target.value))}
-                  className="flex-1 accent-indigo-400"
+                  className="flex-1 accent-accent"
                 />
-                <span className="w-6 text-right tabular-nums text-white/40">{maxThickness}</span>
+                <span className="w-6 text-right tabular-nums text-ghost-foreground">{maxThickness}</span>
               </label>
+            </div>
+
+            {/* Parallax */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-ghost-foreground cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={parallax}
+                  onChange={e => setParallax(e.target.checked)}
+                  className="accent-accent"
+                />
+                Parallax
+              </label>
+              {parallax && (
+                <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <span className="w-12 shrink-0">Amount</span>
+                  <input
+                    type="range"
+                    min={0} max={20} step={1}
+                    value={parallaxAmount}
+                    onChange={e => setParallaxAmount(Number(e.target.value))}
+                    className="flex-1 accent-accent"
+                  />
+                  <span className="w-6 text-right tabular-nums text-ghost-foreground">{parallaxAmount}</span>
+                </label>
+              )}
             </div>
 
             {/* Action buttons */}
@@ -160,14 +189,14 @@ export default function ProcgenLab() {
               <button
                 onClick={() => generateOne(selectedId)}
                 disabled={currentState.status === "generating" || allStatus === "running"}
-                className="flex-1 text-xs py-1.5 px-2 bg-white/10 hover:bg-white/15 rounded disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 py-1.5 px-2 text-[0.65rem] tracking-[0.12em] uppercase cursor-pointer border border-border bg-transparent text-primary font-serif hover:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Generate card
               </button>
               <button
                 onClick={generateAll}
                 disabled={allStatus === "running"}
-                className="flex-1 text-xs py-1.5 px-2 bg-indigo-600/60 hover:bg-indigo-600/80 rounded disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 py-1.5 px-2 text-[0.65rem] tracking-[0.12em] uppercase cursor-pointer border border-primary bg-transparent text-primary font-serif hover:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {allStatus === "running"
                   ? `${doneCount}/78`
@@ -192,14 +221,14 @@ export default function ProcgenLab() {
                   className={[
                     "w-full text-left px-4 py-2 text-xs flex items-center gap-2 transition-colors",
                     selectedId === card.id
-                      ? "bg-white/10 text-white"
-                      : "text-white/50 hover:bg-white/5 hover:text-white/80",
+                      ? "bg-muted text-foreground"
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
                   ].join(" ")}
                 >
                   <StatusDot state={state} />
                   <span className="truncate">{card.name}</span>
                   {state.status === "done" && (
-                    <span className="ml-auto text-white/25 shrink-0">{state.ms}ms</span>
+                    <span className="ml-auto text-ghost-foreground shrink-0">{state.ms}ms</span>
                   )}
                 </button>
               );
@@ -210,10 +239,10 @@ export default function ProcgenLab() {
         {/* Main panel */}
         <main className="flex-1 flex flex-col overflow-hidden">
           {/* Card header */}
-          <div className="px-6 py-3 border-b border-white/10 flex items-center gap-4">
+          <div className="px-6 py-3 border-b border-border flex items-center gap-4">
             <div>
-              <div className="text-sm font-semibold">{currentCard.name}</div>
-              <div className="text-xs text-white/40 capitalize">
+              <div className="text-sm font-semibold text-foreground">{currentCard.name}</div>
+              <div className="text-xs text-muted-foreground capitalize">
                 {currentCard.arcana === "major"
                   ? `Major Arcana · ${currentCard.number}`
                   : `${currentCard.suit} · ${currentCard.number}`}
@@ -221,11 +250,11 @@ export default function ProcgenLab() {
             </div>
             {currentState.status === "done" && (
               <div className="ml-auto flex gap-3 items-center">
-                <span className="text-xs text-white/30">{currentState.ms}ms</span>
+                <span className="text-xs text-ghost-foreground">{currentState.ms}ms</span>
                 <a
                   href={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(currentState.svg)}`}
                   download={`${currentCard.name.toLowerCase().replace(/\s+/g, "-")}.svg`}
-                  className="text-xs px-3 py-1 bg-white/10 hover:bg-white/20 rounded transition-colors"
+                  className="text-[0.65rem] tracking-[0.1em] uppercase px-3 py-1 border border-border bg-transparent text-primary font-serif hover:opacity-80 transition-opacity"
                 >
                   Download SVG
                 </a>
@@ -234,18 +263,21 @@ export default function ProcgenLab() {
           </div>
 
           {/* Preview */}
-          <div className="flex-1 overflow-auto flex items-center justify-center p-8 bg-[#06060e]">
+          <div className="flex-1 overflow-auto flex items-center justify-center p-8 bg-card">
             {currentState.status === "idle" && (
-              <div className="text-white/20 text-sm">Select a card or click Generate</div>
+              <div className="text-ghost-foreground text-sm">Select a card or click Generate</div>
             )}
             {currentState.status === "generating" && (
-              <div className="text-white/40 text-sm animate-pulse">Generating…</div>
+              <div className="text-muted-foreground text-sm animate-pulse">Generating...</div>
             )}
             {currentState.status === "done" && (
-              <div
-                className="shadow-2xl"
-                style={{ width: 376, height: 634 }}
-                dangerouslySetInnerHTML={{ __html: currentState.svg }}
+              <ProcgenTarotCard
+                svg={currentState.svg}
+                name={currentCard.name}
+                revealed={true}
+                size="lg"
+                parallax={parallax}
+                parallaxAmount={parallaxAmount}
               />
             )}
           </div>
@@ -262,5 +294,5 @@ function StatusDot({ state }: { state: CardState }) {
   if (state.status === "done") {
     return <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />;
   }
-  return <span className="w-1.5 h-1.5 rounded-full bg-white/15 shrink-0" />;
+  return <span className="w-1.5 h-1.5 rounded-full bg-border shrink-0" />;
 }

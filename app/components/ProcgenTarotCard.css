@@ -1,0 +1,29 @@
+/* Procgen SVG fills the card front */
+.procgen-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.procgen-svg > svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: var(--card-radius);
+}
+
+/* Parallax: foreground group shifts with tilt */
+.card-scene[data-procgen][data-revealed] [data-layer="fg"] {
+  transition: transform 120ms ease-out;
+  transform: translate(
+    calc((var(--ratio-x, .5) - .5) * var(--procgen-parallax, 8px)),
+    calc((var(--ratio-y, .5) - .5) * var(--procgen-parallax, 8px))
+  );
+}
+
+/* Override aspect ratio for procgen cards (376:634) */
+.card-scene[data-procgen] .card-flipper {
+  aspect-ratio: 376 / 634;
+}
