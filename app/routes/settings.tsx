@@ -320,6 +320,15 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
           </h2>
           <p className="type-caption">
             Choose the art style for your tarot cards.
+            {activeCardStyle === "procgen" && (
+              <span className="block mt-2 text-ghost-foreground">
+                Procedural generation based on{" "}
+                <a href="https://watabou.itch.io/procgen-tarot" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary transition-colors">
+                  watabou&rsquo;s Procgen Tarot
+                </a>
+                .
+              </span>
+            )}
           </p>
           <div className="flex border border-border overflow-hidden">
             {([

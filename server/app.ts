@@ -121,6 +121,8 @@ app.use(
               username: (session.user as any).username ?? null,
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               isAnonymous: (session.user as any).isAnonymous ?? false,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              cardStyle: ((session.user as any).preferences as Record<string, unknown>)?.cardStyle ?? "classic",
             }
           : null,
       };

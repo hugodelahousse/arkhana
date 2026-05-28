@@ -6,6 +6,7 @@ import type { CardDefinition, Rarity } from "../lib/cards";
 import { useCardMotion, DEFAULT_MOTION_CONFIG } from "../lib/useCardMotion";
 import type { CardMotionConfig } from "../lib/useCardMotion";
 import { useHoldReveal } from "../lib/useHoldReveal";
+import { useProcgenProps } from "../lib/useProcgenCard";
 import "./TarotCard.css";
 
 export type { CardMotionConfig };
@@ -51,6 +52,10 @@ export const TarotCard = memo(function TarotCard({
   const hold = useHoldReveal(!revealed ? onReveal : undefined, sceneRef);
   const tilt = useCardMotion(sceneRef, config, !revealed ? hold.cancel : undefined);
 
+  const procgen = useProcgenProps(card.id);
+  const effectiveImageUrl = imageUrl ?? procgen.imageUrl;
+  const isProcgen = !!(effectiveImageUrl || svgContent);
+
   const rarityLabel = RARITY_LABELS[rarityScore]?.toLowerCase() ?? "mundane";
   const hasSubjectMask = rarityScore >= 3 || !!frontImageUrl;
   const hasParallax = rarityScore >= 4 || !!frontImageUrl;
@@ -58,8 +63,7 @@ export const TarotCard = memo(function TarotCard({
   const isMajor = card.arcana === "major";
   const cardHasTopMask = isMajor && hasTopMask(card.id);
   const cardHasNameMask = hasNameMask(card.id);
-  const isProcgen = !!(imageUrl || svgContent);
-  const imgSrc = imageUrl ?? cardImageUrl(card.id);
+  const imgSrc = effectiveImageUrl ?? cardImageUrl(card.id);
 
   const baseImgMask = !isProcgen && hasTextLayers && cardHasNameMask ? (() => {
     const masks = [
