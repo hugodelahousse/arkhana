@@ -1,7 +1,11 @@
 import { Resvg } from "@resvg/resvg-js";
 import { resolve } from "node:path";
+import { existsSync } from "node:fs";
 import { generateCard, CARD_DATA } from "../lib/procgen-tarot";
 import type { Route } from "./+types/api.procgen";
+
+const FONT_PATH = resolve(process.cwd(), "public/fonts/cormorant-garamond.ttf");
+const FONT_FILES = existsSync(FONT_PATH) ? [FONT_PATH] : [];
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -15,12 +19,11 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const svgStr = generateCard(cardId, seed, { palette });
 
-  const fontPath = resolve(process.cwd(), "public/fonts/cormorant-garamond.ttf");
   const resvg = new Resvg(svgStr, {
     fitTo: { mode: "width", value: width },
     font: {
-      fontFiles: [fontPath],
-      loadSystemFonts: false,
+      fontFiles: FONT_FILES,
+      loadSystemFonts: true,
       defaultFontFamily: "Cormorant Garamond",
     },
   });
