@@ -43,32 +43,13 @@ export default function ProcgenLab() {
       { type: "module" }
     );
     workerRef.current = w;
-    w.onmessage = async (e: MessageEvent<WorkerResponse>) => {
+    w.onmessage = (e: MessageEvent<WorkerResponse>) => {
       const msg = e.data;
       if (msg.type === "card-done") {
-        const cardCanvas = new OffscreenCanvas(msg.cardBitmap.width, msg.cardBitmap.height);
-        const cardCtx = cardCanvas.getContext("2d")!;
-        cardCtx.drawImage(msg.cardBitmap, 0, 0);
-        const cardBlob = await cardCanvas.convertToBlob({ type: "image/png" });
-        const cardUrl = URL.createObjectURL(cardBlob);
-
-        const maskCanvas = new OffscreenCanvas(msg.maskBitmap.width, msg.maskBitmap.height);
-        const maskCtx = maskCanvas.getContext("2d")!;
-        maskCtx.drawImage(msg.maskBitmap, 0, 0);
-        const maskBlob = await maskCanvas.convertToBlob({ type: "image/png" });
-        const maskUrl = URL.createObjectURL(maskBlob);
-
-        msg.cardBitmap.close();
-        msg.maskBitmap.close();
-
-        setCards(prev => {
-          const old = prev[msg.cardId];
-          if (old && old.status === "done") {
-            URL.revokeObjectURL(old.cardUrl);
-            URL.revokeObjectURL(old.maskUrl);
-          }
-          return { ...prev, [msg.cardId]: { status: "done", cardUrl, maskUrl, ms: msg.ms } };
-        });
+        setCards(prev => ({
+          ...prev,
+          [msg.cardId]: { status: "done", cardUrl: msg.cardDataUrl, maskUrl: msg.maskDataUrl, ms: msg.ms },
+        }));
         setSelectedId(msg.cardId);
       } else if (msg.type === "all-done") {
         setAllStatus("done");
