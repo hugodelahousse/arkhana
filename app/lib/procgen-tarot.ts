@@ -1128,18 +1128,29 @@ const CARD_HEIGHT = FIELD_HEIGHT + MARGIN * 2 + TITLE_HEIGHT;
 
 class SVGBuilder {
   private paperEl = "";
-  private artElements: string[] = [];
+  private bgElements: string[] = [];
+  private fgElements: string[] = [];
+  private strokeElements: string[] = [];
   private overlayElements: string[] = [];
   private defs: string[] = [];
   private gradientCount = 0;
+  private _isFg = false;
+
+  setForeground(fg: boolean): void {
+    this._isFg = fg;
+  }
 
   paper(color: number): void {
     this.paperEl =
       `<rect width="${CARD_WIDTH}" height="${CARD_HEIGHT}" rx="${MARGIN}" fill="${intToHex(color)}"/>`;
   }
 
+  private get artTarget(): string[] {
+    return this._isFg ? this.fgElements : this.bgElements;
+  }
+
   background(color: number): void {
-    this.artElements.push(
+    this.bgElements.push(
       `<rect x="${MARGIN}" y="${MARGIN}" width="${FIELD_WIDTH}" height="${FIELD_HEIGHT}" fill="${intToHex(color)}"/>`,
     );
   }
@@ -1184,7 +1195,7 @@ class SVGBuilder {
     const pts = points
       .map((p) => `${(p.x + MARGIN).toFixed(2)},${(p.y + MARGIN).toFixed(2)}`)
       .join(" ");
-    this.artElements.push(
+    this.artTarget.push(
       `<polygon points="${pts}" fill="none" stroke="${intToHex(color)}" ` +
         `stroke-width="1" stroke-opacity="${alpha.toFixed(3)}"/>`,
     );
@@ -1195,7 +1206,7 @@ class SVGBuilder {
       y1 = (s.start.y + MARGIN).toFixed(2);
     const x2 = (s.end.x + MARGIN).toFixed(2),
       y2 = (s.end.y + MARGIN).toFixed(2);
-    this.artElements.push(
+    this.strokeElements.push(
       `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ` +
         `stroke="${intToHex(color)}" stroke-width="${s.thickness.toFixed(2)}" ` +
         `stroke-opacity="${alpha.toFixed(3)}" stroke-linecap="round"/>`,
@@ -1259,7 +1270,7 @@ class SVGBuilder {
       fill = intToHex(fillColor);
     }
 
-    this.artElements.push(
+    this.artTarget.push(
       `<polygon points="${pts}" fill="${fill}" fill-opacity="${fillOpacity.toFixed(3)}"/>`,
     );
   }
@@ -1276,8 +1287,10 @@ class SVGBuilder {
       defsBlock + "\n" +
       this.paperEl + "\n" +
       `<g clip-path="url(#art-clip)">\n` +
-      this.artElements.join("\n") +
-      `\n</g>\n` +
+      `<g data-layer="bg">\n` + this.bgElements.join("\n") + `\n</g>\n` +
+      `<g data-layer="fg">\n` + this.fgElements.join("\n") + `\n</g>\n` +
+      `<g data-layer="strokes">\n` + this.strokeElements.join("\n") + `\n</g>\n` +
+      `</g>\n` +
       this.overlayElements.join("\n") +
       `\n</svg>`
     );
@@ -1296,7 +1309,8 @@ class Painter {
   private objColors: number[][];
   private artStyle: ArtStyle;
   private rng: RNG;
-  regions: { shape: Vec2[]; area: number; colors?: number[]; type?: number | null }[] = [];
+  private fgFlags: boolean[] = [];
+  regions: { shape: Vec2[]; area: number; colors?: number[]; type?: number | null; fg?: boolean }[] = [];
 
   constructor(
     svgBuilder: SVGBuilder,
@@ -1319,6 +1333,7 @@ class Painter {
         : shuffle(palette.slice(), rng).slice(0, 2),
     );
     this.masks = sketchers.map((s) => s.mask);
+    this.fgFlags = sketchers.map((s) => s.foreground);
 
     // Build pt2stroke using object identity (like original)
     for (const s of strokes) {
@@ -1434,7 +1449,7 @@ class Painter {
 
   private register(
     shape: Vec2[],
-  ): { shape: Vec2[]; area: number; colors?: number[]; type?: number | null } | null {
+  ): { shape: Vec2[]; area: number; colors?: number[]; type?: number | null; fg?: boolean } | null {
     // Check for duplicate
     for (const region of this.regions) {
       const filled = region.shape;
@@ -1448,7 +1463,7 @@ class Painter {
       if (duplicate) return null;
     }
     const area = Math.abs(polygonArea(shape));
-    const region: { shape: Vec2[]; area: number; colors?: number[]; type: number | null } = { shape, area, type: null };
+    const region: { shape: Vec2[]; area: number; colors?: number[]; type: number | null; fg?: boolean } = { shape, area, type: null };
     this.regions.push(region);
     return region;
   }
@@ -1459,14 +1474,17 @@ class Painter {
     const region = this.register(shape);
     if (!region) return;
 
-    // Pick palette
+    // Pick palette and determine foreground/background
     let palette = this.palette;
+    let isFg = false;
     for (let i = 0; i < this.masks.length; i++) {
       if (this.masks[i].get(p)) {
         palette = this.objColors[i];
+        isFg = this.fgFlags[i];
         break;
       }
     }
+    region.fg = isFg;
 
     // Select color: iterate palette, chance = sqrt(area / totalArea) per color
     let color = palette[palette.length - 1];
@@ -1494,9 +1512,11 @@ class Painter {
     shape: Vec2[];
     colors?: number[];
     type?: number | null;
+    fg?: boolean;
   }): void {
     const colors = region.colors as [number, number, number];
     if (!colors) return;
+    this.svgBuilder.setForeground(!!region.fg);
     if (region.type === 1) {
       this.svgBuilder.polygon(region.shape, colors[1], 1, colors, "radial");
     } else {
@@ -1511,6 +1531,7 @@ class Painter {
       );
     }
     this.svgBuilder.polygonStroke(region.shape, colors[1], 0.6);
+    this.svgBuilder.setForeground(false);
   }
 
   drawAll(): void {
@@ -1583,6 +1604,7 @@ class Sketcher {
   fillPoints: Vec2[] = [];
   tracing: TracerBehaviour | null = null;
   colors: number[] | null = null;
+  foreground = false;
 
   // Spatial bucket optimization
   private static readonly BUCKET_SIZE = 20;
@@ -1834,6 +1856,7 @@ class Sketcher {
 
     const layer = new Sketcher(mask, flow, 4, 1, rng);
     layer.tracing = tracing;
+    layer.foreground = true;
     return layer;
   }
 
@@ -1867,6 +1890,7 @@ class Sketcher {
 
     const layer = new Sketcher(mask, flow, rng.normal() * 2, 1, rng);
     layer.tracing = tracing;
+    layer.foreground = true;
     return layer;
   }
 
@@ -1898,6 +1922,7 @@ class Sketcher {
 
     const layer = new Sketcher(mask, flow, 0, 5, rng);
     layer.tracing = tracing;
+    layer.foreground = true;
     return layer;
   }
 
@@ -1946,6 +1971,7 @@ class Sketcher {
 
     const layer = new Sketcher(mask, flow, 3, density, rng);
     layer.tracing = tracing;
+    layer.foreground = true;
     return layer;
   }
 
@@ -2087,6 +2113,7 @@ class Sketcher {
     );
     layer.tracing = tracing;
     layer.density.dilute(0.3, rng);
+    layer.foreground = true;
     return layer;
   }
 
@@ -2116,6 +2143,7 @@ class Sketcher {
     );
     layer.tracing = suit.tracing;
     layer.colors = [suit.color];
+    layer.foreground = true;
     return layer;
   }
 }
