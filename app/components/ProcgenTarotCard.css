@@ -12,15 +12,16 @@
   height: 100%;
   display: block;
   border-radius: var(--card-radius);
+  transform-style: preserve-3d;
+  overflow: visible;
 }
 
-/* Parallax: foreground group shifts with tilt */
+/* Parallax: foreground group lifts toward the viewer in 3D space.
+   The parent card-tilt already has preserve-3d and a perspective-driven
+   rotateX/Y, so translateZ here creates natural parallax — the tilted
+   plane makes the raised layer appear to shift opposite to the tilt. */
 .card-scene[data-procgen][data-revealed] [data-layer="fg"] {
-  transition: transform 120ms ease-out;
-  transform: translate(
-    calc((var(--ratio-x, .5) - .5) * var(--procgen-parallax, 8px)),
-    calc((var(--ratio-y, .5) - .5) * var(--procgen-parallax, 8px))
-  );
+  transform: translateZ(var(--procgen-parallax, 8px));
 }
 
 /* Override aspect ratio for procgen cards (376:634) */
