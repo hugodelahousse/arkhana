@@ -21,7 +21,7 @@ type CardState =
   | { status: "idle" }
   | { status: "generating" }
   | { status: "rasterizing"; svg: string }
-  | { status: "done"; svg: string; fullUrl: string; backUrl?: string; frontUrl?: string; ms: number };
+  | { status: "done"; svg: string; fullUrl: string; backUrl: string; frontUrl: string; ms: number };
 
 export function meta() {
   return [{ title: "Procgen Tarot — Lab" }];
@@ -39,9 +39,8 @@ export default function ProcgenLab() {
   const [rarity, setRarity] = useState<Rarity>(3);
   const [parallax, setParallax] = useState(true);
   const [parallaxAmount, setParallaxAmount] = useState(8);
+  const [showLayers, setShowLayers] = useState(false);
   const workerRef = useRef<Worker | null>(null);
-  const rarityRef = useRef(rarity);
-  useEffect(() => { rarityRef.current = rarity; }, [rarity]);
 
   useEffect(() => {
     const w = new Worker(
@@ -59,22 +58,19 @@ export default function ProcgenLab() {
         setSelectedId(msg.cardId);
         const genMs = msg.ms;
         const svgStr = msg.svg;
-        const needsLayers = rarityRef.current >= 4;
-        const promises = needsLayers
-          ? Promise.all([rasterizeSvg(svgStr, "back"), rasterizeSvg(svgStr, "front")])
-          : rasterizeSvg(svgStr).then(url => [url] as string[]);
-        promises.then((urls) => {
+        Promise.all([
+          rasterizeSvg(svgStr),
+          rasterizeSvg(svgStr, "back"),
+          rasterizeSvg(svgStr, "front"),
+        ]).then(([fullUrl, backUrl, frontUrl]) => {
           setCards(prev => {
             const old = prev[msg.cardId];
             if (old && old.status === "done") {
               URL.revokeObjectURL(old.fullUrl);
-              if (old.backUrl) URL.revokeObjectURL(old.backUrl);
-              if (old.frontUrl) URL.revokeObjectURL(old.frontUrl);
+              URL.revokeObjectURL(old.backUrl);
+              URL.revokeObjectURL(old.frontUrl);
             }
-            if (needsLayers) {
-              return { ...prev, [msg.cardId]: { status: "done", svg: svgStr, fullUrl: urls[0], backUrl: urls[0], frontUrl: urls[1], ms: genMs } };
-            }
-            return { ...prev, [msg.cardId]: { status: "done", svg: svgStr, fullUrl: urls[0], ms: genMs } };
+            return { ...prev, [msg.cardId]: { status: "done", svg: svgStr, fullUrl, backUrl, frontUrl, ms: genMs } };
           });
         }).catch((err) => {
           console.error("Rasterize error:", err);
@@ -227,6 +223,17 @@ export default function ProcgenLab() {
               )}
             </div>
 
+            {/* Show layers */}
+            <label className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-ghost-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showLayers}
+                onChange={e => setShowLayers(e.target.checked)}
+                className="accent-accent"
+              />
+              Show layers
+            </label>
+
             {/* Action buttons */}
             <div className="flex gap-2">
               <button
@@ -315,7 +322,7 @@ export default function ProcgenLab() {
                 {currentState.status === "generating" ? "Generating..." : "Rasterizing..."}
               </div>
             )}
-            {currentState.status === "done" && (
+            {currentState.status === "done" && !showLayers && (
               <TarotCard
                 key={`${selectedId}-${currentState.fullUrl}`}
                 card={CARDS[selectedId]}
@@ -324,10 +331,42 @@ export default function ProcgenLab() {
                 isRadiant={false}
                 revealed={true}
                 size="lg"
-                imageUrl={currentState.backUrl ?? currentState.fullUrl}
-                frontImageUrl={currentState.frontUrl}
+                imageUrl={rarity >= 4 ? currentState.backUrl : currentState.fullUrl}
+                frontImageUrl={rarity >= 4 ? currentState.frontUrl : undefined}
                 procgenParallax={parallax ? parallaxAmount : 0}
               />
+            )}
+            {currentState.status === "done" && showLayers && (
+              <div className="flex gap-6 items-start">
+                <div className="flex flex-col items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-wider text-ghost-foreground">Back</span>
+                  <img
+                    src={currentState.backUrl}
+                    alt="Back layer"
+                    className="rounded-lg shadow-lg"
+                    style={{ width: 188, height: 317 }}
+                  />
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-wider text-ghost-foreground">Front</span>
+                  <div className="rounded-lg shadow-lg bg-[repeating-conic-gradient(#222_0%_25%,#333_0%_50%)] bg-[length:16px_16px]" style={{ width: 188, height: 317 }}>
+                    <img
+                      src={currentState.frontUrl}
+                      alt="Front layer"
+                      style={{ width: 188, height: 317 }}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-wider text-ghost-foreground">Combined</span>
+                  <img
+                    src={currentState.fullUrl}
+                    alt="Full card"
+                    className="rounded-lg shadow-lg"
+                    style={{ width: 188, height: 317 }}
+                  />
+                </div>
+              </div>
             )}
           </div>
         </main>
