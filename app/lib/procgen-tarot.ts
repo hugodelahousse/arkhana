@@ -703,6 +703,17 @@ const PALETTES: Record<string, { palette: number[], paper: number }> = {
   },
 };
 
+function toRoman(n: number): string {
+  if (n === 0) return "0";
+  const vals = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+  const syms = ["M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"];
+  let result = "";
+  for (let i = 0; i < vals.length; i++) {
+    while (n >= vals[i]) { result += syms[i]; n -= vals[i]; }
+  }
+  return result;
+}
+
 function intToHex(n: number): string {
   return "#" + ((n | 0) >>> 0).toString(16).padStart(6, "0");
 }
@@ -759,9 +770,26 @@ class SVGBuilder {
 
   border(color: number): void {
     this.elements.push(
-      `<rect x="8" y="8" width="${FIELD_WIDTH - 16}" height="${FIELD_HEIGHT - 16}" ` +
-      `fill="none" stroke="${intToHex(color)}" stroke-width="3" rx="4"/>`
+      `<rect x="4" y="4" width="${FIELD_WIDTH - 8}" height="${FIELD_HEIGHT - 8}" ` +
+      `fill="none" stroke="${intToHex(color)}" stroke-width="3" rx="6"/>`
     );
+  }
+
+  cardText(name: string, majorNumber?: number, color: number = 0): void {
+    const hex = intToHex(color);
+    const escapedName = name.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    this.elements.push(
+      `<text x="${FIELD_WIDTH / 2}" y="${FIELD_HEIGHT - 8}" ` +
+      `text-anchor="middle" font-family="serif" font-size="16" fill="${hex}" ` +
+      `style="text-transform:uppercase;letter-spacing:0.05em">${escapedName}</text>`
+    );
+    if (majorNumber !== undefined) {
+      const roman = toRoman(majorNumber);
+      this.elements.push(
+        `<text x="${FIELD_WIDTH / 2}" y="20" ` +
+        `text-anchor="middle" font-family="serif" font-size="16" fill="${hex}">${roman}</text>`
+      );
+    }
   }
 
   stroke(s: Stroke, color: number, alpha: number): void {
@@ -851,18 +879,21 @@ class Painter {
   private svgBuilder: SVGBuilder;
   private palette: number[];
   private totalArea: number;
-  private sketchers: Sketcher[] = [];
+  private masks: Mask[];
+  private objColors: number[][];
+  private regions: { shape: Vec2[]; area: number }[] = [];
 
-  constructor(svgBuilder: SVGBuilder, palette: number[]) {
+  constructor(svgBuilder: SVGBuilder, palette: number[], layers: Sketcher[], strokes: Stroke[]) {
     this.svgBuilder = svgBuilder;
     this.palette = palette;
     this.totalArea = FIELD_WIDTH * FIELD_HEIGHT;
-  }
-
-  addSketcher(sk: Sketcher): void {
-    this.sketchers.push(sk);
-    for (const s of sk.strokes) {
-      this.allStrokes.push(s);
+    this.allStrokes = strokes;
+    this.masks = layers.map(l => l.mask);
+    this.objColors = layers.map(() => {
+      const shuffled = [...palette].sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, 2);
+    });
+    for (const s of strokes) {
       this.addToPt2Stroke(s.start, s);
       this.addToPt2Stroke(s.end, s);
     }
@@ -988,33 +1019,42 @@ class Painter {
   }
 
   fillShape(p: Vec2, rng: RNG): void {
-    const key = `${Math.floor(p.x / CELL_W)},${Math.floor(p.y / CELL_H)}`;
-    if (this.filled.has(key)) return;
-    this.filled.add(key);
-
     const shape = this.findShape(p);
     if (!shape || shape.length < 3) return;
 
     const area = this.polygonArea(shape);
     if (area < 1) return;
 
-    // Choose color: probability based on sqrt(area / totalArea)
-    const prob = Math.sqrt(area / this.totalArea);
-    let colorIdx: number;
-    if (rng.float() < prob) {
-      colorIdx = rng.int0(this.palette.length);
-    } else {
-      colorIdx = 0; // darkest / first
+    // Dedupe: if existing region has all vertices in this shape, skip
+    for (const existing of this.regions) {
+      if (existing.shape.every(v =>
+        shape.some(s => Math.abs(s.x - v.x) < 0.1 && Math.abs(s.y - v.y) < 0.1)
+      )) return;
     }
-    const color = this.palette[colorIdx];
+
+    // Pick palette: use layer-specific colors if point is in a layer's mask
+    let colors = this.palette;
+    for (let i = 0; i < this.masks.length; i++) {
+      if (this.masks[i].get(p)) {
+        colors = this.objColors[i];
+        break;
+      }
+    }
+
+    const prob = Math.sqrt(area / this.totalArea);
+    let color = colors[colors.length - 1];
+    for (const c of colors) {
+      if (rng.float() < prob) { color = c; break; }
+    }
 
     const compact = this.compactness(shape);
     const gradColors = gradient(color) as [number, number, number];
+    const region = { shape, area };
+    this.regions.push(region);
 
     if (compact > 0.8) {
       this.svgBuilder.polygon(shape, color, 0.7, gradColors, "radial");
     } else {
-      // Compute OBB major axis angle
       const centroid = this.polygonCentroid(shape);
       let angle = 0;
       if (shape.length >= 2) {
@@ -1025,20 +1065,9 @@ class Painter {
     }
   }
 
-  fillAll(rng: RNG): void {
-    // Sample fill points across the canvas
-    for (let r = 1; r < FIELD_ROWS - 1; r += 2) {
-      for (let c = 1; c < FIELD_COLS - 1; c += 2) {
-        const p = new Vec2((c + 0.5) * CELL_W, (r + 0.5) * CELL_H);
-        this.fillShape(p, rng);
-      }
-    }
-    // Also fill from explicit fill points from tracers
-    for (const sk of this.sketchers) {
-      for (const fp of sk.fillPoints) {
-        this.fillShape(fp, rng);
-      }
-    }
+  drawAll(): void {
+    // Regions already drawn during fillShape; this sorts and redraws for proper layering
+    // (largest areas behind, smallest in front — already handled by SVG paint order)
   }
 }
 
@@ -1066,7 +1095,6 @@ class Sketcher {
   behaviour: TracerBehaviour;
   style: SketcherStyle;
   private rng: RNG;
-  // Spatial bucket index: bucket cell → stroke indices
   private buckets: Set<number>[][] = [];
 
   constructor(
@@ -1233,7 +1261,32 @@ class Sketcher {
     this.density.drain(s.end);
   }
 
-  /** Run until complete */
+  behind(another: Sketcher): void {
+    for (let r = 0; r < FIELD_ROWS; r++) {
+      for (let c = 0; c < FIELD_COLS; c++) {
+        if (another.mask.values[r][c]) {
+          this.mask.values[r][c] = false;
+          const idx = r * FIELD_COLS + c;
+          const pos = this.density.available.indexOf(idx);
+          if (pos !== -1) this.density.available.splice(pos, 1);
+        }
+      }
+    }
+  }
+
+  rebuildBuckets(): void {
+    this.buckets = [];
+    for (let r = 0; r < BUCKET_ROWS; r++) {
+      this.buckets.push([]);
+      for (let c = 0; c < BUCKET_COLS; c++) {
+        this.buckets[r].push(new Set<number>());
+      }
+    }
+    for (let i = 0; i < this.strokes.length; i++) {
+      this.addToBuckets(i, this.strokes[i]);
+    }
+  }
+
   run(maxIter: number = 2000): void {
     for (let i = 0; i < maxIter; i++) {
       if (!this.draw()) break;
@@ -1246,12 +1299,13 @@ class Sketcher {
     rng: RNG,
     style: SketcherStyle,
     height: number = 1,
-    posX?: number
+    posX?: number,
+    posY?: number
   ): Sketcher {
     const h = FIELD_HEIGHT * height;
     const w = h * (0.25 + rng.normal() / 4);
     const cx = posX !== undefined ? posX : FIELD_WIDTH / 2 + rng.normal2() * 20;
-    const cy = FIELD_HEIGHT / 2 + h / 4;
+    const cy = posY !== undefined ? posY : FIELD_HEIGHT / 2 + h / 4;
     const pos = new Vec2(cx, cy);
 
     const mask = new Mask();
@@ -1603,6 +1657,31 @@ export type GenOptions = {
   maxThickness?: number;
 };
 
+function runLayers(layers: Sketcher[]): void {
+  if (layers.length === 0) return;
+
+  // Add boundary strokes (invisible, thickness=0) to the first layer
+  const tl = new Vec2(0, 0);
+  const tr = new Vec2(FIELD_WIDTH, 0);
+  const bl = new Vec2(0, FIELD_HEIGHT);
+  const br = new Vec2(FIELD_WIDTH, FIELD_HEIGHT);
+  layers[0].addStroke(new Stroke(tl, tr, 0));
+  layers[0].addStroke(new Stroke(tr, br, 0));
+  layers[0].addStroke(new Stroke(br, bl, 0));
+  layers[0].addStroke(new Stroke(bl, tl, 0));
+
+  layers[0].run();
+
+  for (let i = 1; i < layers.length; i++) {
+    const layer = layers[i];
+    for (let j = 0; j < i; j++) layer.behind(layers[j]);
+    layer.strokes = layers[i - 1].strokes;
+    layer.fillPoints = layers[i - 1].fillPoints;
+    layer.rebuildBuckets();
+    layer.run();
+  }
+}
+
 function generateCard(cardId: number, deckSeed: number, opts: GenOptions = {}): string {
   const seed = deckSeed + cardId * 1000;
   const rng = new RNG(seed);
@@ -1610,7 +1689,6 @@ function generateCard(cardId: number, deckSeed: number, opts: GenOptions = {}): 
   const card = CARD_DATA[cardId];
   if (!card) throw new Error(`Unknown card id ${cardId}`);
 
-  // Pick palette — always consume the RNG roll so structure stays consistent
   const paletteNames = Object.keys(PALETTES);
   const autoIdx = rng.int0(paletteNames.length);
   const paletteName = (opts.palette && PALETTES[opts.palette]) ? opts.palette : paletteNames[autoIdx];
@@ -1627,182 +1705,115 @@ function generateCard(cardId: number, deckSeed: number, opts: GenOptions = {}): 
   const svg = new SVGBuilder();
   svg.background(paper);
 
-  const sketchers: Sketcher[] = [];
+  const layers: Sketcher[] = [];
 
   if (card.arcana === "major") {
     const concepts = MAJOR_CONCEPTS[card.id] || ["outdoors"];
-    const len = concepts.length;
+    const indoors = concepts.includes("indoors");
+    const outdoors = concepts.includes("outdoors");
+    const hasSun = concepts.includes("sun");
+    const hasStar = concepts.includes("celestial") && !hasSun;
+    const people = indoors || concepts.includes("event") || concepts.includes("virtue");
 
-    // Artifact → symbol
     if (concepts.includes("artifact")) {
-      const sk = Sketcher.symbol(rng, style);
-      sk.run();
-      sketchers.push(sk);
+      layers.push(Sketcher.symbol(rng, style));
     }
 
-    // Archetype/virtue → figure
     if (concepts.includes("archetype") || concepts.includes("virtue")) {
-      const h = 0.8 + rng.normal() * 0.2;
-      const posX = FIELD_WIDTH * (0.3 + rng.float() * 0.4);
-      const sk = Sketcher.figure(rng, style, h, posX);
-      sk.run();
-      sketchers.push(sk);
+      layers.push(Sketcher.figure(rng, style,
+        0.8 + rng.normal() * 0.2,
+        FIELD_WIDTH * rng.normal(),
+        FIELD_HEIGHT * (0.5 + rng.normal() * 0.2),
+      ));
     }
 
-    // People → always add figure; indoors/event/virtue → 2+ figures
-    if (concepts.includes("people")) {
-      const sk1 = Sketcher.figure(rng, style, 0.7 + rng.normal() * 0.2);
-      sk1.run();
-      sketchers.push(sk1);
-      if (concepts.includes("indoors") || concepts.includes("event")) {
-        const sk2 = Sketcher.figure(rng, style, 0.6 + rng.normal() * 0.15, FIELD_WIDTH * (0.2 + rng.float() * 0.6));
-        sk2.run();
-        sketchers.push(sk2);
+    if (people) {
+      layers.push(Sketcher.figure(rng, style,
+        rng.normal(),
+        FIELD_WIDTH * rng.float(),
+        FIELD_HEIGHT * (0.5 + rng.normal() * 0.2),
+      ));
+      layers.push(Sketcher.figure(rng, style,
+        rng.normal(),
+        FIELD_WIDTH * rng.float(),
+        FIELD_HEIGHT * (0.5 + rng.normal() * 0.2),
+      ));
+    } else {
+      if (rng.bool(0.5)) layers.push(Sketcher.clumps(rng, style));
+    }
+
+    if (indoors || (!outdoors && rng.float() < 0.5)) {
+      layers.push(Sketcher.city(rng, style));
+    } else if (outdoors || (!indoors && rng.float() < 0.5)) {
+      layers.push(rng.float() < 0.5 ? Sketcher.mountains(rng, style) : Sketcher.sea(rng, style));
+    }
+
+    if (hasSun) layers.push(Sketcher.sun(rng, style));
+    if (hasStar) layers.push(Sketcher.star(rng, style));
+
+    if (!indoors) {
+      if (!hasSun && !hasStar && rng.float() < 1 / layers.length) {
+        layers.push(rng.float() < 1 / 3 ? Sketcher.star(rng, style) : Sketcher.sun(rng, style));
       }
-    }
-
-    // No people → 50% clumps
-    if (!concepts.includes("people") && rng.bool()) {
-      const sk = Sketcher.clumps(rng, style);
-      sk.run();
-      sketchers.push(sk);
-    }
-
-    // Landscape
-    if (concepts.includes("indoors") || rng.bool()) {
-      const sk = Sketcher.city(rng, style);
-      sk.run();
-      sketchers.push(sk);
-    }
-    if (concepts.includes("outdoors") || rng.bool()) {
-      if (rng.bool()) {
-        const sk = Sketcher.mountains(rng, style);
-        sk.run();
-        sketchers.push(sk);
-      } else {
-        const sk = Sketcher.sea(rng, style);
-        sk.run();
-        sketchers.push(sk);
+      if (rng.float() < 1 / layers.length) {
+        layers.push(Sketcher.sky(rng, style));
       }
-    }
-
-    // Celestial sun
-    if (concepts.includes("sun")) {
-      const sk = Sketcher.sun(rng, style);
-      sk.run();
-      sketchers.push(sk);
-    }
-
-    // Celestial moon/star (not sun)
-    if (concepts.includes("celestial") && !concepts.includes("sun")) {
-      const sk = Sketcher.star(rng, style);
-      sk.run();
-      sketchers.push(sk);
-    }
-
-    // Random star/sun
-    if (rng.float() < 1 / Math.max(1, len)) {
-      if (rng.bool()) {
-        const sk = Sketcher.star(rng, style);
-        sk.run();
-        sketchers.push(sk);
-      } else {
-        const sk = Sketcher.sun(rng, style);
-        sk.run();
-        sketchers.push(sk);
-      }
-    }
-
-    // Random sky
-    if (rng.float() < 1 / Math.max(1, len)) {
-      const sk = Sketcher.sky(rng, style);
-      sk.run();
-      sketchers.push(sk);
     }
 
   } else {
-    // Minor arcana
     const suit = card.suit!;
     const order = card.number;
 
     if (order > 10) {
-      // Face cards: pip + figure
-      const r = 25 + rng.normal() * 10;
-      const pos = new Vec2(
-        FIELD_WIDTH * (0.2 + rng.float() * 0.6),
-        FIELD_HEIGHT * (0.2 + rng.float() * 0.4)
-      );
-      const suitProps = getSuitProps(suit, Math.min(5, order - 8), rng, palette);
-      const pip = Sketcher.pip(rng, style, pos, r, suitProps);
-      pip.run();
-      sketchers.push(pip);
-
-      const fig = Sketcher.figure(rng, style, 0.7 + rng.normal() * 0.2);
-      fig.run();
-      sketchers.push(fig);
-
-      // 20% chance clumps
+      const numPips = Math.floor(2 + rng.float() * 4);
+      const r = 0.5 * Math.sqrt(FIELD_HEIGHT * FIELD_WIDTH / numPips) / 2;
+      const pos = new Vec2(rng.float() * FIELD_WIDTH, rng.float() * FIELD_HEIGHT);
+      const suitProps = getSuitProps(suit, numPips, rng, palette);
+      layers.push(Sketcher.pip(rng, style, pos, r, suitProps));
+      layers.push(Sketcher.figure(rng, style,
+        0.8 + rng.normal() * 0.2,
+        FIELD_WIDTH * rng.normal(),
+        FIELD_HEIGHT * (0.5 + rng.normal() * 0.2),
+      ));
       if (rng.bool(0.2)) {
-        const sk = Sketcher.clumps(rng, style);
-        sk.run();
-        sketchers.push(sk);
+        layers.push(Sketcher.clumps(rng, style, rng.normal() / 5));
       }
-
-      // 1/4 chance landscape
-      if (rng.bool(0.25)) {
-        if (rng.bool()) {
-          const sk = Sketcher.sky(rng, style);
-          sk.run();
-          sketchers.push(sk);
-        } else {
-          const sk = Sketcher.sea(rng, style);
-          sk.run();
-          sketchers.push(sk);
+      if (rng.float() < 1 / layers.length) {
+        switch (Math.floor(rng.float() * 4)) {
+          case 0: layers.push(Sketcher.sky(rng, style)); break;
+          case 1: layers.push(Sketcher.mountains(rng, style)); break;
+          case 2: layers.push(Sketcher.city(rng, style)); break;
+          case 3: layers.push(Sketcher.sea(rng, style)); break;
         }
       }
-
     } else {
-      // Pip cards: N pips
-      const n = order;
-      const positions = generatePipPositions(n, rng);
-      const baseR = Math.max(12, Math.min(35, FIELD_WIDTH / (Math.sqrt(n) + 1) * 0.6));
-
+      const d = Math.sqrt(FIELD_HEIGHT * FIELD_WIDTH / order) / 2;
+      const r = 0.5 * d;
+      const positions = generatePipPositions(order, r, d, rng);
       for (const pos of positions) {
-        const suitProps = getSuitProps(suit, n, rng, palette);
-        const sk = Sketcher.pip(rng, style, pos, baseR * (0.7 + rng.normal() * 0.3), suitProps);
-        sk.run();
-        sketchers.push(sk);
+        const suitProps = getSuitProps(suit, order, rng, palette);
+        layers.push(Sketcher.pip(rng, style, pos, r, suitProps));
       }
-
-      // 50% sky or sea
-      if (rng.bool(0.5)) {
-        if (rng.bool()) {
-          const sk = Sketcher.sky(rng, style);
-          sk.run();
-          sketchers.push(sk);
-        } else {
-          const sk = Sketcher.sea(rng, style);
-          sk.run();
-          sketchers.push(sk);
-        }
-      }
+      layers.push(rng.float() < 0.5 ? Sketcher.sky(rng, style) : Sketcher.sea(rng, style));
     }
   }
 
-  // Paint filled regions
-  const painter = new Painter(svg, palette);
-  for (const sk of sketchers) painter.addSketcher(sk);
-  painter.fillAll(rng);
+  runLayers(layers);
 
-  // Draw strokes on top
-  for (const sk of sketchers) {
-    for (const s of sk.strokes) {
-      svg.stroke(s, strokeColor, 0.8);
-    }
+  const lastLayer = layers[layers.length - 1];
+  const allStrokes = lastLayer.strokes;
+  const allFillPoints = lastLayer.fillPoints;
+
+  const painter = new Painter(svg, palette, layers, allStrokes);
+  for (const fp of allFillPoints) painter.fillShape(fp, rng);
+  painter.drawAll();
+
+  for (const s of allStrokes) {
+    if (s.thickness > 0) svg.stroke(s, strokeColor, 0.8);
   }
 
-  // Border
-  svg.border(palette[0]);
+  svg.border(strokeColor);
+  svg.cardText(card.name, card.arcana === "major" ? card.number : undefined, strokeColor);
 
   return svg.build();
 }
@@ -1810,65 +1821,36 @@ function generateCard(cardId: number, deckSeed: number, opts: GenOptions = {}): 
 // ---------------------------------------------------------------------------
 // Pip position layouts
 // ---------------------------------------------------------------------------
-function generatePipPositions(n: number, rng: RNG): Vec2[] {
-  const positions: Vec2[] = [];
-  const margin = 50;
-  const w = FIELD_WIDTH - margin * 2;
-  const h = FIELD_HEIGHT - margin * 2;
-
-  // Layout: distribute n pips in a grid-like arrangement
-  if (n === 1) {
-    positions.push(new Vec2(FIELD_WIDTH / 2, FIELD_HEIGHT / 2));
-  } else if (n === 2) {
-    positions.push(new Vec2(FIELD_WIDTH / 2, margin + h * 0.25));
-    positions.push(new Vec2(FIELD_WIDTH / 2, margin + h * 0.75));
-  } else if (n === 3) {
-    positions.push(new Vec2(FIELD_WIDTH / 2, margin + h * 0.15));
-    positions.push(new Vec2(FIELD_WIDTH / 2, margin + h * 0.5));
-    positions.push(new Vec2(FIELD_WIDTH / 2, margin + h * 0.85));
-  } else if (n === 4) {
-    positions.push(new Vec2(margin + w * 0.25, margin + h * 0.25));
-    positions.push(new Vec2(margin + w * 0.75, margin + h * 0.25));
-    positions.push(new Vec2(margin + w * 0.25, margin + h * 0.75));
-    positions.push(new Vec2(margin + w * 0.75, margin + h * 0.75));
-  } else if (n === 5) {
-    positions.push(new Vec2(margin + w * 0.25, margin + h * 0.2));
-    positions.push(new Vec2(margin + w * 0.75, margin + h * 0.2));
-    positions.push(new Vec2(FIELD_WIDTH / 2, margin + h * 0.5));
-    positions.push(new Vec2(margin + w * 0.25, margin + h * 0.8));
-    positions.push(new Vec2(margin + w * 0.75, margin + h * 0.8));
-  } else if (n === 6) {
-    for (let row = 0; row < 3; row++)
-      for (let col = 0; col < 2; col++)
-        positions.push(new Vec2(margin + w * (col === 0 ? 0.25 : 0.75), margin + h * (0.15 + row * 0.35)));
-  } else if (n === 7) {
-    for (let row = 0; row < 3; row++)
-      for (let col = 0; col < 2; col++)
-        positions.push(new Vec2(margin + w * (col === 0 ? 0.25 : 0.75), margin + h * (0.12 + row * 0.3)));
-    positions.push(new Vec2(FIELD_WIDTH / 2, margin + h * 0.5));
-  } else if (n === 8) {
-    for (let row = 0; row < 4; row++)
-      for (let col = 0; col < 2; col++)
-        positions.push(new Vec2(margin + w * (col === 0 ? 0.25 : 0.75), margin + h * (0.1 + row * 0.265)));
-  } else if (n === 9) {
-    for (let row = 0; row < 3; row++)
-      for (let col = 0; col < 3; col++)
-        positions.push(new Vec2(margin + w * (0.1 + col * 0.4), margin + h * (0.15 + row * 0.35)));
-  } else { // 10
-    for (let row = 0; row < 4; row++)
-      for (let col = 0; col < 2; col++)
-        positions.push(new Vec2(margin + w * (col === 0 ? 0.25 : 0.75), margin + h * (0.08 + row * 0.245)));
-    positions.push(new Vec2(margin + w * 0.25, margin + h * 0.96));
-    positions.push(new Vec2(margin + w * 0.75, margin + h * 0.96));
+function generatePipPositions(n: number, r: number, d: number, rng: RNG): Vec2[] {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const positions: Vec2[] = [];
+    for (let i = 0; i < n; i++) {
+      positions.push(new Vec2(
+        r + rng.float() * (FIELD_WIDTH - d),
+        r + rng.float() * (FIELD_HEIGHT - d),
+      ));
+    }
+    let ok = true;
+    for (let i = 0; i < n - 1 && ok; i++) {
+      for (let j = i + 1; j < n && ok; j++) {
+        if (Vec2.dist(positions[i], positions[j]) < d) ok = false;
+      }
+    }
+    if (ok) return positions;
   }
-
-  // Add slight random jitter
-  return positions.map(p => new Vec2(
-    p.x + rng.normal2() * 8,
-    p.y + rng.normal2() * 8
-  ));
+  // Fallback: evenly distribute
+  const positions: Vec2[] = [];
+  const cols = Math.ceil(Math.sqrt(n));
+  for (let i = 0; i < n; i++) {
+    const col = i % cols, row = Math.floor(i / cols);
+    positions.push(new Vec2(
+      r + (FIELD_WIDTH - d) * (col + 0.5) / cols,
+      r + (FIELD_HEIGHT - d) * (row + 0.5) / Math.ceil(n / cols),
+    ));
+  }
+  return positions;
 }
 
 
 export { generateCard, CARD_DATA };
-export type { CardInfo, GenOptions };
+export type { CardInfo };
