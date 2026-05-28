@@ -1165,11 +1165,10 @@ class SVGBuilder {
   }
 
   border(color: number, alpha: number, thickness: number): void {
-    const r = thickness * 2;
     this.overlayElements.push(
       `<rect x="${MARGIN}" y="${MARGIN}" width="${FIELD_WIDTH}" height="${FIELD_HEIGHT}" ` +
         `fill="none" stroke="${intToHex(color)}" stroke-width="${thickness.toFixed(2)}" ` +
-        `stroke-opacity="${alpha.toFixed(3)}" rx="${r.toFixed(1)}"/>`,
+        `stroke-opacity="${alpha.toFixed(3)}" rx="${MARGIN}"/>`,
     );
   }
 
@@ -2423,13 +2422,13 @@ function generateCard(
   const card = CARD_DATA[cardId];
   if (!card) throw new Error(`Unknown card id ${cardId}`);
 
-  // Select palette
+  // Select palette — always consume the RNG roll for consistency
   const paletteNames = Object.keys(PALETTES);
-  const autoIdx = rng.int0(paletteNames.length);
+  rng.int0(paletteNames.length);
   const paletteName =
     opts.palette && PALETTES[opts.palette]
       ? opts.palette
-      : paletteNames[autoIdx];
+      : "RWS";
   const pal = PALETTES[paletteName];
 
   // Build art style

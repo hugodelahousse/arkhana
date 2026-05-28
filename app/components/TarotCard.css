@@ -892,7 +892,8 @@
 }
 
 .card-scene[data-procgen] {
-  --card-radius: 12px;
+  --card-radius: 5.32%;
+  --card-radius-xy: 5.32% / 3.15%;
 }
 
 .card-scene[data-procgen] .card-flipper {
@@ -912,7 +913,7 @@
 }
 
 .card-scene[data-procgen] .card-front {
-  border-radius: var(--card-radius);
+  border-radius: var(--card-radius-xy);
   overflow: hidden;
 }
 
@@ -920,7 +921,11 @@
 .card-scene[data-procgen] .card-shine::before,
 .card-scene[data-procgen] .card-shine::after,
 .card-scene[data-procgen] .card-glare {
-  border-radius: var(--card-radius);
+  border-radius: var(--card-radius-xy);
+}
+
+.card-scene[data-procgen] .card-back {
+  border-radius: var(--card-radius-xy);
 }
 
 .card-scene[data-procgen][data-revealed] [data-layer="fg"] {
