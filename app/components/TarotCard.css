@@ -899,6 +899,18 @@
   aspect-ratio: 376 / 634;
 }
 
+.card-scene[data-procgen] .card-edge-l,
+.card-scene[data-procgen] .card-edge-r {
+  top: var(--card-radius);
+  height: calc(100% - var(--card-radius) * 2);
+}
+
+.card-scene[data-procgen] .card-edge-t,
+.card-scene[data-procgen] .card-edge-b {
+  left: var(--card-radius);
+  width: calc(100% - var(--card-radius) * 2);
+}
+
 .card-scene[data-procgen] .card-front {
   border-radius: var(--card-radius);
   overflow: hidden;
