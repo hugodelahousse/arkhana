@@ -18,7 +18,7 @@ const PALETTE_OPTIONS: { value: string; label: string }[] = [
 type CardState =
   | { status: "idle" }
   | { status: "generating" }
-  | { status: "done"; cardUrl: string; maskUrl: string; ms: number };
+  | { status: "done"; ms: number };
 
 export function meta() {
   return [{ title: "Procgen Tarot — Lab" }];
@@ -46,16 +46,10 @@ export default function ProcgenLab() {
     w.onmessage = (e: MessageEvent<WorkerResponse>) => {
       const msg = e.data;
       if (msg.type === "card-done") {
-        const cardUrl = URL.createObjectURL(msg.cardBlob);
-        const maskUrl = URL.createObjectURL(msg.maskBlob);
-        setCards(prev => {
-          const old = prev[msg.cardId];
-          if (old && old.status === "done") {
-            URL.revokeObjectURL(old.cardUrl);
-            URL.revokeObjectURL(old.maskUrl);
-          }
-          return { ...prev, [msg.cardId]: { status: "done", cardUrl, maskUrl, ms: msg.ms } };
-        });
+        setCards(prev => ({
+          ...prev,
+          [msg.cardId]: { status: "done", ms: msg.ms },
+        }));
         setSelectedId(msg.cardId);
       } else if (msg.type === "all-done") {
         setAllStatus("done");
@@ -259,7 +253,7 @@ export default function ProcgenLab() {
               <div className="ml-auto flex gap-3 items-center">
                 <span className="text-xs text-ghost-foreground">{currentState.ms}ms</span>
                 <a
-                  href={currentState.cardUrl}
+                  href={`/api/procgen.png?id=${selectedId}&seed=${seed}${palette ? `&palette=${palette}` : ""}&w=752`}
                   download={`${currentCard.name.toLowerCase().replace(/\s+/g, "-")}.png`}
                   className="text-[0.65rem] tracking-[0.1em] uppercase px-3 py-1 border border-border bg-transparent text-primary font-serif hover:opacity-80 transition-opacity"
                 >
@@ -279,15 +273,15 @@ export default function ProcgenLab() {
             )}
             {currentState.status === "done" && (
               <TarotCard
-                key={`${selectedId}-${currentState.cardUrl}`}
+                key={`${selectedId}-${seed}-${palette}`}
                 card={CARDS[selectedId]}
                 rarityScore={3}
                 isReversed={false}
                 isRadiant={false}
                 revealed={true}
                 size="lg"
-                imageUrl={currentState.cardUrl}
-                maskUrl={currentState.maskUrl}
+                imageUrl={`/api/procgen.png?id=${selectedId}&seed=${seed}${palette ? `&palette=${palette}` : ""}&w=752`}
+                maskUrl={`/api/procgen.png?id=${selectedId}&seed=${seed}${palette ? `&palette=${palette}` : ""}&w=752&type=mask`}
                 procgenParallax={parallax ? parallaxAmount : 0}
               />
             )}
