@@ -118,6 +118,43 @@ export function moonIlluminatedPath(age: number): "new" | "full" | string {
   }
 }
 
+/**
+ * SVG path for a conventional moon phase icon at a 0–1 phase fraction.
+ * New moon is 0/1, full moon is 0.5, waxing lights the right side,
+ * and waning lights the left side. Rendered in a 100×100 viewBox.
+ */
+export function moonPhaseIconPath(phase: number): "new" | "full" | string {
+  const normalized = ((phase % 1) + 1) % 1;
+
+  if (normalized < 0.03 || normalized > 0.97) return "new";
+  if (normalized > 0.47 && normalized < 0.53) return "full";
+
+  const radius = 45;
+  const cx = 50;
+  const cy = 50;
+  const theta = 2 * Math.PI * normalized;
+  const terminatorRadius = Math.abs(radius * Math.cos(theta));
+  const terminatorSweep = Math.cos(theta) < 0 ? 1 : 0;
+  const top = `${cx} ${cy - radius}`;
+  const bottom = `${cx} ${cy + radius}`;
+
+  if (normalized < 0.5) {
+    return [
+      `M ${top}`,
+      `A ${radius} ${radius} 0 0 1 ${bottom}`,
+      `A ${terminatorRadius} ${radius} 0 0 ${terminatorSweep} ${top}`,
+      "Z",
+    ].join(" ");
+  }
+
+  return [
+    `M ${top}`,
+    `A ${radius} ${radius} 0 0 0 ${bottom}`,
+    `A ${terminatorRadius} ${radius} 0 0 ${terminatorSweep ? 0 : 1} ${top}`,
+    "Z",
+  ].join(" ");
+}
+
 export function getUpcomingCelestialEvents(fromDate: Date, days: number): CelestialEvent[] {
   const events: CelestialEvent[] = [];
   const toTime = fromDate.getTime() + days * MS_PER_DAY;

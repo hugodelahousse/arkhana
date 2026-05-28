@@ -13,7 +13,7 @@ import { getPullDates } from "../lib/pull";
 import {
   getMoonAge,
   getLunarMonthInfo,
-  moonIlluminatedPath,
+  moonPhaseIconPath,
   SYNODIC_MONTH_DAYS,
   MS_PER_DAY,
 } from "../lib/moonphase";
@@ -109,7 +109,8 @@ function formatLunarMonthLabel(newMoonDate: string, days: LunarDay[]): string {
 // ─── SVG Moon Phase Glyph ─────────────────────────────────────────────────────
 
 function MoonGlyph({ age }: { age: number }) {
-  const path = moonIlluminatedPath(age);
+  const path = moonPhaseIconPath(age / SYNODIC_MONTH_DAYS);
+  const isNew = path === "new";
 
   return (
     <svg
@@ -119,13 +120,42 @@ function MoonGlyph({ age }: { age: number }) {
       aria-hidden
       style={{ display: "block" }}
     >
-      {/* Disc outline — always present, faint */}
-      <circle cx={50} cy={50} r={45} fill="none" stroke="currentColor" strokeWidth={1.5} opacity={0.25} />
-      {path === "new" ? null : path === "full" ? (
+      <circle cx={50} cy={50} r={45} fill="currentColor" stroke="currentColor" strokeWidth={5} opacity={0.2} />
+      {path === "full" ? (
         <circle cx={50} cy={50} r={45} fill="currentColor" />
-      ) : (
+      ) : path !== "new" ? (
         <path d={path} fill="currentColor" />
-      )}
+      ) : null}
+      <circle
+        cx={50}
+        cy={50}
+        r={45}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={5}
+        opacity={isNew ? 0.55 : 1}
+      />
+    </svg>
+  );
+}
+
+function MoonGlyphHalo() {
+  return (
+    <svg
+      width="100%"
+      height="100%"
+      viewBox="0 0 100 100"
+      aria-hidden
+      style={{ display: "block" }}
+    >
+      <circle
+        cx={50}
+        cy={50}
+        r={47}
+        fill="currentColor"
+        opacity={0.2}
+        filter="drop-shadow(0 0 18px currentColor)"
+      />
     </svg>
   );
 }
@@ -283,19 +313,35 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
                   return (
                     <div
                       key={days}
-                      className="flex flex-col items-center gap-2.5 flex-1 py-5 border rounded-sm"
+                      className="flex flex-col items-center gap-2.5 flex-1 py-5 border rounded-sm transition-colors"
                       style={{
                         borderColor: reached
-                          ? "var(--accent)"
-                          : "var(--border)",
-                        opacity: reached ? 1 : 0.3,
+                          ? "color-mix(in srgb, var(--accent) 72%, var(--border))"
+                          : "color-mix(in srgb, var(--muted-foreground) 35%, var(--border))",
+                        background: reached
+                          ? "color-mix(in srgb, var(--accent) 9%, var(--card))"
+                          : "color-mix(in srgb, var(--muted-foreground) 4%, transparent)",
                         color: reached
                           ? "var(--accent)"
                           : "var(--muted-foreground)",
+                        boxShadow: reached
+                          ? "0 0 20px color-mix(in srgb, var(--accent) 14%, transparent)"
+                          : "inset 0 1px 0 color-mix(in srgb, var(--foreground) 5%, transparent)",
                       }}
                     >
-                      <Icon weight="thin" size={22} aria-hidden />
-                      <p className="text-xs font-light font-serif text-muted-foreground">
+                      <Icon
+                        weight={reached ? "light" : "thin"}
+                        size={24}
+                        aria-hidden
+                        style={{
+                          opacity: reached ? 1 : 0.68,
+                          filter: reached ? "drop-shadow(0 0 8px var(--accent))" : undefined,
+                        }}
+                      />
+                      <p
+                        className="text-xs font-light font-serif"
+                        style={{ color: reached ? "var(--accent-text)" : "var(--faint-foreground)" }}
+                      >
                         {days}
                       </p>
                     </div>
@@ -321,7 +367,7 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
                   <button
                     onClick={goOlder}
                     disabled={activeMonth >= calendarMonths.length - 1}
-                    className="opacity-40 hover:opacity-80 disabled:opacity-10 transition-opacity"
+                    className="opacity-60 hover:opacity-90 disabled:opacity-20 transition-opacity"
                     aria-label="Previous month"
                   >
                     <CaretLeft weight="thin" size={16} />
@@ -337,7 +383,7 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
                   <button
                     onClick={goNewer}
                     disabled={activeMonth === 0}
-                    className="opacity-40 hover:opacity-80 disabled:opacity-10 transition-opacity"
+                    className="opacity-60 hover:opacity-90 disabled:opacity-20 transition-opacity"
                     aria-label="Next month"
                   >
                     <CaretRight weight="thin" size={16} />
@@ -402,34 +448,41 @@ function LunarDayCell({ day }: { day: LunarDay }) {
 
   let color: string;
   let opacity: number;
-  let filter: string | undefined;
+  let halo = false;
 
   if (isToday && day.pulled) {
     color = "var(--accent)";
     opacity = 1;
-    filter = "drop-shadow(0 0 3px var(--accent))";
+    halo = true;
   } else if (isToday) {
     color = "var(--muted-foreground)";
-    opacity = 0.6;
-    filter = "drop-shadow(0 0 2px var(--muted-foreground))";
+    opacity = 0.78;
+    halo = true;
   } else if (isFuture) {
     color = "var(--muted-foreground)";
-    opacity = 0.08;
+    opacity = 0.16;
   } else if (day.pulled) {
     color = "var(--muted-foreground)";
-    opacity = 0.75;
+    opacity = 0.9;
   } else {
     color = "var(--muted-foreground)";
-    opacity = 0.15;
+    opacity = 0.28;
   }
 
   return (
     <div
       title={day.date}
-      className="aspect-square"
-      style={{ color, opacity, filter }}
+      className="relative aspect-square"
+      style={{ color, opacity }}
     >
-      <MoonGlyph age={day.lunarAge} />
+      {halo && (
+        <div className="absolute inset-0">
+          <MoonGlyphHalo />
+        </div>
+      )}
+      <div className="relative">
+        <MoonGlyph age={day.lunarAge} />
+      </div>
     </div>
   );
 }
