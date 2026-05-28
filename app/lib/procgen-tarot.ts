@@ -1177,6 +1177,16 @@ class SVGBuilder {
     }
   }
 
+  polygonStroke(points: Vec2[], color: number, alpha: number): void {
+    const pts = points
+      .map((p) => `${(p.x + MARGIN).toFixed(2)},${(p.y + MARGIN).toFixed(2)}`)
+      .join(" ");
+    this.elements.push(
+      `<polygon points="${pts}" fill="none" stroke="${intToHex(color)}" ` +
+        `stroke-width="1" stroke-opacity="${alpha.toFixed(3)}"/>`,
+    );
+  }
+
   stroke(s: Stroke, color: number, alpha: number): void {
     const x1 = (s.start.x + MARGIN).toFixed(2),
       y1 = (s.start.y + MARGIN).toFixed(2);
@@ -1429,7 +1439,7 @@ class Painter {
       if (duplicate) return null;
     }
     const area = Math.abs(polygonArea(shape));
-    const region = { shape, area, colors: undefined as number[] | undefined, type: null as number | null };
+    const region: { shape: Vec2[]; area: number; colors?: number[]; type: number | null } = { shape, area, type: null };
     this.regions.push(region);
     return region;
   }
@@ -1461,42 +1471,44 @@ class Painter {
       }
     }
 
-    // Compute gradient
-    const colors = (region.colors = artGradient(this.artStyle, color, this.rng));
+    region.colors = artGradient(this.artStyle, color, this.rng);
 
-    // Determine gradient type
     const compactness = polygonCompactness(shape);
     if (compactness > 0.8) {
-      region.type = 1; // radial
-      this.drawRegion(region, shape, colors, "radial");
+      region.type = 1;
     } else {
-      region.type = 0; // linear
-      this.drawRegion(region, shape, colors, "linear");
+      region.type = 0;
     }
   }
 
-  private drawRegion(
-    _region: { shape: Vec2[]; area: number },
-    shape: Vec2[],
-    colors: [number, number, number],
-    type: "linear" | "radial",
-  ): void {
-    if (type === "radial") {
-      this.svgBuilder.polygon(shape, colors[1], 1, colors, "radial");
+  private drawRegion(region: {
+    shape: Vec2[];
+    colors?: number[];
+    type?: number | null;
+  }): void {
+    const colors = region.colors as [number, number, number];
+    if (!colors) return;
+    if (region.type === 1) {
+      this.svgBuilder.polygon(region.shape, colors[1], 1, colors, "radial");
     } else {
-      // Use OBB angle for oriented gradient
-      const obb = computeOBB(shape);
-      this.svgBuilder.polygon(shape, colors[1], 1, colors, "linear", obb.angle);
+      const obb = computeOBB(region.shape);
+      this.svgBuilder.polygon(
+        region.shape,
+        colors[1],
+        1,
+        colors,
+        "linear",
+        obb.angle,
+      );
     }
+    this.svgBuilder.polygonStroke(region.shape, colors[1], 0.6);
   }
 
   drawAll(): void {
-    // Sort regions by area descending, then redraw
     this.regions.sort((a, b) => b.area - a.area);
-    // Already drawn during fillShape; re-render sorted
-    // Clear and re-emit would require re-rendering, but for SVG we already
-    // emitted polygons in order. Since we're generating SVG incrementally,
-    // the order is correct if fillShape calls are in order.
+    for (const region of this.regions) {
+      this.drawRegion(region);
+    }
   }
 }
 
@@ -1572,6 +1584,7 @@ class Sketcher {
     FIELD_HEIGHT / Sketcher.BUCKET_SIZE,
   );
   private buckets: Set<number>[][] = [];
+  private needsRebucket = false;
 
   constructor(
     mask: Mask,
@@ -1647,6 +1660,10 @@ class Sketcher {
   }
 
   draw(): boolean {
+    if (this.needsRebucket) {
+      this.rebuildBuckets();
+      this.needsRebucket = false;
+    }
     const newList: Tracer[] = [];
     for (const t of this.tracers) {
       const s = t.trace(this.flow.get(t.pos));
@@ -1714,17 +1731,13 @@ class Sketcher {
       } else if (ty === 1) {
         stroke.end = closest.end;
       } else {
-        // Split at intersection point
         const p = new Vec2(x1 + tx * dx1, y1 + tx * dy1);
         stroke.end = p;
-        // Remove old stroke and add two splits
+        this.strokes.push(new Stroke(closest.start, p, closest.thickness));
+        this.strokes.push(new Stroke(p, closest.end, closest.thickness));
         const oldIdx = this.strokes.indexOf(closest);
-        const s1 = new Stroke(closest.start, p, closest.thickness);
-        const s2 = new Stroke(p, closest.end, closest.thickness);
-        this.strokes.splice(oldIdx, 1, s1, s2);
-        // Rebuild buckets for affected area
-        this.addToBuckets(oldIdx, s1);
-        this.addToBuckets(oldIdx + 1, s2);
+        if (oldIdx !== -1) this.strokes.splice(oldIdx, 1);
+        this.needsRebucket = true;
       }
       return false;
     }
