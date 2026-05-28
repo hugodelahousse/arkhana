@@ -1,7 +1,21 @@
 const W = 376 * 2;
 const H = 634 * 2;
 
-export function rasterizeSvg(svg: string): Promise<string> {
+const LAYER_CSS: Record<string, string> = {
+  back: `[data-layer="fg"],[data-layer="text"]{display:none}`,
+  front: `[data-layer="bg"],[data-layer="strokes"],[data-layer="border"]{display:none}` +
+    `svg>rect{display:none}`,
+};
+
+export function rasterizeSvg(
+  svg: string,
+  layer?: "back" | "front",
+): Promise<string> {
+  let svgStr = svg;
+  if (layer && LAYER_CSS[layer]) {
+    svgStr = svgStr.replace("</defs>", `<style>${LAYER_CSS[layer]}</style></defs>`);
+  }
+
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -19,6 +33,6 @@ export function rasterizeSvg(svg: string): Promise<string> {
       }, "image/png");
     };
     img.onerror = () => reject(new Error("SVG image load failed"));
-    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svg)));
+    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgStr)));
   });
 }

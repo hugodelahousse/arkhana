@@ -20,8 +20,8 @@ const PALETTE_OPTIONS: { value: string; label: string }[] = [
 type CardState =
   | { status: "idle" }
   | { status: "generating" }
-  | { status: "rasterizing" }
-  | { status: "done"; cardUrl: string; maskUrl: string; ms: number };
+  | { status: "rasterizing"; svg: string }
+  | { status: "done"; svg: string; fullUrl: string; backUrl?: string; frontUrl?: string; ms: number };
 
 export function meta() {
   return [{ title: "Procgen Tarot — Lab" }];
@@ -40,6 +40,8 @@ export default function ProcgenLab() {
   const [parallax, setParallax] = useState(true);
   const [parallaxAmount, setParallaxAmount] = useState(8);
   const workerRef = useRef<Worker | null>(null);
+  const rarityRef = useRef(rarity);
+  useEffect(() => { rarityRef.current = rarity; }, [rarity]);
 
   useEffect(() => {
     const w = new Worker(
@@ -52,21 +54,27 @@ export default function ProcgenLab() {
       if (msg.type === "card-done") {
         setCards(prev => ({
           ...prev,
-          [msg.cardId]: { status: "rasterizing" },
+          [msg.cardId]: { status: "rasterizing", svg: msg.svg },
         }));
         setSelectedId(msg.cardId);
         const genMs = msg.ms;
-        Promise.all([
-          rasterizeSvg(msg.cardSvg),
-          rasterizeSvg(msg.maskSvg),
-        ]).then(([cardUrl, maskUrl]) => {
+        const svgStr = msg.svg;
+        const needsLayers = rarityRef.current >= 4;
+        const promises = needsLayers
+          ? Promise.all([rasterizeSvg(svgStr, "back"), rasterizeSvg(svgStr, "front")])
+          : rasterizeSvg(svgStr).then(url => [url] as string[]);
+        promises.then((urls) => {
           setCards(prev => {
             const old = prev[msg.cardId];
             if (old && old.status === "done") {
-              URL.revokeObjectURL(old.cardUrl);
-              URL.revokeObjectURL(old.maskUrl);
+              URL.revokeObjectURL(old.fullUrl);
+              if (old.backUrl) URL.revokeObjectURL(old.backUrl);
+              if (old.frontUrl) URL.revokeObjectURL(old.frontUrl);
             }
-            return { ...prev, [msg.cardId]: { status: "done", cardUrl, maskUrl, ms: genMs } };
+            if (needsLayers) {
+              return { ...prev, [msg.cardId]: { status: "done", svg: svgStr, fullUrl: urls[0], backUrl: urls[0], frontUrl: urls[1], ms: genMs } };
+            }
+            return { ...prev, [msg.cardId]: { status: "done", svg: svgStr, fullUrl: urls[0], ms: genMs } };
           });
         }).catch((err) => {
           console.error("Rasterize error:", err);
@@ -287,7 +295,7 @@ export default function ProcgenLab() {
               <div className="ml-auto flex gap-3 items-center">
                 <span className="text-xs text-ghost-foreground">{currentState.ms}ms</span>
                 <a
-                  href={currentState.cardUrl}
+                  href={currentState.fullUrl}
                   download={`${currentCard.name.toLowerCase().replace(/\s+/g, "-")}.png`}
                   className="text-[0.65rem] tracking-[0.1em] uppercase px-3 py-1 border border-border bg-transparent text-primary font-serif hover:opacity-80 transition-opacity"
                 >
@@ -309,15 +317,15 @@ export default function ProcgenLab() {
             )}
             {currentState.status === "done" && (
               <TarotCard
-                key={`${selectedId}-${currentState.cardUrl}`}
+                key={`${selectedId}-${currentState.fullUrl}`}
                 card={CARDS[selectedId]}
                 rarityScore={rarity}
                 isReversed={false}
                 isRadiant={false}
                 revealed={true}
                 size="lg"
-                imageUrl={currentState.cardUrl}
-                maskUrl={currentState.maskUrl}
+                imageUrl={currentState.backUrl ?? currentState.fullUrl}
+                frontImageUrl={currentState.frontUrl}
                 procgenParallax={parallax ? parallaxAmount : 0}
               />
             )}

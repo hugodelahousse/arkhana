@@ -21,10 +21,10 @@ export interface TarotCardProps {
   size?: "sm" | "md" | "lg";
   showHint?: boolean;
   motionConfig?: Partial<CardMotionConfig>;
-  /** Override the card image URL (e.g. procgen PNG). */
+  /** Override the card image URL (e.g. procgen back-layer PNG). */
   imageUrl?: string;
-  /** Override the subject mask URL (e.g. procgen mask PNG). */
-  maskUrl?: string;
+  /** Front/foreground layer image for parallax (e.g. procgen front-layer PNG). */
+  frontImageUrl?: string;
   /** Procgen SVG string. When set, renders inline SVG instead of CDN image. */
   svgContent?: string;
   /** Parallax depth in px for procgen fg layer (default 8). */
@@ -42,7 +42,7 @@ export const TarotCard = memo(function TarotCard({
   showHint = false,
   motionConfig,
   imageUrl,
-  maskUrl: maskUrlProp,
+  frontImageUrl,
   svgContent,
   procgenParallax = 8,
 }: TarotCardProps) {
@@ -52,8 +52,8 @@ export const TarotCard = memo(function TarotCard({
   const tilt = useCardMotion(sceneRef, config, !revealed ? hold.cancel : undefined);
 
   const rarityLabel = RARITY_LABELS[rarityScore]?.toLowerCase() ?? "mundane";
-  const hasSubjectMask = rarityScore >= 3 || !!maskUrlProp;
-  const hasParallax = rarityScore >= 4 || !!maskUrlProp;
+  const hasSubjectMask = rarityScore >= 3 || !!frontImageUrl;
+  const hasParallax = rarityScore >= 4 || !!frontImageUrl;
   const hasTextLayers = rarityScore >= 5;
   const isMajor = card.arcana === "major";
   const cardHasTopMask = isMajor && hasTopMask(card.id);
@@ -93,14 +93,14 @@ export const TarotCard = memo(function TarotCard({
       data-revealed={revealed || undefined}
       data-reversed={isReversed || undefined}
       data-radiant={isRadiant || undefined}
-      data-procgen={svgContent || maskUrlProp ? "" : undefined}
+      data-procgen={svgContent || frontImageUrl ? "" : undefined}
       style={{
         "--rarity-color": `var(--color-rarity-${rarityLabel})`,
-        ...((svgContent || maskUrlProp) ? { "--procgen-parallax": `${procgenParallax}px` } : {}),
-        ...(hasSubjectMask ? {
-          "--mask-url": maskUrlProp ? `url(${maskUrlProp})` : `url(${cardMaskUrl(card.id)})`,
-          ...(!maskUrlProp && cardHasNameMask ? { "--name-mask-url": `url(${cardNameMaskUrl(card.id)})` } : {}),
-          ...(!maskUrlProp && cardHasTopMask ? { "--top-mask-url": `url(${cardTopMaskUrl(card.id)})` } : {}),
+        ...((svgContent || frontImageUrl) ? { "--procgen-parallax": `${procgenParallax}px` } : {}),
+        ...(hasSubjectMask && !frontImageUrl ? {
+          "--mask-url": `url(${cardMaskUrl(card.id)})`,
+          ...(cardHasNameMask ? { "--name-mask-url": `url(${cardNameMaskUrl(card.id)})` } : {}),
+          ...(cardHasTopMask ? { "--top-mask-url": `url(${cardTopMaskUrl(card.id)})` } : {}),
         } : {}),
       } as React.CSSProperties}
       onMouseMove={tilt.onMouseMove}
@@ -154,15 +154,26 @@ export const TarotCard = memo(function TarotCard({
                 />
                 {hasParallax && (
                   <>
-                    <img
-                      className="card-subject"
-                      src={imgSrc}
-                      alt=""
-                      loading="eager"
-                      draggable={false}
-                      aria-hidden="true"
-                      style={{ maskImage: `url(${maskUrlProp ?? cardMaskUrl(card.id)})`, WebkitMaskImage: `url(${maskUrlProp ?? cardMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
-                    />
+                    {frontImageUrl ? (
+                      <img
+                        className="card-subject"
+                        src={frontImageUrl}
+                        alt=""
+                        loading="eager"
+                        draggable={false}
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <img
+                        className="card-subject"
+                        src={imgSrc}
+                        alt=""
+                        loading="eager"
+                        draggable={false}
+                        aria-hidden="true"
+                        style={{ maskImage: `url(${cardMaskUrl(card.id)})`, WebkitMaskImage: `url(${cardMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
+                      />
+                    )}
                     {rarityScore >= 5 && (
                       <>
                         {cardHasNameMask && (
