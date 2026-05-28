@@ -18,7 +18,7 @@ const PALETTE_OPTIONS: { value: string; label: string }[] = [
 type CardState =
   | { status: "idle" }
   | { status: "generating" }
-  | { status: "done"; svg: string; ms: number };
+  | { status: "done"; cardUrl: string; maskUrl: string; ms: number };
 
 export function meta() {
   return [{ title: "Procgen Tarot — Lab" }];
@@ -43,13 +43,32 @@ export default function ProcgenLab() {
       { type: "module" }
     );
     workerRef.current = w;
-    w.onmessage = (e: MessageEvent<WorkerResponse>) => {
+    w.onmessage = async (e: MessageEvent<WorkerResponse>) => {
       const msg = e.data;
       if (msg.type === "card-done") {
-        setCards(prev => ({
-          ...prev,
-          [msg.cardId]: { status: "done", svg: msg.svg, ms: msg.ms },
-        }));
+        const cardCanvas = new OffscreenCanvas(msg.cardBitmap.width, msg.cardBitmap.height);
+        const cardCtx = cardCanvas.getContext("2d")!;
+        cardCtx.drawImage(msg.cardBitmap, 0, 0);
+        const cardBlob = await cardCanvas.convertToBlob({ type: "image/png" });
+        const cardUrl = URL.createObjectURL(cardBlob);
+
+        const maskCanvas = new OffscreenCanvas(msg.maskBitmap.width, msg.maskBitmap.height);
+        const maskCtx = maskCanvas.getContext("2d")!;
+        maskCtx.drawImage(msg.maskBitmap, 0, 0);
+        const maskBlob = await maskCanvas.convertToBlob({ type: "image/png" });
+        const maskUrl = URL.createObjectURL(maskBlob);
+
+        msg.cardBitmap.close();
+        msg.maskBitmap.close();
+
+        setCards(prev => {
+          const old = prev[msg.cardId];
+          if (old && old.status === "done") {
+            URL.revokeObjectURL(old.cardUrl);
+            URL.revokeObjectURL(old.maskUrl);
+          }
+          return { ...prev, [msg.cardId]: { status: "done", cardUrl, maskUrl, ms: msg.ms } };
+        });
         setSelectedId(msg.cardId);
       } else if (msg.type === "all-done") {
         setAllStatus("done");
@@ -253,19 +272,11 @@ export default function ProcgenLab() {
               <div className="ml-auto flex gap-3 items-center">
                 <span className="text-xs text-ghost-foreground">{currentState.ms}ms</span>
                 <a
-                  href={`/api/procgen.png?id=${selectedId}&seed=${seed}${palette ? `&palette=${palette}` : ""}&w=752`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={currentState.cardUrl}
+                  download={`${currentCard.name.toLowerCase().replace(/\s+/g, "-")}.png`}
                   className="text-[0.65rem] tracking-[0.1em] uppercase px-3 py-1 border border-border bg-transparent text-primary font-serif hover:opacity-80 transition-opacity"
                 >
-                  PNG
-                </a>
-                <a
-                  href={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(currentState.svg)}`}
-                  download={`${currentCard.name.toLowerCase().replace(/\s+/g, "-")}.svg`}
-                  className="text-[0.65rem] tracking-[0.1em] uppercase px-3 py-1 border border-border bg-transparent text-primary font-serif hover:opacity-80 transition-opacity"
-                >
-                  Download SVG
+                  Download PNG
                 </a>
               </div>
             )}
@@ -281,14 +292,15 @@ export default function ProcgenLab() {
             )}
             {currentState.status === "done" && (
               <TarotCard
-                key={`${selectedId}-${seed}-${palette}`}
+                key={`${selectedId}-${currentState.cardUrl}`}
                 card={CARDS[selectedId]}
                 rarityScore={3}
                 isReversed={false}
                 isRadiant={false}
                 revealed={true}
                 size="lg"
-                imageUrl={`/api/procgen.png?id=${selectedId}&seed=${seed}${palette ? `&palette=${palette}` : ""}&w=752`}
+                imageUrl={currentState.cardUrl}
+                maskUrl={currentState.maskUrl}
                 procgenParallax={parallax ? parallaxAmount : 0}
               />
             )}

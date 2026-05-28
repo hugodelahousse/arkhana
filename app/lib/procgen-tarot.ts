@@ -2371,7 +2371,7 @@ function generateCard(
   cardId: number,
   deckSeed: number,
   opts: GenOptions = {},
-): string {
+): { svg: string; maskSvg: string } {
   const seed = deckSeed + cardId * 1000;
   const rng = new RNG(seed);
 
@@ -2594,7 +2594,36 @@ function generateCard(
     artStyle.paper,
   );
 
-  return svg.build();
+  const cardSvg = svg.build();
+
+  // Generate foreground mask SVG (white on transparent)
+  const maskSvg = buildMaskSvg(layers);
+
+  return { svg: cardSvg, maskSvg };
+}
+
+function buildMaskSvg(layers: Sketcher[]): string {
+  const rects: string[] = [];
+  for (const layer of layers) {
+    if (!layer.foreground) continue;
+    for (let r = 0; r < FIELD_ROWS; r++) {
+      for (let c = 0; c < FIELD_COLS; c++) {
+        if (layer.mask.values[r][c]) {
+          const x = MARGIN + c * (FIELD_WIDTH / FIELD_COLS);
+          const y = MARGIN + r * (FIELD_HEIGHT / FIELD_ROWS);
+          const w = FIELD_WIDTH / FIELD_COLS;
+          const h = FIELD_HEIGHT / FIELD_ROWS;
+          rects.push(`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}"/>`);
+        }
+      }
+    }
+  }
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_WIDTH}" height="${CARD_HEIGHT}" ` +
+    `viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}">` +
+    `<g fill="white">${rects.join("")}</g>` +
+    `</svg>`
+  );
 }
 
 export { generateCard, CARD_DATA };

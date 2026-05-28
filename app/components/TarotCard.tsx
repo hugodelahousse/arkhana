@@ -21,8 +21,10 @@ export interface TarotCardProps {
   size?: "sm" | "md" | "lg";
   showHint?: boolean;
   motionConfig?: Partial<CardMotionConfig>;
-  /** Override the card image URL (e.g. procgen PNG endpoint). */
+  /** Override the card image URL (e.g. procgen PNG). */
   imageUrl?: string;
+  /** Override the subject mask URL (e.g. procgen mask PNG). */
+  maskUrl?: string;
   /** Procgen SVG string. When set, renders inline SVG instead of CDN image. */
   svgContent?: string;
   /** Parallax depth in px for procgen fg layer (default 8). */
@@ -40,6 +42,7 @@ export const TarotCard = memo(function TarotCard({
   showHint = false,
   motionConfig,
   imageUrl,
+  maskUrl: maskUrlProp,
   svgContent,
   procgenParallax = 8,
 }: TarotCardProps) {
@@ -49,8 +52,8 @@ export const TarotCard = memo(function TarotCard({
   const tilt = useCardMotion(sceneRef, config, !revealed ? hold.cancel : undefined);
 
   const rarityLabel = RARITY_LABELS[rarityScore]?.toLowerCase() ?? "mundane";
-  const hasSubjectMask = rarityScore >= 3;
-  const hasParallax = rarityScore >= 4;
+  const hasSubjectMask = rarityScore >= 3 || !!maskUrlProp;
+  const hasParallax = rarityScore >= 4 || !!maskUrlProp;
   const hasTextLayers = rarityScore >= 5;
   const isMajor = card.arcana === "major";
   const cardHasTopMask = isMajor && hasTopMask(card.id);
@@ -158,7 +161,7 @@ export const TarotCard = memo(function TarotCard({
                       loading="eager"
                       draggable={false}
                       aria-hidden="true"
-                      style={{ maskImage: `url(${cardMaskUrl(card.id)})`, WebkitMaskImage: `url(${cardMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
+                      style={{ maskImage: `url(${maskUrlProp ?? cardMaskUrl(card.id)})`, WebkitMaskImage: `url(${maskUrlProp ?? cardMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
                     />
                     {rarityScore >= 5 && (
                       <>

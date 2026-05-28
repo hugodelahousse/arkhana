@@ -12,9 +12,11 @@ export async function loader({ request }: Route.LoaderArgs) {
   const palette = url.searchParams.get("palette") ?? undefined;
   const width = Math.min(1200, Math.max(100, parseInt(url.searchParams.get("w") ?? "376", 10) || 376));
 
-  const svg = generateCard(cardId, seed, { palette });
+  const type = url.searchParams.get("type") === "mask" ? "mask" : "card";
+  const result = generateCard(cardId, seed, { palette });
+  const svgStr = type === "mask" ? result.maskSvg : result.svg;
 
-  const resvg = new Resvg(svg, {
+  const resvg = new Resvg(svgStr, {
     fitTo: { mode: "width", value: width },
     font: {
       fontFiles: [],

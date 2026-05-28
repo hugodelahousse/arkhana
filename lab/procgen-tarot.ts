@@ -25,7 +25,7 @@ function main(): void {
 
   for (let id = 0; id < total; id++) {
     const card = CARD_DATA[id];
-    const svgContent = generateCard(id, deckSeed);
+    const { svg: svgContent } = generateCard(id, deckSeed);
     const filename = `card-${String(id).padStart(2, "0")}.svg`;
     fs.writeFileSync(path.join(outputDir, filename), svgContent, "utf8");
     const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
