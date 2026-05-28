@@ -1122,7 +1122,7 @@ function toRoman(n: number): string {
 // SVGBuilder
 // ---------------------------------------------------------------------------
 const MARGIN = 20;
-const TITLE_HEIGHT = 25;
+const TITLE_HEIGHT = 36;
 const CARD_WIDTH = FIELD_WIDTH + MARGIN * 2;
 const CARD_HEIGHT = FIELD_HEIGHT + MARGIN * 2 + TITLE_HEIGHT;
 
@@ -1162,7 +1162,7 @@ class SVGBuilder {
     const hex = intToHex(color);
     const escapedName = name.replace(/&/g, "&amp;").replace(/</g, "&lt;");
     const font = "'Cormorant Garamond', Georgia, serif";
-    const titleY = MARGIN + FIELD_HEIGHT + TITLE_HEIGHT / 2;
+    const titleY = MARGIN + FIELD_HEIGHT + (MARGIN + TITLE_HEIGHT) / 2;
     this.overlayElements.push(
       `<text x="${CARD_WIDTH / 2}" y="${titleY}" ` +
         `text-anchor="middle" dominant-baseline="central" ` +

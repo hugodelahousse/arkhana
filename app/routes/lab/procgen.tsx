@@ -244,7 +244,7 @@ export default function ProcgenLab() {
             {currentState.status === "done" && (
               <div
                 className="shadow-2xl"
-                style={{ width: 376, height: 623 }}
+                style={{ width: 376, height: 634 }}
                 dangerouslySetInnerHTML={{ __html: currentState.svg }}
               />
             )}
