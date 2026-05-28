@@ -90,7 +90,7 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
           <Link to="/" className="text-2xl tracking-widest text-primary font-serif block">
             ARKHANA
           </Link>
-          <p className="text-xs tracking-widest uppercase opacity-60">
+          <p className="type-caption">
             Return to your arkhive
           </p>
         </div>
@@ -111,7 +111,7 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
             required
             placeholder="your@email.com"
             autoComplete="username webauthn"
-            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-secondary"
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-muted-foreground"
           />
           <label htmlFor="password" className="sr-only">Password</label>
           <input
@@ -121,12 +121,12 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
             required
             placeholder="Password"
             autoComplete="current-password webauthn"
-            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-secondary"
+            className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-muted-foreground"
           />
           <div className="flex justify-end">
             <Link
               to="/auth/forgot-password"
-              className="text-xs opacity-50 hover:opacity-80 transition-opacity"
+              className="type-caption hover:opacity-80 transition-opacity"
             >
               Forgot password?
             </Link>
@@ -142,7 +142,7 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
 
             <div className="flex items-center gap-3 opacity-30">
               <div className="flex-1 border-t border-border" />
-              <span className="text-[10px] tracking-widest uppercase">or</span>
+              <span className="type-ghost">or</span>
               <div className="flex-1 border-t border-border" />
             </div>
 
@@ -153,16 +153,16 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
               type="button"
               onClick={handlePasskeySignIn}
               disabled={passkeyLoading}
-              className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-secondary hover:text-primary disabled:opacity-40 transition-all"
+              className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-muted-foreground hover:text-primary disabled:opacity-40 transition-all"
             >
               {passkeyLoading ? "…" : "Sign in with passkey"}
             </button>
           </div>
         </Form>
 
-        <p className="text-center text-xs opacity-60">
+        <p className="text-center type-caption">
           No account yet?{" "}
-          <Link to="/auth/signup" className="opacity-80 hover:opacity-100 transition-opacity underline">
+          <Link to="/auth/signup" className="hover:opacity-100 transition-opacity underline">
             Create one
           </Link>
         </p>

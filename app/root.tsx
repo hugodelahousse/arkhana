@@ -5,12 +5,14 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useRouteLoaderData,
 } from "react-router";
 import { useEffect } from "react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
 import { OrientationProvider } from "./lib/orientation";
+import { getThemeFromCookie, THEME_SCRIPT, THEME_COLORS, type Theme } from "./lib/theme";
 
 export const links: Route.LinksFunction = () => [
   { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -18,18 +20,41 @@ export const links: Route.LinksFunction = () => [
   { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
 ];
 
+export async function loader({ request }: Route.LoaderArgs) {
+  return { theme: getThemeFromCookie(request) };
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
+  const data = useRouteLoaderData<typeof loader>("root");
+  const theme = data?.theme ?? "system";
+
+  // suppressHydrationWarning: the blocking script intentionally mutates
+  // document.documentElement.classList before React hydrates — not a bug.
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <meta name="theme-color" content="#0a0a0f" />
+        {/* system: two media-conditional tags so the browser picks correctly without JS.
+            explicit light/dark: single tag. The blocking script collapses both to the
+            resolved value before first paint, so iOS sees the right color immediately. */}
+        {theme === "system" ? (
+          <>
+            <meta name="theme-color" content={THEME_COLORS.light} media="(prefers-color-scheme: light)" />
+            <meta name="theme-color" content={THEME_COLORS.dark} media="(prefers-color-scheme: dark)" />
+          </>
+        ) : (
+          <meta name="theme-color" content={theme === "light" ? THEME_COLORS.light : THEME_COLORS.dark} />
+        )}
         <link rel="manifest" href="/site.webmanifest" />
         <Meta />
         <Links />
       </head>
       <body>
+        {/* Blocking script: must be first in <body> so it runs before any content
+            is painted. Reads the theme cookie, falls back to matchMedia for
+            'system', and toggles .dark on <html>. No flash possible. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -49,6 +74,37 @@ function ServiceWorkerRegister() {
 }
 
 export default function App() {
+  const data = useRouteLoaderData<typeof loader>("root");
+  const theme = data?.theme ?? "system";
+
+  // Keep .dark in sync with theme and OS preference after hydration.
+  // The blocking script handles initial load; this effect handles:
+  //   1. Theme changes triggered by the settings page
+  //   2. OS-level prefers-color-scheme changes while theme is 'system'
+  useEffect(() => {
+    function apply(t: Theme) {
+      const isDark =
+        t === "dark" ||
+        (t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.classList.toggle("dark", isDark);
+      // Keep iOS address-bar color in sync with the resolved theme
+      const color = isDark ? THEME_COLORS.dark : THEME_COLORS.light;
+      document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m, i) => {
+        if (i === 0) { m.content = color; m.removeAttribute("media"); }
+        else m.remove();
+      });
+    }
+
+    apply(theme);
+
+    if (theme === "system") {
+      const mql = window.matchMedia("(prefers-color-scheme: dark)");
+      const onChange = () => apply("system");
+      mql.addEventListener("change", onChange);
+      return () => mql.removeEventListener("change", onChange);
+    }
+  }, [theme]);
+
   return (
     <OrientationProvider>
       <Outlet />
@@ -78,28 +134,28 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="min-h-screen bg-base flex flex-col items-center justify-center px-6 text-center">
+    <main className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center">
       <div className="max-w-md space-y-6">
         {isOffline && (
-          <div className="w-32 mx-auto mb-2 rounded border border-default overflow-hidden bg-surface">
+          <div className="w-32 mx-auto mb-2 rounded border border-border overflow-hidden bg-card">
             <img src="/cards/moon.jpg" alt="The Moon" className="w-full opacity-85" />
           </div>
         )}
         <p className="text-6xl font-light tracking-widest text-primary font-serif">
           {message}
         </p>
-        <p className="text-sm tracking-wide opacity-60 text-secondary font-serif">
+        <p className="text-sm tracking-wide opacity-60 text-muted-foreground font-serif">
           {details}
         </p>
         <a
           href={isOffline ? undefined : "/"}
           onClick={isOffline ? () => history.back() : undefined}
-          className="inline-block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-4 text-secondary cursor-pointer"
+          className="inline-block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-4 text-muted-foreground cursor-pointer"
         >
           ← Return home
         </a>
         {stack && (
-          <pre className="w-full p-4 overflow-x-auto text-left text-xs mt-8 opacity-50 bg-surface text-secondary">
+          <pre className="w-full p-4 overflow-x-auto text-left text-xs mt-8 opacity-50 bg-card text-muted-foreground">
             <code>{stack}</code>
           </pre>
         )}

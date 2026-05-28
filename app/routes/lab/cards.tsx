@@ -34,7 +34,7 @@ function SliderControl({ label, value, min, max, step, unit = "", onChange }: Sl
   return (
     <label
       className="flex flex-col gap-1.5 text-[0.6rem] tracking-[0.12em] uppercase"
-      style={{ color: "var(--color-text-primary)" }}
+      style={{ color: "var(--foreground)" }}
     >
       {label}
       <div className="flex items-center gap-2.5">
@@ -46,11 +46,11 @@ function SliderControl({ label, value, min, max, step, unit = "", onChange }: Sl
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
           className="w-28"
-          style={{ accentColor: "var(--color-border-default)" }}
+          style={{ accentColor: "var(--border)" }}
         />
         <span
           className="text-[0.75rem] font-mono w-14 text-right tabular-nums"
-          style={{ color: "var(--color-text-primary)", opacity: 0.6 }}
+          style={{ color: "var(--foreground)", opacity: 0.6 }}
         >
           {value}{unit}
         </span>
@@ -115,20 +115,20 @@ export default function CardLab() {
   return (
     <div
       className="min-h-screen p-8"
-      style={{ background: "var(--color-bg-base)" }}
+      style={{ background: "var(--background)" }}
     >
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div className="space-y-1">
           <h1
             className="text-2xl font-light tracking-widest"
-            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+            style={{ color: "var(--foreground)", fontFamily: "var(--font-serif)" }}
           >
             Card Lab
           </h1>
           <p
             className="text-xs tracking-widest uppercase opacity-40"
-            style={{ color: "var(--color-text-primary)" }}
+            style={{ color: "var(--foreground)" }}
           >
             Test animations, art &amp; effects
           </p>
@@ -137,12 +137,12 @@ export default function CardLab() {
         {/* Card controls */}
         <div
           className="flex flex-wrap gap-5 items-end p-5 border"
-          style={{ background: "var(--color-bg-surface)", borderColor: "var(--color-bg-elevated)" }}
+          style={{ background: "var(--card)", borderColor: "var(--muted)" }}
         >
           {/* Card picker */}
           <label
             className="flex flex-col gap-1 text-[0.65rem] tracking-[0.12em] uppercase"
-            style={{ color: "var(--color-text-primary)" }}
+            style={{ color: "var(--foreground)" }}
           >
             Card
             <select
@@ -150,9 +150,9 @@ export default function CardLab() {
               onChange={(e) => handleCardChange(Number(e.target.value))}
               className="min-w-[180px] px-[0.6rem] py-[0.4rem] text-[0.8rem] tracking-[0.05em] border outline-none cursor-pointer"
               style={{
-                background: "var(--color-bg-elevated)",
-                color: "var(--color-text-primary)",
-                borderColor: "var(--color-border-default)",
+                background: "var(--muted)",
+                color: "var(--foreground)",
+                borderColor: "var(--border)",
                 fontFamily: "var(--font-serif)",
               }}
             >
@@ -167,7 +167,7 @@ export default function CardLab() {
           {/* Rarity */}
           <label
             className="flex flex-col gap-1 text-[0.65rem] tracking-[0.12em] uppercase"
-            style={{ color: "var(--color-text-primary)" }}
+            style={{ color: "var(--foreground)" }}
           >
             Rarity
             <select
@@ -175,9 +175,9 @@ export default function CardLab() {
               onChange={(e) => setRarity(Number(e.target.value) as RarityScore)}
               className="px-[0.6rem] py-[0.4rem] text-[0.8rem] tracking-[0.05em] border outline-none cursor-pointer"
               style={{
-                background: "var(--color-bg-elevated)",
-                color: "var(--color-text-primary)",
-                borderColor: "var(--color-border-default)",
+                background: "var(--muted)",
+                color: "var(--foreground)",
+                borderColor: "var(--border)",
                 fontFamily: "var(--font-serif)",
               }}
             >
@@ -192,28 +192,28 @@ export default function CardLab() {
           {/* Toggles */}
           <label
             className="flex flex-row items-center gap-2 text-[0.65rem] tracking-[0.12em] uppercase cursor-pointer"
-            style={{ color: "var(--color-text-primary)" }}
+            style={{ color: "var(--foreground)" }}
           >
             <input
               type="checkbox"
               checked={isRadiant}
               onChange={(e) => setIsRadiant(e.target.checked)}
               className="w-[0.9rem] h-[0.9rem]"
-              style={{ accentColor: "var(--color-border-default)" }}
+              style={{ accentColor: "var(--border)" }}
             />
             Radiant ✦
           </label>
 
           <label
             className="flex flex-row items-center gap-2 text-[0.65rem] tracking-[0.12em] uppercase cursor-pointer"
-            style={{ color: "var(--color-text-primary)" }}
+            style={{ color: "var(--foreground)" }}
           >
             <input
               type="checkbox"
               checked={isReversed}
               onChange={(e) => setIsReversed(e.target.checked)}
               className="w-[0.9rem] h-[0.9rem]"
-              style={{ accentColor: "var(--color-border-default)" }}
+              style={{ accentColor: "var(--border)" }}
             />
             Reversed
           </label>
@@ -223,8 +223,8 @@ export default function CardLab() {
             onClick={handleDraw}
             className="px-6 py-2 text-[0.7rem] tracking-[0.15em] uppercase cursor-pointer border bg-transparent hover:opacity-90 transition-opacity"
             style={{
-              color: "var(--color-text-primary)",
-              borderColor: "var(--color-border-default)",
+              color: "var(--foreground)",
+              borderColor: "var(--border)",
               fontFamily: "var(--font-serif)",
             }}
           >
@@ -235,9 +235,9 @@ export default function CardLab() {
         {/* Motion controls */}
         <div
           className="p-5 border space-y-4"
-          style={{ background: "var(--color-bg-surface)", borderColor: "var(--color-bg-elevated)" }}
+          style={{ background: "var(--card)", borderColor: "var(--muted)" }}
         >
-          <p className="text-[0.6rem] tracking-[0.15em] uppercase opacity-40" style={{ color: "var(--color-text-primary)" }}>
+          <p className="text-[0.6rem] tracking-[0.15em] uppercase opacity-40" style={{ color: "var(--foreground)" }}>
             Motion
           </p>
 
@@ -276,7 +276,7 @@ export default function CardLab() {
 
           <div
             className="border-t pt-4 flex flex-wrap gap-x-8 gap-y-4"
-            style={{ borderColor: "var(--color-bg-elevated)" }}
+            style={{ borderColor: "var(--muted)" }}
           >
             <div className="flex flex-wrap gap-x-8 gap-y-4">
               <SliderControl
@@ -294,13 +294,13 @@ export default function CardLab() {
             </div>
             <p
               className="self-end text-[0.6rem] tracking-[0.1em] uppercase opacity-30 pb-1"
-              style={{ color: "var(--color-text-primary)" }}
+              style={{ color: "var(--foreground)" }}
             >
               spring changes apply after 350 ms
             </p>
           </div>
 
-          <div className="border-t border-elevated pt-4 flex flex-wrap gap-x-8 gap-y-4 items-end">
+          <div className="border-t border-muted pt-4 flex flex-wrap gap-x-8 gap-y-4 items-end">
             <label className="flex flex-row items-center gap-2 text-[0.6rem] tracking-[0.12em] uppercase cursor-pointer text-primary">
               <input
                 type="checkbox"
@@ -358,7 +358,7 @@ export default function CardLab() {
                 <p
                   className="text-sm leading-relaxed"
                   style={{
-                    color: "var(--color-text-primary)",
+                    color: "var(--foreground)",
                     fontFamily: "var(--font-serif)",
                     opacity: 0.85,
                   }}

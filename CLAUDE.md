@@ -7,7 +7,7 @@ Daily tarot card pull app. Dark fantasy aesthetic. One card per user per UTC day
 - Express server (`server.js` outer shell + `server/app.ts` inner app)
 - Drizzle ORM + Postgres (`db/schema/`)
 - better-auth (email/password, `/api/auth/*`)
-- Tailwind CSS v4 + design tokens (`app/styles/tokens.css`)
+- Tailwind CSS v4 + design tokens (`app/styles/tokens.css` primitives + `app/app.css` @theme inline mappings)
 - Config via Zod-validated env vars — never use `process.env` directly in app code, import from `config/index.ts`. Exception: `db/index.ts` reads `DATABASE_URL` directly so seed/migration scripts work without requiring all app env vars
 
 ## Commands
@@ -53,6 +53,25 @@ Production uses `pnpm db:migrate` (not `db:push`). After editing any file in `db
 
 ## Product philosophy
 - **Hook before friction**: let new visitors draw a card before asking them to sign up. CTAs for unauthenticated users should link to `/` (the draw flow) rather than `/auth/signup`. The anonymous pull system means they can experience the app immediately; account creation follows naturally.
+
+## Design system
+Tokens live in `app/styles/tokens.css` (primitives + semantics) and `app/app.css` (`@theme inline` maps them into Tailwind utilities). Read both files before generating UI.
+
+**Two-tier structure:**
+- Primitives: OKLCH color values (`--black-950`, `--bone-100`, `--purple-500`, `--rarity-1` … `--rarity-5`)
+- Semantics: shadcn-style names (`--background`, `--foreground`, `--card`, `--muted`, `--muted-foreground`, `--border`, `--ring`, `--primary`, `--primary-foreground`, `--accent`, `--accent-foreground`, `--rarity-mundane` … `--rarity-primordial`)
+
+**Rules:**
+- Use semantic Tailwind classes — NEVER primitives:
+  - Backgrounds: `bg-background`, `bg-card`, `bg-muted`
+  - Text: `text-foreground` (default), `text-muted-foreground` (dimmer), `text-primary` (high-emphasis / bone-100)
+  - Borders: `border-border`
+  - Accent/interactive: `bg-accent text-accent-foreground`, `bg-primary text-primary-foreground`
+  - Rarity: `text-rarity-mundane` … `text-rarity-primordial` (or `var(--color-rarity-*)` for inline styles)
+- Surfaces ALWAYS pair with their foreground: `bg-card text-card-foreground`
+- For inline `style=` props use the semantic CSS vars directly: `var(--background)`, `var(--muted-foreground)`, `var(--border)`, `var(--accent)`, etc.
+- Rarity colors in JS: `var(--color-rarity-${rarityLabel.toLowerCase()})` — this pattern works because `@theme inline` registers `--color-rarity-*` CSS vars
+- Dark mode infrastructure: `.dark` class on `<html>` (wired in `tokens.css`); no light-mode values yet but the `.dark {}` block is ready for override
 
 ## Future features (see GitHub Issues)
 - Daily pack system (1 Major + 4 Minor per pull)

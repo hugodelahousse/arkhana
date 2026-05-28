@@ -149,14 +149,14 @@ export default function LayerLab() {
   const selectedCard = selectedId !== null ? CARDS.find((c) => c.id === selectedId) : null;
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--color-bg-base)", padding: "1.5rem 1rem" }}>
+    <div className="min-h-screen" style={{ background: "var(--background)", padding: "1.5rem 1rem" }}>
       <style>{layerLabCss}</style>
 
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="space-y-1">
           <h1
             className="text-xl font-light tracking-widest"
-            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-serif)" }}
+            style={{ color: "var(--foreground)", fontFamily: "var(--font-serif)" }}
           >
             Layer Lab
           </h1>
@@ -358,8 +358,8 @@ const layerLabCss = `
     flex-wrap: wrap;
     gap: .5rem 1.25rem;
     padding: .75rem 1rem;
-    background: var(--color-bg-surface, #111);
-    border: 1px solid var(--color-bg-elevated, #222);
+    background: var(--card, #111);
+    border: 1px solid var(--muted, #222);
     align-items: end;
     border-radius: 4px;
   }
@@ -370,10 +370,10 @@ const layerLabCss = `
     font-size: .6rem;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--color-text-primary, #999);
+    color: var(--foreground, #999);
     cursor: pointer;
   }
-  .ll-ctrl input[type=range] { accent-color: var(--color-border-default, #555); width: 80px; }
+  .ll-ctrl input[type=range] { accent-color: var(--border, #555); width: 80px; }
   .ll-ctrl-val { font-family: monospace; font-size: .65rem; opacity: .6; text-align: right; }
 
   /* ─── Grid ─── */
@@ -419,7 +419,7 @@ const layerLabCss = `
     font-size: .75rem;
     letter-spacing: .15em;
     text-transform: uppercase;
-    color: var(--color-text-primary, #999);
+    color: var(--foreground, #999);
     font-family: var(--font-serif, Georgia);
     opacity: .6;
   }
