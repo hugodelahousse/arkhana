@@ -1121,22 +1121,34 @@ function toRoman(n: number): string {
 // ---------------------------------------------------------------------------
 // SVGBuilder
 // ---------------------------------------------------------------------------
+const MARGIN = 20;
+const TITLE_HEIGHT = 25;
+const CARD_WIDTH = FIELD_WIDTH + MARGIN * 2;
+const CARD_HEIGHT = FIELD_HEIGHT + MARGIN * 2 + TITLE_HEIGHT;
+
 class SVGBuilder {
   private elements: string[] = [];
   private defs: string[] = [];
   private gradientCount = 0;
 
+  paper(color: number): void {
+    this.elements.push(
+      `<rect width="${CARD_WIDTH}" height="${CARD_HEIGHT}" rx="${MARGIN}" fill="${intToHex(color)}"/>`,
+    );
+  }
+
   background(color: number): void {
     this.elements.push(
-      `<rect width="${FIELD_WIDTH}" height="${FIELD_HEIGHT}" fill="${intToHex(color)}"/>`,
+      `<rect x="${MARGIN}" y="${MARGIN}" width="${FIELD_WIDTH}" height="${FIELD_HEIGHT}" fill="${intToHex(color)}"/>`,
     );
   }
 
   border(color: number, alpha: number, thickness: number): void {
+    const r = thickness * 2;
     this.elements.push(
-      `<rect x="0" y="0" width="${FIELD_WIDTH}" height="${FIELD_HEIGHT}" ` +
+      `<rect x="${MARGIN}" y="${MARGIN}" width="${FIELD_WIDTH}" height="${FIELD_HEIGHT}" ` +
         `fill="none" stroke="${intToHex(color)}" stroke-width="${thickness.toFixed(2)}" ` +
-        `stroke-opacity="${alpha.toFixed(3)}" rx="${thickness}"/>`,
+        `stroke-opacity="${alpha.toFixed(3)}" rx="${r.toFixed(1)}"/>`,
     );
   }
 
@@ -1144,28 +1156,32 @@ class SVGBuilder {
     name: string,
     majorNumber: number | undefined,
     color: number,
+    paperColor: number,
   ): void {
     const hex = intToHex(color);
     const escapedName = name.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    const titleY = MARGIN + FIELD_HEIGHT + 18;
     this.elements.push(
-      `<text x="${FIELD_WIDTH / 2}" y="${FIELD_HEIGHT - 8}" ` +
-        `text-anchor="middle" font-family="serif" font-size="16" fill="${hex}" ` +
-        `style="text-transform:uppercase;letter-spacing:0.05em">${escapedName}</text>`,
+      `<text x="${CARD_WIDTH / 2}" y="${titleY}" ` +
+        `text-anchor="middle" font-family="serif" font-size="18" fill="${hex}" ` +
+        `style="letter-spacing:0.05em">${escapedName}</text>`,
     );
     if (majorNumber !== undefined) {
       const roman = toRoman(majorNumber);
+      const numY = MARGIN + 18;
+      const numHex = intToHex(paperColor);
       this.elements.push(
-        `<text x="${FIELD_WIDTH / 2}" y="20" ` +
-          `text-anchor="middle" font-family="serif" font-size="16" fill="${hex}">${roman}</text>`,
+        `<text x="${CARD_WIDTH / 2}" y="${numY}" ` +
+          `text-anchor="middle" font-family="serif" font-size="18" fill="${numHex}">${roman}</text>`,
       );
     }
   }
 
   stroke(s: Stroke, color: number, alpha: number): void {
-    const x1 = s.start.x.toFixed(2),
-      y1 = s.start.y.toFixed(2);
-    const x2 = s.end.x.toFixed(2),
-      y2 = s.end.y.toFixed(2);
+    const x1 = (s.start.x + MARGIN).toFixed(2),
+      y1 = (s.start.y + MARGIN).toFixed(2);
+    const x2 = (s.end.x + MARGIN).toFixed(2),
+      y2 = (s.end.y + MARGIN).toFixed(2);
     this.elements.push(
       `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ` +
         `stroke="${intToHex(color)}" stroke-width="${s.thickness.toFixed(2)}" ` +
@@ -1182,7 +1198,7 @@ class SVGBuilder {
     gradientAngle?: number,
   ): void {
     const pts = points
-      .map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`)
+      .map((p) => `${(p.x + MARGIN).toFixed(2)},${(p.y + MARGIN).toFixed(2)}`)
       .join(" ");
     let fill: string;
 
@@ -1191,8 +1207,8 @@ class SVGBuilder {
       const [dark, mid, light] = gradientColors;
 
       if (gradientType === "radial") {
-        const xs = points.map((p) => p.x),
-          ys = points.map((p) => p.y);
+        const xs = points.map((p) => p.x + MARGIN),
+          ys = points.map((p) => p.y + MARGIN);
         const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
         const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
         this.defs.push(
@@ -1207,8 +1223,8 @@ class SVGBuilder {
         const angle = gradientAngle ?? 0;
         const cos = Math.cos(angle),
           sin = Math.sin(angle);
-        const xs = points.map((p) => p.x),
-          ys = points.map((p) => p.y);
+        const xs = points.map((p) => p.x + MARGIN),
+          ys = points.map((p) => p.y + MARGIN);
         const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
         const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
         const len =
@@ -1240,8 +1256,8 @@ class SVGBuilder {
       this.defs.length > 0 ? `<defs>${this.defs.join("")}</defs>` : "";
     return (
       `<?xml version="1.0" encoding="UTF-8"?>\n` +
-      `<svg xmlns="http://www.w3.org/2000/svg" width="${FIELD_WIDTH}" height="${FIELD_HEIGHT}" ` +
-      `viewBox="0 0 ${FIELD_WIDTH} ${FIELD_HEIGHT}">\n` +
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_WIDTH}" height="${CARD_HEIGHT}" ` +
+      `viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}">\n` +
       defsBlock +
       this.elements.join("\n") +
       `\n</svg>`
@@ -2334,6 +2350,7 @@ function generateCard(
   Tracer.artStyle = artStyle;
 
   const svg = new SVGBuilder();
+  svg.paper(artStyle.paper);
   svg.background(artStyle.paper);
 
   const layers: Sketcher[] = [];
@@ -2524,6 +2541,7 @@ function generateCard(
     card.name,
     card.arcana === "major" ? card.number : undefined,
     artStyle.black,
+    artStyle.paper,
   );
 
   return svg.build();
