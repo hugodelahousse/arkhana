@@ -42,6 +42,7 @@ export default function ProcgenLab() {
   const [showLayers, setShowLayers] = useState(false);
   const [view, setView] = useState<"single" | "grid">("single");
   const workerRef = useRef<Worker | null>(null);
+  const batchRef = useRef(false);
 
   useEffect(() => {
     const w = new Worker(
@@ -56,7 +57,7 @@ export default function ProcgenLab() {
           ...prev,
           [msg.cardId]: { status: "rasterizing", svg: msg.svg },
         }));
-        setSelectedId(msg.cardId);
+        if (!batchRef.current) setSelectedId(msg.cardId);
         const genMs = msg.ms;
         const svgStr = msg.svg;
         Promise.all([
@@ -77,6 +78,7 @@ export default function ProcgenLab() {
           console.error("Rasterize error:", err);
         });
       } else if (msg.type === "all-done") {
+        batchRef.current = false;
         setAllStatus("done");
         setTotalMs(msg.ms);
       } else if (msg.type === "error") {
@@ -104,9 +106,7 @@ export default function ProcgenLab() {
   }
 
   function generateAll() {
-    const initialState: Record<number, CardState> = {};
-    CARD_DATA.forEach(c => { initialState[c.id] = { status: "generating" }; });
-    setCards(initialState);
+    batchRef.current = true;
     setAllStatus("running");
     setTotalMs(null);
     post({ type: "generate-all", deckSeed: seed, opts: buildOpts() });
