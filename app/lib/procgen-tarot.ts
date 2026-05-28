@@ -1127,25 +1127,26 @@ const CARD_WIDTH = FIELD_WIDTH + MARGIN * 2;
 const CARD_HEIGHT = FIELD_HEIGHT + MARGIN * 2 + TITLE_HEIGHT;
 
 class SVGBuilder {
-  private elements: string[] = [];
+  private paperEl = "";
+  private artElements: string[] = [];
+  private overlayElements: string[] = [];
   private defs: string[] = [];
   private gradientCount = 0;
 
   paper(color: number): void {
-    this.elements.push(
-      `<rect width="${CARD_WIDTH}" height="${CARD_HEIGHT}" rx="${MARGIN}" fill="${intToHex(color)}"/>`,
-    );
+    this.paperEl =
+      `<rect width="${CARD_WIDTH}" height="${CARD_HEIGHT}" rx="${MARGIN}" fill="${intToHex(color)}"/>`;
   }
 
   background(color: number): void {
-    this.elements.push(
+    this.artElements.push(
       `<rect x="${MARGIN}" y="${MARGIN}" width="${FIELD_WIDTH}" height="${FIELD_HEIGHT}" fill="${intToHex(color)}"/>`,
     );
   }
 
   border(color: number, alpha: number, thickness: number): void {
     const r = thickness * 2;
-    this.elements.push(
+    this.overlayElements.push(
       `<rect x="${MARGIN}" y="${MARGIN}" width="${FIELD_WIDTH}" height="${FIELD_HEIGHT}" ` +
         `fill="none" stroke="${intToHex(color)}" stroke-width="${thickness.toFixed(2)}" ` +
         `stroke-opacity="${alpha.toFixed(3)}" rx="${r.toFixed(1)}"/>`,
@@ -1161,7 +1162,7 @@ class SVGBuilder {
     const hex = intToHex(color);
     const escapedName = name.replace(/&/g, "&amp;").replace(/</g, "&lt;");
     const titleY = MARGIN + FIELD_HEIGHT + 18;
-    this.elements.push(
+    this.overlayElements.push(
       `<text x="${CARD_WIDTH / 2}" y="${titleY}" ` +
         `text-anchor="middle" font-family="serif" font-size="18" fill="${hex}" ` +
         `style="letter-spacing:0.05em">${escapedName}</text>`,
@@ -1170,7 +1171,7 @@ class SVGBuilder {
       const roman = toRoman(majorNumber);
       const numY = MARGIN + 18;
       const numHex = intToHex(paperColor);
-      this.elements.push(
+      this.overlayElements.push(
         `<text x="${CARD_WIDTH / 2}" y="${numY}" ` +
           `text-anchor="middle" font-family="serif" font-size="18" fill="${numHex}">${roman}</text>`,
       );
@@ -1181,7 +1182,7 @@ class SVGBuilder {
     const pts = points
       .map((p) => `${(p.x + MARGIN).toFixed(2)},${(p.y + MARGIN).toFixed(2)}`)
       .join(" ");
-    this.elements.push(
+    this.artElements.push(
       `<polygon points="${pts}" fill="none" stroke="${intToHex(color)}" ` +
         `stroke-width="1" stroke-opacity="${alpha.toFixed(3)}"/>`,
     );
@@ -1192,7 +1193,7 @@ class SVGBuilder {
       y1 = (s.start.y + MARGIN).toFixed(2);
     const x2 = (s.end.x + MARGIN).toFixed(2),
       y2 = (s.end.y + MARGIN).toFixed(2);
-    this.elements.push(
+    this.artElements.push(
       `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ` +
         `stroke="${intToHex(color)}" stroke-width="${s.thickness.toFixed(2)}" ` +
         `stroke-opacity="${alpha.toFixed(3)}" stroke-linecap="round"/>`,
@@ -1256,20 +1257,26 @@ class SVGBuilder {
       fill = intToHex(fillColor);
     }
 
-    this.elements.push(
+    this.artElements.push(
       `<polygon points="${pts}" fill="${fill}" fill-opacity="${fillOpacity.toFixed(3)}"/>`,
     );
   }
 
   build(): string {
-    const defsBlock =
-      this.defs.length > 0 ? `<defs>${this.defs.join("")}</defs>` : "";
+    this.defs.push(
+      `<clipPath id="art-clip"><rect x="${MARGIN}" y="${MARGIN}" width="${FIELD_WIDTH}" height="${FIELD_HEIGHT}"/></clipPath>`,
+    );
+    const defsBlock = `<defs>${this.defs.join("")}</defs>`;
     return (
       `<?xml version="1.0" encoding="UTF-8"?>\n` +
       `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_WIDTH}" height="${CARD_HEIGHT}" ` +
       `viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}">\n` +
-      defsBlock +
-      this.elements.join("\n") +
+      defsBlock + "\n" +
+      this.paperEl + "\n" +
+      `<g clip-path="url(#art-clip)">\n` +
+      this.artElements.join("\n") +
+      `\n</g>\n` +
+      this.overlayElements.join("\n") +
       `\n</svg>`
     );
   }
