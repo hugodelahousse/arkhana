@@ -98,6 +98,7 @@ export const TarotCard = memo(function TarotCard({
       style={{
         "--rarity-color": `var(--color-rarity-${rarityLabel})`,
         ...(isProcgen ? { "--procgen-parallax": `${procgenParallax}px` } : {}),
+        ...(isProcgen && frontImageUrl ? { "--mask-url": `url(${frontImageUrl})` } : {}),
         ...(!isProcgen && hasSubjectMask ? {
           "--mask-url": `url(${cardMaskUrl(card.id)})`,
           ...(cardHasNameMask ? { "--name-mask-url": `url(${cardNameMaskUrl(card.id)})` } : {}),
