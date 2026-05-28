@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CARD_DATA } from "../../lib/procgen-tarot";
 import type { GenOptions } from "../../lib/procgen-tarot";
 import type { WorkerRequest, WorkerResponse } from "../../workers/procgen-tarot.worker";
-import { ProcgenTarotCard } from "../../components/ProcgenTarotCard";
+import { TarotCard } from "../../components/TarotCard";
+import { CARDS } from "../../lib/cards";
 
 const DEFAULT_SEED = 12345;
 
@@ -271,13 +272,15 @@ export default function ProcgenLab() {
               <div className="text-muted-foreground text-sm animate-pulse">Generating...</div>
             )}
             {currentState.status === "done" && (
-              <ProcgenTarotCard
-                svg={currentState.svg}
-                name={currentCard.name}
+              <TarotCard
+                card={CARDS[selectedId]}
+                rarityScore={3}
+                isReversed={false}
+                isRadiant={false}
                 revealed={true}
                 size="lg"
-                parallax={parallax}
-                parallaxAmount={parallaxAmount}
+                svgContent={currentState.svg}
+                procgenParallax={parallax ? parallaxAmount : 0}
               />
             )}
           </div>

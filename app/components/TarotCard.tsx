@@ -21,6 +21,10 @@ export interface TarotCardProps {
   size?: "sm" | "md" | "lg";
   showHint?: boolean;
   motionConfig?: Partial<CardMotionConfig>;
+  /** Procgen SVG string. When set, renders inline SVG instead of CDN image. */
+  svgContent?: string;
+  /** Parallax depth in px for procgen fg layer (default 8). */
+  procgenParallax?: number;
 }
 
 export const TarotCard = memo(function TarotCard({
@@ -33,6 +37,8 @@ export const TarotCard = memo(function TarotCard({
   size = "md",
   showHint = false,
   motionConfig,
+  svgContent,
+  procgenParallax = 8,
 }: TarotCardProps) {
   const sceneRef = useRef<HTMLDivElement>(null);
   const config = { ...DEFAULT_MOTION_CONFIG, ...motionConfig, maxRotateYDeg: revealed ? undefined : 89 };
@@ -81,9 +87,11 @@ export const TarotCard = memo(function TarotCard({
       data-revealed={revealed || undefined}
       data-reversed={isReversed || undefined}
       data-radiant={isRadiant || undefined}
+      data-procgen={svgContent ? "" : undefined}
       style={{
         "--rarity-color": `var(--color-rarity-${rarityLabel})`,
-        ...(hasSubjectMask ? {
+        ...(svgContent ? { "--procgen-parallax": `${procgenParallax}px` } : {}),
+        ...(hasSubjectMask && !svgContent ? {
           "--mask-url": `url(${cardMaskUrl(card.id)})`,
           ...(cardHasNameMask ? { "--name-mask-url": `url(${cardNameMaskUrl(card.id)})` } : {}),
           ...(cardHasTopMask ? { "--top-mask-url": `url(${cardTopMaskUrl(card.id)})` } : {}),
@@ -124,47 +132,56 @@ export const TarotCard = memo(function TarotCard({
           </div>
 
           <div className="card-face card-front">
-            <img
-              src={imgSrc}
-              alt={card.name}
-              loading="eager"
-              draggable={false}
-              style={baseImgMask}
-            />
-            {hasParallax && (
+            {svgContent ? (
+              <div
+                className="procgen-svg"
+                dangerouslySetInnerHTML={{ __html: svgContent }}
+              />
+            ) : (
               <>
                 <img
-                  className="card-subject"
                   src={imgSrc}
-                  alt=""
+                  alt={card.name}
                   loading="eager"
                   draggable={false}
-                  aria-hidden="true"
-                  style={{ maskImage: `url(${cardMaskUrl(card.id)})`, WebkitMaskImage: `url(${cardMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
+                  style={baseImgMask}
                 />
-                {rarityScore >= 5 && (
+                {hasParallax && (
                   <>
-                    {cardHasNameMask && (
-                      <img
-                        className="card-text-layer card-name-layer"
-                        src={imgSrc} alt="" draggable={false} aria-hidden="true"
-                        style={{ maskImage: `url(${cardNameMaskUrl(card.id)})`, WebkitMaskImage: `url(${cardNameMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
-                      />
-                    )}
-                    {cardHasTopMask && (
-                      <img
-                        className="card-text-layer card-top-layer"
-                        src={imgSrc} alt="" draggable={false} aria-hidden="true"
-                        style={{ maskImage: `url(${cardTopMaskUrl(card.id)})`, WebkitMaskImage: `url(${cardTopMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
-                      />
+                    <img
+                      className="card-subject"
+                      src={imgSrc}
+                      alt=""
+                      loading="eager"
+                      draggable={false}
+                      aria-hidden="true"
+                      style={{ maskImage: `url(${cardMaskUrl(card.id)})`, WebkitMaskImage: `url(${cardMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
+                    />
+                    {rarityScore >= 5 && (
+                      <>
+                        {cardHasNameMask && (
+                          <img
+                            className="card-text-layer card-name-layer"
+                            src={imgSrc} alt="" draggable={false} aria-hidden="true"
+                            style={{ maskImage: `url(${cardNameMaskUrl(card.id)})`, WebkitMaskImage: `url(${cardNameMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
+                          />
+                        )}
+                        {cardHasTopMask && (
+                          <img
+                            className="card-text-layer card-top-layer"
+                            src={imgSrc} alt="" draggable={false} aria-hidden="true"
+                            style={{ maskImage: `url(${cardTopMaskUrl(card.id)})`, WebkitMaskImage: `url(${cardTopMaskUrl(card.id)})`, maskSize: "cover", WebkitMaskSize: "cover" } as React.CSSProperties}
+                          />
+                        )}
+                      </>
                     )}
                   </>
                 )}
+                {hasSubjectMask && cardHasNameMask && <div className="card-name-foil" aria-hidden="true" />}
+                {hasSubjectMask && cardHasTopMask && <div className="card-top-foil" aria-hidden="true" />}
               </>
             )}
             <div className="card-shine" />
-            {hasSubjectMask && cardHasNameMask && <div className="card-name-foil" aria-hidden="true" />}
-            {hasSubjectMask && cardHasTopMask && <div className="card-top-foil" aria-hidden="true" />}
             <div className="card-glare" />
           </div>
         </div>

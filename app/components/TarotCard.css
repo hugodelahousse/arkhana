@@ -868,3 +868,33 @@
   .card-scene[data-rarity="5"][data-revealed] .card-shine { opacity: .25; }
   .card-scene[data-rarity="3"][data-revealed] .card-shine { opacity: .15; }
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   PROCGEN SVG CARDS
+   ═══════════════════════════════════════════════════════════ */
+
+.procgen-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.procgen-svg > svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: var(--card-radius);
+  transform-style: preserve-3d;
+  overflow: visible;
+}
+
+.card-scene[data-procgen] .card-flipper {
+  aspect-ratio: 376 / 634;
+}
+
+.card-scene[data-procgen][data-revealed] [data-layer="fg"] {
+  transform: translateZ(var(--procgen-parallax, 8px));
+}
