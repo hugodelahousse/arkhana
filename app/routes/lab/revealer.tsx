@@ -140,10 +140,12 @@ export default function Revealer({ loaderData }: { loaderData: { utcDate: string
     query.length >= 1
       ? CARDS.filter((c) => c.name.toLowerCase().includes(query.toLowerCase())).slice(0, 6)
       : [];
+  const isValidGuess = CARDS.some((c) => c.name.toLowerCase() === query.trim().toLowerCase());
 
   function submit(name: string) {
     const text = name.trim();
     if (!text || status !== "playing") return;
+    if (!CARDS.some((c) => c.name.toLowerCase() === text.toLowerCase())) return;
     const correct = text.toLowerCase() === card.name.toLowerCase();
     setGuesses((g) => [...g, { text, correct }]);
     setQuery("");
@@ -320,7 +322,7 @@ export default function Revealer({ loaderData }: { loaderData: { utcDate: string
                     setShowDropdown(true);
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") submit(query);
+                    if (e.key === "Enter" && isValidGuess) submit(query);
                     if (e.key === "Escape") setShowDropdown(false);
                   }}
                   onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
@@ -338,11 +340,14 @@ export default function Revealer({ loaderData }: { loaderData: { utcDate: string
                 />
                 <button
                   onClick={() => submit(query)}
-                  className="px-5 py-2.5 text-[0.65rem] tracking-[0.15em] uppercase border cursor-pointer hover:opacity-80 transition-opacity"
+                  disabled={!isValidGuess}
+                  className="px-5 py-2.5 text-[0.65rem] tracking-[0.15em] uppercase border transition-opacity"
                   style={{
                     background: "transparent",
                     color: "var(--foreground)",
                     borderColor: "var(--border)",
+                    cursor: isValidGuess ? "pointer" : "default",
+                    opacity: isValidGuess ? 1 : 0.3,
                   }}
                 >
                   Guess
