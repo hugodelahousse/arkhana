@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import type { Route } from "./+types/root";
 import "./app.css";
 import { OrientationProvider } from "./lib/orientation";
+import { KofiWidget } from "./components/KofiWidget";
 import { getThemeFromCookie, THEME_SCRIPT, THEME_COLORS, type Theme } from "./lib/theme";
 
 export const links: Route.LinksFunction = () => [
@@ -56,6 +57,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             'system', and toggles .dark on <html>. No flash possible. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         {children}
+        <KofiWidget />
         <ScrollRestoration />
         <Scripts />
         <ServiceWorkerRegister />
