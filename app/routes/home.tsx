@@ -355,15 +355,14 @@ function DailyCardReveal({
         </h2>
       </div>
 
-      <AnimatePresence>
-        {revealed && (
-          <motion.div
-            key="meaning"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="space-y-4 text-center"
-          >
+      <motion.div
+        initial={false}
+        animate={revealed ? { height: "auto", opacity: 1 } : { height: 0, opacity: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        style={{ overflow: "hidden" }}
+        aria-hidden={!revealed}
+      >
+        <div className="space-y-4 text-center pt-1">
             <p className="type-body-serif max-w-xs mx-auto">
               {meaning}
             </p>
@@ -396,9 +395,8 @@ function DailyCardReveal({
                 label="Share"
               />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+      </motion.div>
     </div>
   );
 }
