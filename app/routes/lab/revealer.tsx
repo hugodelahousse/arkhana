@@ -1,6 +1,92 @@
 import { useState } from "react";
 import { CARDS, CARD_BY_ID } from "../../lib/cards";
+import type { CardDefinition } from "../../lib/cards";
 import { cardImageUrl } from "../../lib/cardImages";
+
+type Element = "Fire" | "Water" | "Air" | "Earth";
+
+const SUIT_ELEMENT: Record<string, Element> = {
+  wands: "Fire",
+  cups: "Water",
+  swords: "Air",
+  pentacles: "Earth",
+};
+
+// Golden Dawn elemental attributions for Major Arcana (index = card id 0–21)
+const MAJOR_ELEMENT: Element[] = [
+  "Air",   // 0  The Fool
+  "Air",   // 1  The Magician       (Mercury)
+  "Water", // 2  The High Priestess (Moon)
+  "Earth", // 3  The Empress        (Venus)
+  "Fire",  // 4  The Emperor        (Aries)
+  "Earth", // 5  The Hierophant     (Taurus)
+  "Air",   // 6  The Lovers         (Gemini)
+  "Water", // 7  The Chariot        (Cancer)
+  "Fire",  // 8  Strength           (Leo)
+  "Earth", // 9  The Hermit         (Virgo)
+  "Fire",  // 10 Wheel of Fortune   (Jupiter)
+  "Air",   // 11 Justice            (Libra)
+  "Water", // 12 The Hanged Man     (Water)
+  "Water", // 13 Death              (Scorpio)
+  "Fire",  // 14 Temperance         (Sagittarius)
+  "Earth", // 15 The Devil          (Capricorn)
+  "Fire",  // 16 The Tower          (Mars)
+  "Air",   // 17 The Star           (Aquarius)
+  "Water", // 18 The Moon           (Pisces)
+  "Fire",  // 19 The Sun            (Sun)
+  "Fire",  // 20 Judgement          (Fire)
+  "Earth", // 21 The World          (Saturn)
+];
+
+function cardElement(card: CardDefinition): Element {
+  return card.arcana === "minor" ? SUIT_ELEMENT[card.suit!] : MAJOR_ELEMENT[card.id];
+}
+
+const MINOR_THEME: Record<number, string> = {
+  1:  "New beginnings and raw potential",
+  2:  "Balance, duality, and choice",
+  3:  "Growth, creativity, and collaboration",
+  4:  "Stability, rest, and structure",
+  5:  "Disruption, conflict, and change",
+  6:  "Harmony, resolution, and generosity",
+  7:  "Challenge, perseverance, and introspection",
+  8:  "Power, momentum, and mastery",
+  9:  "Near-completion, intensity, and reflection",
+  10: "Completion, excess, and transition",
+  11: "Curiosity, openness, and new messages",     // Page
+  12: "Action, pursuit, and restless energy",      // Knight
+  13: "Mastery, intuition, and inner authority",   // Queen
+  14: "Command, vision, and outer authority",      // King
+};
+
+const MAJOR_THEME: Record<number, string> = {
+  0:  "The threshold before the journey — pure spirit before form",
+  1:  "Focused will shaping the fabric of reality",
+  2:  "Veiled wisdom and knowledge withheld",
+  3:  "Abundance, creation, and the fertile earth",
+  4:  "Order, authority, and the will to structure",
+  5:  "Tradition, guidance, and the higher principle",
+  6:  "Connection, choice, and the pull of desire",
+  7:  "Victory through will — the control of opposing forces",
+  8:  "Strength found in patience and quiet compassion",
+  9:  "Solitary wisdom and the light of the inner lantern",
+  10: "The turning wheel of fate — cycles without end",
+  11: "Impartial truth and the scales of consequence",
+  12: "Surrender, reversal, and the view from below",
+  13: "Transformation — the ending that clears the path",
+  14: "Flow between extremes, the alchemy of balance",
+  15: "Bondage, shadow, and the illusion of chains",
+  16: "Sudden rupture — revelation born through collapse",
+  17: "Hope renewed, clarity after the storm",
+  18: "Illusion, the depths, and the unconscious tide",
+  19: "Radiance, joy, and the unbroken clarity of noon",
+  20: "Awakening, reckoning, and the call to rise",
+  21: "Wholeness — the dance of the completed cosmos",
+};
+
+function cardNumerologicalTheme(card: CardDefinition): string {
+  return card.arcana === "major" ? MAJOR_THEME[card.id] : MINOR_THEME[card.number];
+}
 
 export function meta() {
   return [{ title: "Revealer — Arkhana Lab" }];
@@ -21,9 +107,9 @@ function firstSentence(text: string): string {
   return m ? m[0].trim() : text.slice(0, 70) + "…";
 }
 
-const CLUE_LABELS = ["Essence", "Nature", "Number", "Shrouded", "Unveiled"] as const;
+const CLUE_LABELS = ["Essence", "Nature", "Element", "Current", "Vision"] as const;
 // 0 = text clue, non-zero = image clue with that blur radius
-const IMAGE_BLUR = [0, 0, 0, 22, 9] as const;
+const IMAGE_BLUR = [0, 0, 0, 0, 14] as const;
 const MAX_GUESSES = 5;
 
 type Status = "playing" | "won" | "lost";
@@ -37,8 +123,8 @@ export default function Revealer({ loaderData }: { loaderData: { utcDate: string
     card.arcana === "major"
       ? "Major Arcana"
       : `Minor Arcana · ${card.suit![0].toUpperCase() + card.suit!.slice(1)}`,
-    `Number ${card.number}`,
-    null,
+    cardElement(card),
+    cardNumerologicalTheme(card),
     null,
   ];
 
