@@ -326,7 +326,7 @@ export default function Revealer({ loaderData }: { loaderData: { utcDate: string
                   onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
                   onFocus={() => query.length >= 1 && setShowDropdown(true)}
                   placeholder="Name the card…"
-                  className="flex-1 px-4 py-2.5 text-sm border outline-none"
+                  className="flex-1 px-4 py-2.5 text-base border outline-none"
                   style={{
                     background: "var(--muted)",
                     color: "var(--foreground)",
