@@ -170,6 +170,13 @@ body::before {
   }
 }
 
+/* Ko-fi support button — subtle accent glow pulse */
+@keyframes kofi-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 30%, transparent); }
+  50%       { box-shadow: 0 0 8px 2px color-mix(in srgb, var(--accent) 35%, transparent); }
+}
+.kofi-btn { animation: kofi-pulse 3s ease-in-out infinite; }
+
 /* Reduced motion — collapse all VT animations and disable smooth scroll */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
