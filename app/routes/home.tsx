@@ -319,7 +319,7 @@ function DailyCardReveal({
     : `/share/${pullId}`;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex justify-center">
         <TarotCard
           card={card}
@@ -329,8 +329,30 @@ function DailyCardReveal({
           revealed={revealed}
           onReveal={revealNow}
           size="lg"
-          showHint={!revealed}
+          showHint={false}
         />
+      </div>
+
+      {/* Always-visible header — reserves space so the card never jumps */}
+      <div
+        className="space-y-1 text-center transition-opacity duration-500"
+        style={{ opacity: revealed ? 1 : 0.25 }}
+        aria-hidden={!revealed}
+      >
+        <p
+          className="text-xs tracking-widest uppercase"
+          style={{ color: `var(--color-rarity-${rarityLabel})` }}
+          aria-label={[RARITY_LABELS[rarityScore], isRadiant ? "Radiant" : null, isReversed ? "Reversed" : null].filter(Boolean).join(", ")}
+        >
+          <span aria-hidden="true">
+            {RARITY_LABELS[rarityScore]}
+            {isRadiant && " ✦"}
+            {isReversed && " · Reversed"}
+          </span>
+        </p>
+        <h2 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
+          {card.name}
+        </h2>
       </div>
 
       <AnimatePresence>
@@ -342,20 +364,6 @@ function DailyCardReveal({
             transition={{ duration: 0.6 }}
             className="space-y-4 text-center"
           >
-            <p
-              className="text-xs tracking-widest uppercase"
-              style={{ color: `var(--color-rarity-${rarityLabel})` }}
-              aria-label={[RARITY_LABELS[rarityScore], isRadiant ? "Radiant" : null, isReversed ? "Reversed" : null].filter(Boolean).join(", ")}
-            >
-              <span aria-hidden="true">
-                {RARITY_LABELS[rarityScore]}
-                {isRadiant && " ✦"}
-                {isReversed && " · Reversed"}
-              </span>
-            </p>
-            <h2 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
-              {card.name}
-            </h2>
             <p className="type-body-serif max-w-xs mx-auto">
               {meaning}
             </p>

@@ -58,7 +58,6 @@
   --grain:   url("https://cdn.jsdelivr.net/gh/simeydotme/pokemon-cards-css@main/public/img/grain.webp");
 }
 
-.card-scene:not([data-revealed]) { margin-bottom: 2rem; }
 .card-scene[data-revealed] { cursor: default; }
 
 /* ─── Hold-to-reveal glow ─── */
