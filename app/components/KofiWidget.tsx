@@ -9,12 +9,16 @@ declare global {
   }
 }
 
-// Matches --accent in dark / light mode from tokens.css
-const COLOR_DARK = "#a855f7";  // --purple-500
-const COLOR_LIGHT = "#e8b931"; // --gold-300
-
 function accentColor() {
-  return document.documentElement.classList.contains("dark") ? COLOR_DARK : COLOR_LIGHT;
+  const el = document.createElement("div");
+  el.style.color = "var(--accent)";
+  document.body.appendChild(el);
+  const rgb = getComputedStyle(el).color;
+  document.body.removeChild(el);
+  // rgb(...) → #rrggbb
+  const m = rgb.match(/\d+/g);
+  if (!m) return "#a855f7";
+  return "#" + m.slice(0, 3).map((n) => parseInt(n).toString(16).padStart(2, "0")).join("");
 }
 
 function drawWidget() {
