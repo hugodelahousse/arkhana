@@ -789,10 +789,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-6">
-                  <p className="text-xl text-muted-foreground font-serif">
-                    {isPulling ? "The fates are turning…" : "The cards await your question."}
-                  </p>
+                <div className="space-y-4">
                   <div className={`flex justify-center ${isPulling ? "animate-pulse pointer-events-none" : ""}`}>
                     <TarotCard
                       card={CARD_BY_ID[0]}
@@ -805,6 +802,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       showHint={!isPulling}
                     />
                   </div>
+                  <p className="text-xl text-muted-foreground font-serif">
+                    {isPulling ? "The fates are turning…" : "The cards await your question."}
+                  </p>
                 </div>
               )}
             </section>
