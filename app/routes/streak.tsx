@@ -1,5 +1,5 @@
 import { redirect } from "react-router";
-import { startTransition, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { addTransitionType } from "react";
 import type { Route } from "./+types/streak";
 import { Link, useNavigate } from "react-router";
@@ -10,107 +10,27 @@ import { DirectionalTransition } from "../components/DirectionalTransition";
 import { getStreak } from "../lib/streak";
 import { getPullDates } from "../lib/pull";
 import {
-  getMoonAge,
-  getLunarMonthInfo,
-  moonPhaseIconPath,
-  moonPhaseOutlineOpacity,
-  SYNODIC_MONTH_DAYS,
+  getLunarMonthsInfo,
+  type LunarMonthDetail,
 } from "../lib/moonphase";
 import { todayUTC } from "../lib/utils";
 import { DateTime } from "luxon";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface LunarDay {
-  date: string;
-  lunarAge: number; // 0–29.5, used to render the moon phase glyph
-  pulled: boolean;
-  isToday: boolean;
-  isFuture: boolean;
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const HISTORY_ROWS = 5;
-const HISTORY_LOOKBACK_DAYS = 365;
-const HISTORY_DAYS = Math.ceil(HISTORY_LOOKBACK_DAYS / HISTORY_ROWS) * HISTORY_ROWS;
+const MONTHS_BACK = 6;
 
-function buildLunarHistory(
-  today: string,
-  pullDateSet: Set<string>,
-  dayCount: number
-): LunarDay[] {
-  const end = DateTime.fromISO(today, { zone: "utc" });
-  const start = end.minus({ days: dayCount - 1 });
-  const days: LunarDay[] = [];
+function formatMonthRange(month: LunarMonthDetail): string {
+  const start = DateTime.fromISO(month.startDate, { zone: "utc" });
+  const end = DateTime.fromISO(month.endDate, { zone: "utc" });
 
-  for (let i = 0; i < dayCount; i++) {
-    const dt = start.plus({ days: i });
-    const date = dt.toISODate()!;
-
-    days.push({
-      date,
-      lunarAge: getMoonAge(dt.toJSDate()),
-      pulled: pullDateSet.has(date),
-      isToday: date === today,
-      isFuture: false,
-    });
+  if (start.hasSame(end, "month")) {
+    return `${start.toFormat("MMM d")}–${end.toFormat("d, yyyy")}`;
   }
-
-  return days;
-}
-
-function formatHistoryRange(start: DateTime, end: DateTime) {
   if (start.hasSame(end, "year")) {
     return `${start.toFormat("MMM d")} – ${end.toFormat("MMM d, yyyy")}`;
   }
-
   return `${start.toFormat("MMM d, yyyy")} – ${end.toFormat("MMM d, yyyy")}`;
-}
-
-// ─── SVG Moon Phase Glyph ─────────────────────────────────────────────────────
-
-function MoonGlyph({ age, active = false }: { age: number; active?: boolean }) {
-  const phase = age / SYNODIC_MONTH_DAYS;
-  const path = moonPhaseIconPath(phase);
-  const outlineOpacity = moonPhaseOutlineOpacity(phase);
-  const litFill = active ? "currentColor" : "var(--moon-phase-lit)";
-  const shadowFill = active ? "var(--moon-phase-active-shadow)" : "currentColor";
-
-  return (
-    <svg
-      width="100%"
-      height="100%"
-      viewBox="0 0 100 100"
-      aria-hidden
-      style={{ display: "block" }}
-    >
-      <circle
-        cx={50}
-        cy={50}
-        r={45}
-        fill={shadowFill}
-        stroke={shadowFill}
-        strokeWidth={5}
-        opacity="var(--moon-phase-shadow-opacity)"
-      />
-      {path === "full" ? (
-        <circle cx={50} cy={50} r={45} fill={litFill} />
-      ) : path !== "new" ? (
-        <path d={path} fill={litFill} />
-      ) : null}
-      <circle
-        cx={50}
-        cy={50}
-        r={45}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={5}
-        opacity={outlineOpacity}
-        filter={active ? "drop-shadow(0 0 12px currentColor)" : undefined}
-      />
-    </svg>
-  );
 }
 
 // ─── Loader ───────────────────────────────────────────────────────────────────
@@ -126,7 +46,8 @@ export async function loader({ context }: Route.LoaderArgs) {
     getStreak(userId),
     getPullDates(userId),
   ]);
-  const lunarMonthInfo = getLunarMonthInfo(todayDate, pullDates);
+  const currentStreak = streakState?.currentStreak ?? 0;
+  const lunarMonths = getLunarMonthsInfo(todayDate, pullDates, MONTHS_BACK, currentStreak);
 
   return {
     user: context.user,
@@ -138,7 +59,7 @@ export async function loader({ context }: Route.LoaderArgs) {
       graceNightsUsed: 0,
     },
     pullDates,
-    lunarMonthInfo,
+    lunarMonths,
     today,
   };
 }
@@ -150,16 +71,19 @@ export function meta() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StreakPage({ loaderData }: Route.ComponentProps) {
-  const { user, streakState, pullDates, lunarMonthInfo, today } = loaderData;
+  const { user, streakState, pullDates, lunarMonths, today } = loaderData;
   const navigate = useNavigate();
 
   const { currentStreak, longestStreak, graceNightsUsed } = streakState;
-  const { todayLunarIndex, lunarMonthLength, pulledDayIndices } = lunarMonthInfo;
   const graceRemaining = 2 - graceNightsUsed;
-
-  const pullDateSet = new Set(pullDates);
-  const historyDays = buildLunarHistory(today, pullDateSet, HISTORY_DAYS);
   const totalPulls = pullDates.length;
+
+  const currentMonth = lunarMonths[lunarMonths.length - 1];
+  const todayLunarIndex = currentMonth?.todayLunarIndex ?? 0;
+
+  const [activeIndex, setActiveIndex] = useState(lunarMonths.length - 1);
+  const activeMonth = lunarMonths[activeIndex];
+  const isCurrentMonth = activeIndex === lunarMonths.length - 1;
 
   function goBack() {
     startTransition(() => {
@@ -184,32 +108,57 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
             </h1>
           </div>
 
-          {/* Lunar ring */}
-          <div className="flex flex-col items-center gap-6">
-            <MoonCycle
+          {/* Lunar ring carousel */}
+          <div className="space-y-5">
+            <MoonCycleCarousel
+              months={lunarMonths}
               currentStreak={currentStreak}
-              todayLunarIndex={todayLunarIndex}
-              lunarMonthLength={lunarMonthLength}
-              pulledDayIndices={pulledDayIndices}
-              size="lg"
+              onActiveChange={setActiveIndex}
             />
 
-            <div className="text-center space-y-1">
-              {currentStreak > 0 ? (
-                <>
-                  <p className="type-body-serif">
-                    Day {todayLunarIndex + 1} of the moon · {currentStreak} day streak
+            <div className="text-center space-y-2">
+              {/* Dot indicators */}
+              <div className="flex gap-1.5 justify-center">
+                {lunarMonths.map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full transition-all duration-200"
+                    style={{
+                      backgroundColor: i === activeIndex ? "var(--accent)" : "var(--muted-foreground)",
+                      opacity: i === activeIndex ? 1 : 0.2,
+                      transform: i === activeIndex ? "scale(1.3)" : "scale(1)",
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Month info */}
+              {activeMonth && (
+                <div className="space-y-1">
+                  <p className="type-caption font-serif">
+                    {formatMonthRange(activeMonth)}
                   </p>
-                  {graceRemaining > 0 && (
-                    <p className="text-xs text-ghost-foreground">
-                      {graceRemaining === 2 ? "Two grace nights remain" : "One grace night remains"} this cycle
+                  {isCurrentMonth && currentStreak > 0 ? (
+                    <>
+                      <p className="type-body-serif">
+                        Day {todayLunarIndex + 1} of the moon · {currentStreak} day streak
+                      </p>
+                      {graceRemaining > 0 && (
+                        <p className="text-xs text-ghost-foreground">
+                          {graceRemaining === 2 ? "Two grace nights remain" : "One grace night remains"} this cycle
+                        </p>
+                      )}
+                    </>
+                  ) : isCurrentMonth ? (
+                    <p className="type-body-serif">
+                      Pull your first card to begin
+                    </p>
+                  ) : (
+                    <p className="type-body-serif">
+                      {activeMonth.pulledDayIndices.length} of {activeMonth.lunarMonthLength} days practiced
                     </p>
                   )}
-                </>
-              ) : (
-                <p className="type-body-serif">
-                  Pull your first card to begin
-                </p>
+                </div>
               )}
             </div>
           </div>
@@ -288,8 +237,6 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
             </section>
           )}
 
-          <PracticeHistory days={historyDays} />
-
           {currentStreak === 0 && (
             <div className="text-center py-8 space-y-4">
               <p className="type-body-serif">
@@ -311,133 +258,89 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
   );
 }
 
-// ─── Calendar cell ────────────────────────────────────────────────────────────
+// ─── Carousel ─────────────────────────────────────────────────────────────────
 
-function PracticeHistory({ days }: { days: LunarDay[] }) {
-  const [visibleRange, setVisibleRange] = useState(() => ({
-    firstDate: days[0]?.date ?? null,
-    lastDate: days.at(-1)?.date ?? null,
-  }));
-
-  if (days.length === 0 || !visibleRange.firstDate || !visibleRange.lastDate) {
-    return null;
-  }
-
-  const rangeStart = DateTime.fromISO(visibleRange.firstDate, { zone: "utc" });
-  const rangeEnd = DateTime.fromISO(visibleRange.lastDate, { zone: "utc" });
-
-  return (
-    <section className="space-y-4">
-      <h2 className="type-label">
-        Practice history
-      </h2>
-
-      <div>
-        <p className="type-caption font-serif truncate">
-          {formatHistoryRange(rangeStart, rangeEnd)}
-        </p>
-      </div>
-
-      <LunarHistoryGrid days={days} onVisibleRangeChange={setVisibleRange} />
-    </section>
-  );
-}
-
-function LunarHistoryGrid({
-  days,
-  onVisibleRangeChange,
+function MoonCycleCarousel({
+  months,
+  currentStreak,
+  onActiveChange,
 }: {
-  days: LunarDay[];
-  onVisibleRangeChange: (range: { firstDate: string; lastDate: string }) => void;
+  months: LunarMonthDetail[];
+  currentStreak: number;
+  onActiveChange: (index: number) => void;
 }) {
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const viewport = viewportRef.current;
-    const grid = gridRef.current;
-    if (!viewport || !grid) return;
+  // Reversed array so that with dir="rtl", the visual order is
+  // [oldest → current] left to right, and scrollLeft=0 shows the
+  // right edge (current month). No JS scroll positioning needed.
+  const carousel = useMemo(() => [...months].reverse(), [months]);
 
-    function updateVisibleRange() {
-      const viewportBounds = viewport.getBoundingClientRect();
-      const visibleCells = Array.from(
-        grid.querySelectorAll<HTMLElement>("[data-history-date]")
-      ).filter((cell) => {
-        const cellBounds = cell.getBoundingClientRect();
-        return cellBounds.right > viewportBounds.left && cellBounds.left < viewportBounds.right;
-      });
-
-      const firstDate = visibleCells[0]?.dataset.historyDate;
-      const lastDate = visibleCells.at(-1)?.dataset.historyDate;
-      if (firstDate && lastDate) {
-        onVisibleRangeChange({ firstDate, lastDate });
+  const detectActive = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const box = el.getBoundingClientRect();
+    const center = box.left + box.width / 2;
+    let closest = 0;
+    let minDist = Infinity;
+    for (let i = 0; i < el.children.length; i++) {
+      const child = (el.children[i] as HTMLElement).getBoundingClientRect();
+      const dist = Math.abs(center - (child.left + child.width / 2));
+      if (dist < minDist) {
+        minDist = dist;
+        closest = i;
       }
     }
+    onActiveChange(months.length - 1 - closest);
+  }, [months.length, onActiveChange]);
 
-    updateVisibleRange();
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
 
-    const resizeObserver = new ResizeObserver(updateVisibleRange);
-    resizeObserver.observe(viewport);
-    resizeObserver.observe(grid);
+    let timer: ReturnType<typeof setTimeout>;
+    function onScroll() {
+      clearTimeout(timer);
+      timer = setTimeout(detectActive, 80);
+    }
 
-    return () => resizeObserver.disconnect();
-  }, [days, onVisibleRangeChange]);
-
-  return (
-    <div ref={viewportRef} className="flex justify-end overflow-hidden">
-      <div
-        ref={gridRef}
-        className="w-max shrink-0"
-        style={{
-          display: "grid",
-          gridAutoFlow: "column",
-          gridTemplateRows: `repeat(${HISTORY_ROWS}, clamp(8px, 1.9vw, 12px))`,
-          gridAutoColumns: "clamp(8px, 1.9vw, 12px)",
-          gap: "clamp(3px, 0.65vw, 4px)",
-        }}
-      >
-        {days.map((day) => (
-          <LunarDayCell key={day.date} day={day} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function LunarDayCell({ day }: { day: LunarDay }) {
-  const isToday = day.isToday;
-  const isFuture = day.isFuture;
-
-  let color: string;
-  let opacity: number;
-
-  if (isToday && day.pulled) {
-    color = "var(--moon-phase-active)";
-    opacity = 1;
-  } else if (isToday) {
-    color = "var(--muted-foreground)";
-    opacity = 0.78;
-  } else if (isFuture) {
-    color = "var(--muted-foreground)";
-    opacity = 0.16;
-  } else if (day.pulled) {
-    color = "var(--muted-foreground)";
-    opacity = 0.9;
-  } else {
-    color = "var(--muted-foreground)";
-    opacity = 0.28;
-  }
+    el.addEventListener("scrollend", detectActive);
+    el.addEventListener("scroll", onScroll);
+    return () => {
+      el.removeEventListener("scrollend", detectActive);
+      el.removeEventListener("scroll", onScroll);
+      clearTimeout(timer);
+    };
+  }, [detectActive]);
 
   return (
     <div
-      title={day.date}
-      data-history-date={day.date}
-      className="relative aspect-square"
-      style={{ color, opacity }}
+      ref={scrollRef}
+      dir="rtl"
+      className="flex overflow-x-auto snap-x snap-mandatory"
+      style={{ scrollbarWidth: "none" }}
     >
-      <div className="relative">
-        <MoonGlyph age={day.lunarAge} active={isToday} />
-      </div>
+      {carousel.map((month, ci) => {
+        const isCurrentMonth = ci === 0;
+        const pulledCount = month.pulledDayIndices.length;
+        return (
+          <div
+            key={month.newMoonDate}
+            dir="ltr"
+            className="snap-center shrink-0 w-full flex justify-center"
+          >
+            <MoonCycle
+              currentStreak={isCurrentMonth ? currentStreak : pulledCount}
+              todayLunarIndex={month.todayLunarIndex}
+              lunarMonthLength={month.lunarMonthLength}
+              pulledDayIndices={month.pulledDayIndices}
+              graceDayIndices={month.graceDayIndices}
+              streakDayIndices={month.streakDayIndices}
+              size="lg"
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }

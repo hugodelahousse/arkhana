@@ -87,6 +87,125 @@ export function getLunarMonthInfo(today: Date, pullDates: string[]): LunarMonthI
   return { todayLunarIndex, lunarMonthLength, pulledDayIndices };
 }
 
+export interface LunarMonthDetail {
+  newMoonDate: string;
+  todayLunarIndex: number;
+  lunarMonthLength: number;
+  pulledDayIndices: number[];
+  graceDayIndices: number[];
+  streakDayIndices: number[];
+  startDate: string;
+  endDate: string;
+}
+
+export function getLunarMonthsInfo(
+  today: Date,
+  pullDates: string[],
+  count: number,
+  streakLength = 0,
+): LunarMonthDetail[] {
+  const age = getMoonAge(today);
+  const currentNewMoonMs = today.getTime() - age * MS_PER_DAY;
+  const todayDayMs = Date.UTC(
+    today.getUTCFullYear(),
+    today.getUTCMonth(),
+    today.getUTCDate(),
+  );
+  const streakStartMs =
+    streakLength > 0 ? todayDayMs - (streakLength - 1) * MS_PER_DAY : 0;
+  const results: LunarMonthDetail[] = [];
+
+  for (let m = count - 1; m >= 0; m--) {
+    const newMoonMs = currentNewMoonMs - m * SYNODIC_MONTH_DAYS * MS_PER_DAY;
+    const nextNewMoonMs = newMoonMs + SYNODIC_MONTH_DAYS * MS_PER_DAY;
+
+    const lnm = new Date(newMoonMs);
+    const nnm = new Date(nextNewMoonMs);
+    const startDayMs = Date.UTC(lnm.getUTCFullYear(), lnm.getUTCMonth(), lnm.getUTCDate());
+    const endDayMs = Date.UTC(nnm.getUTCFullYear(), nnm.getUTCMonth(), nnm.getUTCDate());
+
+    const lunarMonthLength = Math.max(
+      29,
+      Math.min(30, Math.round((endDayMs - startDayMs) / MS_PER_DAY)),
+    );
+
+    const todayIdx = Math.round((todayDayMs - startDayMs) / MS_PER_DAY);
+    const todayLunarIndex =
+      todayIdx >= 0 && todayIdx < lunarMonthLength
+        ? Math.min(todayIdx, lunarMonthLength - 1)
+        : -1;
+
+    const pulledDayIndices: number[] = [];
+    for (const dateStr of pullDates) {
+      const d = new Date(dateStr + "T00:00:00Z");
+      const dayMs = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+      const idx = Math.round((dayMs - startDayMs) / MS_PER_DAY);
+      if (idx >= 0 && idx < lunarMonthLength) {
+        pulledDayIndices.push(idx);
+      }
+    }
+
+    const lastDay = todayLunarIndex >= 0 ? todayLunarIndex : lunarMonthLength - 1;
+    const graceDayIndices = computeGraceDays(pulledDayIndices, lastDay);
+
+    const streakDayIndices: number[] = [];
+    if (streakLength > 0) {
+      for (const idx of pulledDayIndices) {
+        const dayMs = startDayMs + idx * MS_PER_DAY;
+        if (dayMs >= streakStartMs && dayMs <= todayDayMs) {
+          streakDayIndices.push(idx);
+        }
+      }
+    }
+
+    const sd = new Date(startDayMs);
+    const ed = new Date(startDayMs + (lunarMonthLength - 1) * MS_PER_DAY);
+
+    results.push({
+      newMoonDate: utcISODate(sd),
+      todayLunarIndex,
+      lunarMonthLength,
+      pulledDayIndices,
+      graceDayIndices,
+      streakDayIndices,
+      startDate: utcISODate(sd),
+      endDate: utcISODate(ed),
+    });
+  }
+
+  return results;
+}
+
+function utcISODate(d: Date): string {
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function computeGraceDays(pulledIndices: number[], lastDay: number): number[] {
+  const pulledSet = new Set(pulledIndices);
+  const grace: number[] = [];
+  let i = 0;
+
+  while (i <= lastDay) {
+    if (!pulledSet.has(i)) {
+      const gapStart = i;
+      while (i <= lastDay && !pulledSet.has(i)) i++;
+      const gapLen = i - gapStart;
+      if (gapLen <= 2 && gapStart > 0 && pulledSet.has(gapStart - 1) && i <= lastDay) {
+        for (let g = gapStart; g < gapStart + gapLen; g++) {
+          grace.push(g);
+        }
+      }
+    } else {
+      i++;
+    }
+  }
+
+  return grace.slice(0, 2);
+}
+
 /**
  * SVG path for the illuminated portion of the moon at a given lunar age.
  * Rendered in a 100×100 viewBox. Returns "new", "full", or an SVG path string.

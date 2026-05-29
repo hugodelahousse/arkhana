@@ -3,9 +3,11 @@ import { moonPhaseIconPath, moonPhaseOutlineOpacity } from "../lib/moonphase";
 
 interface MoonCycleProps {
   currentStreak: number;
-  todayLunarIndex: number;    // 0-based position today in the current lunar month
+  todayLunarIndex: number;    // 0-based position today in the current lunar month (-1 if not this month)
   lunarMonthLength: number;   // 29 or 30
   pulledDayIndices: number[]; // which days in this lunar month the user pulled
+  graceDayIndices?: number[]; // days where streak survived without a pull
+  streakDayIndices?: number[]; // pulled days that are part of the active streak
   size?: "sm" | "md" | "lg";
 }
 
@@ -28,6 +30,8 @@ export const MoonCycle = memo(function MoonCycle({
   todayLunarIndex,
   lunarMonthLength,
   pulledDayIndices,
+  graceDayIndices = [],
+  streakDayIndices = [],
   size = "sm",
 }: MoonCycleProps) {
   const filterId = useId().replace(/:/g, "");
@@ -36,7 +40,9 @@ export const MoonCycle = memo(function MoonCycle({
   const cy = cfg.total / 2;
 
   const pulledSet = new Set(pulledDayIndices);
-  const todayPulled = pulledSet.has(todayLunarIndex);
+  const graceSet = new Set(graceDayIndices);
+  const streakSet = new Set(streakDayIndices);
+  const todayPulled = todayLunarIndex >= 0 && pulledSet.has(todayLunarIndex);
 
   return (
     <svg
@@ -77,20 +83,28 @@ export const MoonCycle = memo(function MoonCycle({
         const outlineOpacity = moonPhaseOutlineOpacity(phase);
         const deg = (i * 360) / lunarMonthLength - 90;
         const pos = polarToCartesian(cx, cy, cfg.radius, deg);
-        const litFill = isToday ? "currentColor" : "var(--moon-phase-lit)";
-        const shadowFill = isToday ? "var(--moon-phase-active-shadow)" : "currentColor";
+        const isHighlighted = isToday || streakSet.has(i);
+        const litFill = isHighlighted ? "currentColor" : "var(--moon-phase-lit)";
+        const shadowFill = isHighlighted ? "var(--moon-phase-active-shadow)" : "currentColor";
         const glowMaskId = `moon-glow-mask-${filterId}-${i}`;
 
         let color: string;
         let opacity: number;
 
+        const inStreak = streakSet.has(i);
+
         if (isToday && todayPulled) {
           color = "var(--moon-phase-active)";
           opacity = 1;
         } else if (isToday) {
-          // Today, not yet pulled — soft ring highlight
           color = "var(--muted-foreground)";
           opacity = 0.72;
+        } else if (inStreak) {
+          color = "var(--moon-phase-active)";
+          opacity = 0.82;
+        } else if (graceSet.has(i)) {
+          color = "var(--moon-phase-grace)";
+          opacity = 0.6;
         } else if (pulled) {
           color = "var(--muted-foreground)";
           opacity = 0.68;
@@ -98,7 +112,6 @@ export const MoonCycle = memo(function MoonCycle({
           color = "var(--muted-foreground)";
           opacity = 0.38;
         } else {
-          // Past, not pulled
           color = "var(--muted-foreground)";
           opacity = 0.38;
         }
