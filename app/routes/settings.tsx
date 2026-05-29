@@ -350,6 +350,16 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                     { intent: "set-card-style", cardStyle: value },
                     { method: "post" },
                   );
+                  if (value === "procgen") {
+                    let h = 0;
+                    const id = loaderData.user.id;
+                    for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+                    fetch("/api/procgen/prefetch", {
+                      method: "POST",
+                      headers: { "content-type": "application/json" },
+                      body: JSON.stringify({ seed: Math.abs(h) || 1 }),
+                    });
+                  }
                 }}
                 aria-pressed={activeCardStyle === value}
                 className={`flex-1 px-4 py-2.5 text-xs tracking-widest uppercase transition-colors ${

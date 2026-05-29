@@ -7,3 +7,4 @@
 /build/
 .lockbox/
 lab/output/
+data/procgen-cache/

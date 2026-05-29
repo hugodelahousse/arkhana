@@ -10,6 +10,8 @@ import { eq } from "drizzle-orm";
 import { getVapidPublicKey, testPushToUser, sendDailyReminders, sendCelestialNotification } from "../app/lib/push.js";
 import { getUpcomingCelestialEvents } from "../app/lib/moonphase.js";
 import { todayUTC } from "../app/lib/utils.js";
+import { userCards } from "../db/schema/user-cards.js";
+import { prefetchAll } from "../app/lib/procgen-prefetch.js";
 
 export const app = express();
 
@@ -103,6 +105,26 @@ app.post("/api/push/test", async (req, res) => {
   const payload = payloads[type] ?? payloads["daily-reminder"];
   const result = await testPushToUser(session.user.id, { type: type as "daily-reminder", ...payload, url: "/" });
   res.json(result);
+});
+
+app.post("/api/procgen/prefetch", async (req, res) => {
+  const session = await auth.api.getSession({
+    headers: new Headers(req.headers as Record<string, string>),
+  });
+  if (!session?.user) return res.status(401).json({ error: "Unauthorized" });
+
+  const { seed, width = 752, palette } = req.body ?? {};
+  if (!seed || typeof seed !== "number") return res.status(400).json({ error: "Missing seed" });
+
+  const collected = await db
+    .select({ cardId: userCards.cardId })
+    .from(userCards)
+    .where(eq(userCards.userId, session.user.id));
+  const priorityCardIds = [...new Set(collected.map((r) => r.cardId))];
+
+  res.json({ ok: true, count: 78, priority: priorityCardIds.length });
+
+  prefetchAll(seed, width, palette, priorityCardIds).catch(() => {});
 });
 
 app.use(
