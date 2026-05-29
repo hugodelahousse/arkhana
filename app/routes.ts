@@ -23,4 +23,5 @@ export default [
   route("lab/spreads", "routes/lab/spreads.tsx"),
   route("lab/layers", "routes/lab/layers.tsx"),
   route("lab/push", "routes/lab/push.tsx"),
+  route("lab/revealer", "routes/lab/revealer.tsx"),
 ] satisfies RouteConfig;
