@@ -2,7 +2,7 @@ import { eq, and, desc, ne, sql, inArray } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { userCards } from "../../db/schema/user-cards.js";
 import { CARD_BY_ID, type CardDefinition, type Rarity } from "./cards.js";
-import { rollRarity, rollRadiant, rollReversed } from "./rarity.js";
+import { HARD_PITY, rollRarity, rollRadiant, rollReversed } from "./rarity.js";
 import { todayUTC } from "./utils.js";
 import { updateStreak } from "./streak.js";
 import type { Milestone } from "./streak.js";
@@ -29,6 +29,22 @@ export type PullResult =
       milestone: Milestone | null;
     };
 
+export async function getDryStreak(userId: string): Promise<number> {
+  const recent = await db
+    .select({ rarityScore: userCards.rarityScore })
+    .from(userCards)
+    .where(eq(userCards.userId, userId))
+    .orderBy(desc(userCards.pulledAt))
+    .limit(HARD_PITY);
+
+  let streak = 0;
+  for (const row of recent) {
+    if (row.rarityScore >= 3) break;
+    streak++;
+  }
+  return streak;
+}
+
 export async function dailyPull(userId: string): Promise<PullResult> {
   const pullDate = todayUTC();
 
@@ -53,7 +69,8 @@ export async function dailyPull(userId: string): Promise<PullResult> {
   }
 
   const cardId = Math.floor(Math.random() * 78);
-  const rarityScore = rollRarity();
+  const dryStreak = await getDryStreak(userId);
+  const rarityScore = rollRarity(dryStreak);
   const isRadiant = rollRadiant();
   const isReversed = rollReversed("daily");
 
