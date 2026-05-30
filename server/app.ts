@@ -10,7 +10,6 @@ import { getVapidPublicKey, testPushToUser, sendDailyReminders, sendCelestialNot
 import { getUpcomingCelestialEvents } from "../app/lib/moonphase.js";
 import { todayUTC, parseTzCookie } from "../app/lib/utils.js";
 import { user as userTable } from "../db/schema/auth.js";
-import { eq } from "drizzle-orm";
 
 export const app = express();
 
@@ -115,6 +114,7 @@ app.use(
       });
       if (!session?.user) return { user: null };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const u = session.user as any;
       const storedTz: string | null = u.timezone ?? null;
       const webReq = new Request(`http://localhost${req.url}`, {
