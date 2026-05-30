@@ -5,6 +5,7 @@ import { spreads, spreadCards } from "../../db/schema/spreads.js";
 import { userCards } from "../../db/schema/user-cards.js";
 import { CARD_BY_ID, type CardDefinition, type Rarity } from "./cards.js";
 import { rollRarity, rollRadiant, rollReversed } from "./rarity.js";
+import { getDryStreak } from "./pull.js";
 import { getSpreadType } from "./spreads.js";
 import { updateStreak } from "./streak.js";
 
@@ -60,15 +61,19 @@ export async function drawSpread(
     return { status: "already_pulled", spreadId: spreadRow.id, cards: existing };
   }
 
-  // Roll all cards upfront
-  const rolls = spreadDef.positions.map((pos) => ({
-    position: pos.index,
-    positionKey: pos.label.toLowerCase(),
-    cardId: Math.floor(Math.random() * 78),
-    rarityScore: rollRarity(),
-    isRadiant: rollRadiant(),
-    isReversed: rollReversed("spread"),
-  }));
+  let dryStreak = await getDryStreak(userId);
+  const rolls = spreadDef.positions.map((pos) => {
+    const rarityScore = rollRarity(dryStreak);
+    dryStreak = rarityScore >= 3 ? 0 : dryStreak + 1;
+    return {
+      position: pos.index,
+      positionKey: pos.label.toLowerCase(),
+      cardId: Math.floor(Math.random() * 78),
+      rarityScore,
+      isRadiant: rollRadiant(),
+      isReversed: rollReversed("spread"),
+    };
+  });
 
   const result = await db.transaction(async (tx) => {
     const [spreadRow] = await tx
