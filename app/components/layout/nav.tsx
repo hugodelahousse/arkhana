@@ -76,7 +76,7 @@ export function Nav({ userName: _userName, isAnonymous }: { userName: string; is
 
       {isAnonymous && (
         <div className="flex items-center justify-between gap-4 px-4 sm:px-6 py-2 border-b border-border bg-card text-xs tracking-widest">
-          <p className="type-ghost">Your reading is ephemeral — create an account to save it</p>
+          <p className="type-label">Your reading is ephemeral — create an account to save it</p>
           <div className="flex items-center gap-4 shrink-0">
             <Link to="/auth/signup" className={buttonClass("sm")}>
               Create account
