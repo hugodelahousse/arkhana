@@ -71,7 +71,7 @@ export function meta() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StreakPage({ loaderData }: Route.ComponentProps) {
-  const { user, streakState, pullDates, lunarMonths, today } = loaderData;
+  const { user, streakState, pullDates, lunarMonths } = loaderData;
   const navigate = useNavigate();
 
   const { currentStreak, longestStreak, graceNightsUsed } = streakState;
