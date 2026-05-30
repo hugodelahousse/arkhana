@@ -8,7 +8,9 @@ import { pushSubscriptions } from "../db/schema/push-subscriptions.js";
 import { eq } from "drizzle-orm";
 import { getVapidPublicKey, testPushToUser, sendDailyReminders, sendCelestialNotification } from "../app/lib/push.js";
 import { getUpcomingCelestialEvents } from "../app/lib/moonphase.js";
-import { todayUTC } from "../app/lib/utils.js";
+import { todayUTC, parseTzCookie } from "../app/lib/utils.js";
+import { user as userTable } from "../db/schema/auth.js";
+import { eq } from "drizzle-orm";
 
 export const app = express();
 
@@ -111,18 +113,31 @@ app.use(
       const session = await auth.api.getSession({
         headers: new Headers(req.headers as Record<string, string>),
       });
+      if (!session?.user) return { user: null };
+
+      const u = session.user as any;
+      const storedTz: string | null = u.timezone ?? null;
+      const webReq = new Request(`http://localhost${req.url}`, {
+        headers: new Headers(req.headers as Record<string, string>),
+      });
+      const cookieTz = parseTzCookie(webReq);
+
+      if (cookieTz && cookieTz !== storedTz) {
+        await db
+          .update(userTable)
+          .set({ timezone: cookieTz })
+          .where(eq(userTable.id, u.id));
+      }
+
       return {
-        user: session?.user
-          ? {
-              id: session.user.id,
-              name: session.user.name,
-              email: session.user.email,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              username: (session.user as any).username ?? null,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              isAnonymous: (session.user as any).isAnonymous ?? false,
-            }
-          : null,
+        user: {
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          username: u.username ?? null,
+          isAnonymous: u.isAnonymous ?? false,
+          timezone: cookieTz ?? storedTz,
+        },
       };
     },
   })

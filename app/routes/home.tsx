@@ -18,7 +18,7 @@ import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity, t
 import { getSpreadType } from "../lib/spreads";
 import { useAutoReveal } from "../lib/useAutoReveal";
 import { DateTime } from "luxon";
-import { todayUTC, getOrigin } from "../lib/utils";
+import { todayForUser, nowForUser, getOrigin } from "../lib/utils";
 import { config } from "../../config/index.js";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
@@ -58,7 +58,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       sundaySpread: null as SpreadCardResult[] | null,
       sundaySpreadId: null as number | null,
       spreadDef: null as { name: string; subtitle: string; description: string; positions: { index: number; label: string; contemplationPrompt: string }[] } | null,
-      todayStr: todayUTC(),
+      todayStr: todayForUser(null),
       origin: getOrigin(request),
       streak: null as { currentStreak: number; longestStreak: number; cycleStartDate: string | null } | null,
       lunarMonthInfo: getLunarMonthInfo(new Date(), []),
@@ -67,8 +67,10 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   }
 
   const userId = context.user.id;
-  const todayStr = todayUTC();
-  const isSundayToday = DateTime.utc().weekday === 7;
+  const tz = context.user.timezone;
+  const now = nowForUser(tz);
+  const todayStr = now.toISODate()!;
+  const isSundayToday = now.weekday === 7;
 
   const [recentPulls, totalUnique, sundaySpread, sundaySpreadId, streakState, pullDates] = await Promise.all([
     getRecentPulls(userId, 5),
@@ -144,13 +146,15 @@ export async function action({ request, context }: Route.ActionArgs) {
   const formData = await request.formData();
   const actionType = formData.get("_action");
 
+  const tz = context.user.timezone;
+
   if (actionType === "spread") {
-    const result = await drawSpread(context.user.id, "sunday-weekly", DateTime.utc());
+    const result = await drawSpread(context.user.id, "sunday-weekly", nowForUser(tz));
     if (result.status === "unavailable") return { _type: "spread", status: "unavailable" as const };
     return { _type: "spread" as const, status: result.status, spreadId: result.spreadId, cards: result.cards };
   }
 
-  const result = await dailyPull(context.user.id);
+  const result = await dailyPull(context.user.id, tz);
   return result;
 }
 

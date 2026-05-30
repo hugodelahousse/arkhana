@@ -17,7 +17,7 @@ import {
   SYNODIC_MONTH_DAYS,
   MS_PER_DAY,
 } from "../lib/moonphase";
-import { todayUTC } from "../lib/utils";
+import { todayForUser } from "../lib/utils";
 import { DateTime } from "luxon";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ export async function loader({ context }: Route.LoaderArgs) {
   if (!context.user) return redirect("/");
 
   const userId = context.user.id;
-  const today = todayUTC();
+  const today = todayForUser(context.user.timezone);
   const todayDate = new Date(today + "T12:00:00Z");
 
   const [streakState, pullDates] = await Promise.all([

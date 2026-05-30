@@ -31,7 +31,7 @@ async function createTestUser(id: string, isAnonymous = false) {
   });
 }
 
-async function createPull(userId: string, pullDate: string, pulledAt: Date) {
+async function createPull(userId: string, pullDate: string) {
   const [row] = await db
     .insert(userCards)
     .values({
@@ -41,7 +41,6 @@ async function createPull(userId: string, pullDate: string, pulledAt: Date) {
       isRadiant: false,
       isReversed: false,
       pullDate,
-      pulledAt,
     })
     .returning();
   return row;
@@ -74,7 +73,7 @@ describe("migrateAnonymousPulls", () => {
   });
 
   it("transfers anonymous pull to new user when new user has no prior pulls", async () => {
-    const anonPull = await createPull(anonId, DATE_C, new Date("2026-05-24T10:00:00Z"));
+    const anonPull = await createPull(anonId, DATE_C);
 
     await migrateAnonymousPulls(anonId, userId);
 
@@ -87,9 +86,8 @@ describe("migrateAnonymousPulls", () => {
   });
 
   it("transfers anonymous pull to existing user when existing user has no pull for that day", async () => {
-    // Existing user has a pull on a different day
-    const existingPull = await createPull(userId, DATE_B, new Date("2026-05-23T09:00:00Z"));
-    const anonPull = await createPull(anonId, DATE_C, new Date("2026-05-24T10:00:00Z"));
+    const existingPull = await createPull(userId, DATE_B);
+    const anonPull = await createPull(anonId, DATE_C);
 
     await migrateAnonymousPulls(anonId, userId);
 
@@ -103,9 +101,9 @@ describe("migrateAnonymousPulls", () => {
     expect(anonPulls).toHaveLength(0);
   });
 
-  it("keeps the anonymous pull when there is a same-day conflict and the anonymous pull was earlier", async () => {
-    const anonPull = await createPull(anonId, DATE_C, new Date("2026-05-24T08:00:00Z"));
-    await createPull(userId, DATE_C, new Date("2026-05-24T14:00:00Z"));
+  it("keeps the pull with the lower id on same-day conflict (anon created first)", async () => {
+    const anonPull = await createPull(anonId, DATE_C);
+    await createPull(userId, DATE_C);
 
     await migrateAnonymousPulls(anonId, userId);
 
@@ -117,9 +115,9 @@ describe("migrateAnonymousPulls", () => {
     expect(anonPulls).toHaveLength(0);
   });
 
-  it("keeps the existing user pull when there is a same-day conflict and the existing user pull was earlier", async () => {
-    const existingPull = await createPull(userId, DATE_C, new Date("2026-05-24T08:00:00Z"));
-    await createPull(anonId, DATE_C, new Date("2026-05-24T14:00:00Z"));
+  it("keeps the pull with the lower id on same-day conflict (user created first)", async () => {
+    const existingPull = await createPull(userId, DATE_C);
+    await createPull(anonId, DATE_C);
 
     await migrateAnonymousPulls(anonId, userId);
 
@@ -132,9 +130,9 @@ describe("migrateAnonymousPulls", () => {
   });
 
   it("handles multiple anonymous pulls across different dates, all transferred when no conflicts", async () => {
-    await createPull(anonId, DATE_A, new Date("2026-05-22T10:00:00Z"));
-    await createPull(anonId, DATE_B, new Date("2026-05-23T10:00:00Z"));
-    await createPull(anonId, DATE_C, new Date("2026-05-24T10:00:00Z"));
+    await createPull(anonId, DATE_A);
+    await createPull(anonId, DATE_B);
+    await createPull(anonId, DATE_C);
 
     await migrateAnonymousPulls(anonId, userId);
 
@@ -145,15 +143,15 @@ describe("migrateAnonymousPulls", () => {
     expect(anonPulls).toHaveLength(0);
   });
 
-  it("handles mixed conflicts: transfers non-conflicting pulls and applies earliest-wins to conflicting ones", async () => {
-    // Date A: anon is earlier → anon pull wins
-    const anonEarlier = await createPull(anonId, DATE_A, new Date("2026-05-22T06:00:00Z"));
-    await createPull(userId, DATE_A, new Date("2026-05-22T18:00:00Z"));
-    // Date B: existing user is earlier → existing pull wins
-    const existingEarlier = await createPull(userId, DATE_B, new Date("2026-05-23T06:00:00Z"));
-    await createPull(anonId, DATE_B, new Date("2026-05-23T18:00:00Z"));
-    // Date C: no conflict on user side → anon pull transferred
-    const anonOnly = await createPull(anonId, DATE_C, new Date("2026-05-24T10:00:00Z"));
+  it("handles mixed conflicts: transfers non-conflicting pulls and applies lower-id-wins to conflicting ones", async () => {
+    // Date A: anon created first (lower id) → anon pull wins
+    const anonFirst = await createPull(anonId, DATE_A);
+    await createPull(userId, DATE_A);
+    // Date B: user created first (lower id) → user pull wins
+    const userFirst = await createPull(userId, DATE_B);
+    await createPull(anonId, DATE_B);
+    // Date C: no conflict → anon pull transferred
+    const anonOnly = await createPull(anonId, DATE_C);
 
     await migrateAnonymousPulls(anonId, userId);
 
@@ -163,8 +161,8 @@ describe("migrateAnonymousPulls", () => {
     expect(anonPulls).toHaveLength(0);
     expect(userPulls).toHaveLength(3);
     const pulledIds = userPulls.map((p) => p.id);
-    expect(pulledIds).toContain(anonEarlier.id);
-    expect(pulledIds).toContain(existingEarlier.id);
+    expect(pulledIds).toContain(anonFirst.id);
+    expect(pulledIds).toContain(userFirst.id);
     expect(pulledIds).toContain(anonOnly.id);
   });
 });

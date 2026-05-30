@@ -43,6 +43,13 @@
       "when": 1779895642216,
       "tag": "0005_perpetual_swarm",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780146158516,
+      "tag": "0006_kind_the_anarchist",
+      "breakpoints": true
     }
   ]
 }

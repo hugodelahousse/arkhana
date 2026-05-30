@@ -42,7 +42,7 @@ export async function drawSpread(
     };
   }
 
-  const spreadDate = now.setZone("utc").toISODate()!;
+  const spreadDate = now.toISODate()!;
 
   const existing = await getTodaySpread(userId, spreadTypeId, spreadDate);
   if (existing) {

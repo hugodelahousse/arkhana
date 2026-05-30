@@ -77,7 +77,7 @@ export async function migrateAnonymousPulls(
         .update(userCards)
         .set({ userId: newUserId })
         .where(eq(userCards.id, anonPull.id));
-    } else if (anonPull.pulledAt < conflict.pulledAt) {
+    } else if (anonPull.id < conflict.id) {
       await db.delete(userCards).where(eq(userCards.id, conflict.id));
       await db
         .update(userCards)
