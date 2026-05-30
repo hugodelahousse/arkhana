@@ -61,7 +61,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       todayStr: todayForUser(null),
       origin: getOrigin(request),
       streak: null as { currentStreak: number; longestStreak: number; cycleStartDate: string | null } | null,
-      lunarMonthInfo: getLunarMonthInfo(new Date(), []),
+      lunarMonthInfo: getLunarMonthInfo(DateTime.utc(), []),
       previousPullDate: null as string | null,
     };
   }
@@ -81,7 +81,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     getPullDates(userId),
   ]);
 
-  const lunarMonthInfo = getLunarMonthInfo(new Date(todayStr + "T12:00:00Z"), pullDates);
+  const lunarMonthInfo = getLunarMonthInfo(DateTime.fromISO(todayStr, { zone: "utc" }).set({ hour: 12 }), pullDates);
 
   const spreadDef = isSundayToday ? (() => {
     const d = getSpreadType("sunday-weekly")!;

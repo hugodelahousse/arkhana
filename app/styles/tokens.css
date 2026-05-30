@@ -64,7 +64,11 @@
   --accent:              var(--gold-300);
   --accent-foreground:   var(--black-950);
   --accent-text:         color-mix(in srgb, var(--gold-400) 55%, var(--black-950));
-
+  --moon-phase-lit:      var(--background);
+  --moon-phase-shadow-opacity: 0.98;
+  --moon-phase-active:   color-mix(in srgb, var(--gold-300) 42%, var(--background));
+  --moon-phase-active-shadow: color-mix(in srgb, var(--stone-500) 58%, var(--background));
+  --moon-phase-grace:    color-mix(in srgb, var(--gold-300) 55%, var(--stone-500));
 
   /* Rarity semantic aliases */
   --rarity-mundane:    var(--rarity-1);
@@ -98,6 +102,11 @@
   --accent:              var(--purple-500);
   --accent-foreground:   var(--bone-100);
   --accent-text:         var(--purple-500);
+  --moon-phase-lit:      currentColor;
+  --moon-phase-shadow-opacity: 0.2;
+  --moon-phase-active:   var(--purple-500);
+  --moon-phase-active-shadow: color-mix(in srgb, var(--bone-400) 35%, var(--black-950));
+  --moon-phase-grace:    color-mix(in srgb, var(--purple-500) 55%, var(--bone-400));
 
   --rarity-mundane:    var(--rarity-1);
   --rarity-wandering:  var(--rarity-2);
@@ -107,8 +116,24 @@
 }
 
 /* ════════════════════════════════════════════════════════
+   MOON CYCLE — data-state driven colors
+   ════════════════════════════════════════════════════════ */
+
+.moon-day { color: var(--muted-foreground); opacity: 0.38; }
+.moon-day[data-state="today-pulled"] { color: var(--moon-phase-active); opacity: 1; }
+.moon-day[data-state="today"]        { color: var(--muted-foreground); opacity: 0.72; }
+.moon-day[data-state="streak"]       { color: var(--moon-phase-active); opacity: 0.82; }
+.moon-day[data-state="grace"]        { color: var(--moon-phase-grace); opacity: 0.6; }
+.moon-day[data-state="pulled"]       { color: var(--muted-foreground); opacity: 0.68; }
+.moon-day[data-state="future"]       { color: var(--muted-foreground); opacity: 0.38; }
+
+.moon-day[data-state="today-pulled"] .moon-glow { opacity: 0.32; }
+.moon-day[data-state="today"]        .moon-glow { opacity: 0.18; }
+
+/* ════════════════════════════════════════════════════════
    UTILITY CLASSES
    ════════════════════════════════════════════════════════ */
+
 
 @keyframes radiant-shimmer {
   0%   { background-position: 0% 50%; }
