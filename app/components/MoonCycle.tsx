@@ -17,12 +17,32 @@ const SIZE = {
   lg: { total: 280, radius: 110, moonSize: 17, numSize: 52, labelSize: 12 },
 } as const;
 
+type MoonState = "today-pulled" | "today" | "streak" | "grace" | "pulled" | "future" | "missed";
+
 function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
   const rad = (deg * Math.PI) / 180;
   return {
     x: Math.round((cx + r * Math.cos(rad)) * 1e4) / 1e4,
     y: Math.round((cy + r * Math.sin(rad)) * 1e4) / 1e4,
   };
+}
+
+function getMoonState(
+  i: number,
+  todayLunarIndex: number,
+  todayPulled: boolean,
+  pulledSet: Set<number>,
+  streakSet: Set<number>,
+  graceSet: Set<number>,
+): MoonState {
+  const isToday = i === todayLunarIndex;
+  if (isToday && todayPulled) return "today-pulled";
+  if (isToday) return "today";
+  if (streakSet.has(i)) return "streak";
+  if (graceSet.has(i)) return "grace";
+  if (pulledSet.has(i)) return "pulled";
+  if (i > todayLunarIndex) return "future";
+  return "missed";
 }
 
 export const MoonCycle = memo(function MoonCycle({
@@ -75,53 +95,22 @@ export const MoonCycle = memo(function MoonCycle({
       </defs>
 
       {Array.from({ length: lunarMonthLength }, (_, i) => {
-        const pulled = pulledSet.has(i);
         const isToday = i === todayLunarIndex;
-        const isFuture = i > todayLunarIndex;
         const phase = i / lunarMonthLength;
         const litPath = moonPhaseIconPath(phase);
         const outlineOpacity = moonPhaseOutlineOpacity(phase);
         const deg = (i * 360) / lunarMonthLength - 90;
         const pos = polarToCartesian(cx, cy, cfg.radius, deg);
-        const isHighlighted = isToday || streakSet.has(i);
-        const litFill = isHighlighted ? "currentColor" : "var(--moon-phase-lit)";
-        const shadowFill = isHighlighted ? "var(--moon-phase-active-shadow)" : "currentColor";
+        const state = getMoonState(i, todayLunarIndex, todayPulled, pulledSet, streakSet, graceSet);
+        const highlighted = state === "today-pulled" || state === "today" || state === "streak";
         const glowMaskId = `moon-glow-mask-${filterId}-${i}`;
-
-        let color: string;
-        let opacity: number;
-
-        const inStreak = streakSet.has(i);
-
-        if (isToday && todayPulled) {
-          color = "var(--moon-phase-active)";
-          opacity = 1;
-        } else if (isToday) {
-          color = "var(--muted-foreground)";
-          opacity = 0.72;
-        } else if (inStreak) {
-          color = "var(--moon-phase-active)";
-          opacity = 0.82;
-        } else if (graceSet.has(i)) {
-          color = "var(--moon-phase-grace)";
-          opacity = 0.6;
-        } else if (pulled) {
-          color = "var(--muted-foreground)";
-          opacity = 0.68;
-        } else if (isFuture) {
-          color = "var(--muted-foreground)";
-          opacity = 0.38;
-        } else {
-          color = "var(--muted-foreground)";
-          opacity = 0.38;
-        }
 
         return (
           <g
             key={i}
+            className="moon-day"
+            data-state={state}
             transform={`translate(${pos.x}, ${pos.y})`}
-            color={color}
-            opacity={opacity}
           >
             {isToday && (
               <>
@@ -143,9 +132,9 @@ export const MoonCycle = memo(function MoonCycle({
                   <circle r={cfg.moonSize * 0.5} fill="black" />
                 </mask>
                 <circle
+                  className="moon-glow"
                   r={cfg.moonSize * 0.76}
                   fill="currentColor"
-                  opacity={todayPulled ? 0.32 : 0.18}
                   filter={`url(#glow-${filterId})`}
                   mask={`url(#${glowMaskId})`}
                 />
@@ -157,19 +146,20 @@ export const MoonCycle = memo(function MoonCycle({
               })`}
             >
               <circle
+                className="moon-shadow"
                 cx={50}
                 cy={50}
                 r={45}
-                fill={shadowFill}
-                stroke={shadowFill}
+                fill={highlighted ? "var(--moon-phase-active-shadow)" : "currentColor"}
+                stroke={highlighted ? "var(--moon-phase-active-shadow)" : "currentColor"}
                 strokeWidth={5}
                 opacity="var(--moon-phase-shadow-opacity)"
               />
               {litPath === "full" && (
-                <circle cx={50} cy={50} r={45} fill={litFill} />
+                <circle cx={50} cy={50} r={45} fill={highlighted ? "currentColor" : "var(--moon-phase-lit)"} />
               )}
               {litPath !== "new" && litPath !== "full" && (
-                <path d={litPath} fill={litFill} />
+                <path d={litPath} fill={highlighted ? "currentColor" : "var(--moon-phase-lit)"} />
               )}
               <circle
                 cx={50}

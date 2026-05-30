@@ -116,6 +116,21 @@
 }
 
 /* ════════════════════════════════════════════════════════
+   MOON CYCLE — data-state driven colors
+   ════════════════════════════════════════════════════════ */
+
+.moon-day { color: var(--muted-foreground); opacity: 0.38; }
+.moon-day[data-state="today-pulled"] { color: var(--moon-phase-active); opacity: 1; }
+.moon-day[data-state="today"]        { color: var(--muted-foreground); opacity: 0.72; }
+.moon-day[data-state="streak"]       { color: var(--moon-phase-active); opacity: 0.82; }
+.moon-day[data-state="grace"]        { color: var(--moon-phase-grace); opacity: 0.6; }
+.moon-day[data-state="pulled"]       { color: var(--muted-foreground); opacity: 0.68; }
+.moon-day[data-state="future"]       { color: var(--muted-foreground); opacity: 0.38; }
+
+.moon-day[data-state="today-pulled"] .moon-glow { opacity: 0.32; }
+.moon-day[data-state="today"]        .moon-glow { opacity: 0.18; }
+
+/* ════════════════════════════════════════════════════════
    UTILITY CLASSES
    ════════════════════════════════════════════════════════ */
 

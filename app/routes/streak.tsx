@@ -40,14 +40,14 @@ export async function loader({ context }: Route.LoaderArgs) {
 
   const userId = context.user.id;
   const today = todayUTC();
-  const todayDate = new Date(today + "T12:00:00Z");
+  const todayDt = DateTime.fromISO(today, { zone: "utc" }).set({ hour: 12 });
 
   const [streakState, pullDates] = await Promise.all([
     getStreak(userId),
     getPullDates(userId),
   ]);
   const currentStreak = streakState?.currentStreak ?? 0;
-  const lunarMonths = getLunarMonthsInfo(todayDate, pullDates, MONTHS_BACK, currentStreak);
+  const lunarMonths = getLunarMonthsInfo(todayDt, pullDates, MONTHS_BACK, currentStreak);
 
   return {
     user: context.user,
