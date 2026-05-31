@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Export, Check } from "@phosphor-icons/react";
 import { buttonClass } from "./Button";
+import { useT } from "../i18n/provider";
 
 interface ShareButtonProps {
   title: string;
@@ -14,9 +15,11 @@ export function ShareButton({
   title,
   url,
   text,
-  label = "Share",
+  label,
   size = "sm",
 }: ShareButtonProps) {
+  const t = useT();
+  const resolvedLabel = label ?? t("share.share");
   const [copied, setCopied] = useState(false);
 
   async function handleShare() {
@@ -43,12 +46,12 @@ export function ShareButton({
       type="button"
       onClick={handleShare}
       className={buttonClass(size, "outline", "inline-flex items-center gap-2")}
-      aria-label={copied ? "Link copied!" : label}
+      aria-label={copied ? t("share.linkCopied") : resolvedLabel}
     >
       {copied ? (
-        <><Check weight="light" size={13} aria-hidden />Copied!</>
+        <><Check weight="light" size={13} aria-hidden />{t("share.copied")}</>
       ) : (
-        <><Export weight="light" size={13} aria-hidden />{label}</>
+        <><Export weight="light" size={13} aria-hidden />{resolvedLabel}</>
       )}
     </button>
   );

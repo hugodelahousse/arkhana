@@ -2,6 +2,7 @@ import { redirect, data, Form, useNavigation, Link, useSearchParams } from "reac
 import { useEffect, useState } from "react";
 import type { Route } from "./+types/signin";
 import { config } from "../../../config/index.js";
+import { useT } from "../../i18n/provider";
 
 async function getPasskeySignIn() {
   const { createAuthClient } = await import("better-auth/client");
@@ -46,6 +47,7 @@ export function meta() {
 }
 
 export default function SignIn({ actionData }: Route.ComponentProps) {
+  const t = useT();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const error = actionData && "error" in actionData ? actionData.error : null;
@@ -91,19 +93,19 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
             ARKHANA
           </Link>
           <p className="type-caption">
-            Return to your arkhive
+            {t("auth.signIn.title")}
           </p>
         </div>
 
         {wasReset && (
-          <p className="text-sm text-primary/80 text-center">Password reset successfully. Sign in with your new password.</p>
+          <p className="text-sm text-primary/80 text-center">{t("auth.signIn.resetSuccess")}</p>
         )}
 
         <Form method="post" className="space-y-3" aria-describedby={error ? "form-error" : undefined}>
           {error && (
             <p id="form-error" role="alert" className="text-sm text-rarity-arcane text-center">{error}</p>
           )}
-          <label htmlFor="email" className="sr-only">Email address</label>
+          <label htmlFor="email" className="sr-only">{t("auth.signIn.emailLabel")}</label>
           <input
             id="email"
             name="email"
@@ -113,13 +115,13 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
             autoComplete="username webauthn"
             className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-muted-foreground"
           />
-          <label htmlFor="password" className="sr-only">Password</label>
+          <label htmlFor="password" className="sr-only">{t("auth.signIn.passwordLabel")}</label>
           <input
             id="password"
             name="password"
             type="password"
             required
-            placeholder="Password"
+            placeholder={t("auth.signIn.passwordLabel")}
             autoComplete="current-password webauthn"
             className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-muted-foreground"
           />
@@ -128,7 +130,7 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
               to="/auth/forgot-password"
               className="type-caption hover:opacity-80 transition-opacity"
             >
-              Forgot password?
+              {t("auth.signIn.forgotPassword")}
             </Link>
           </div>
           <div className="flex flex-col gap-3">
@@ -137,12 +139,12 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
               disabled={isSubmitting}
               className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-accent text-accent hover:opacity-80 disabled:opacity-40 transition-opacity"
             >
-              {isSubmitting ? "…" : "Enter"}
+              {isSubmitting ? "…" : t("auth.signIn.enter")}
             </button>
 
             <div className="flex items-center gap-3 opacity-30">
               <div className="flex-1 border-t border-border" />
-              <span className="type-ghost">or</span>
+              <span className="type-ghost">{t("auth.signIn.or")}</span>
               <div className="flex-1 border-t border-border" />
             </div>
 
@@ -155,15 +157,15 @@ export default function SignIn({ actionData }: Route.ComponentProps) {
               disabled={passkeyLoading}
               className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-muted-foreground hover:text-primary disabled:opacity-40 transition-all"
             >
-              {passkeyLoading ? "…" : "Sign in with passkey"}
+              {passkeyLoading ? "…" : t("auth.signIn.signInWithPasskey")}
             </button>
           </div>
         </Form>
 
         <p className="text-center type-caption">
-          No account yet?{" "}
+          {t("auth.signIn.noAccount")}{" "}
           <Link to="/auth/signup" className="hover:opacity-100 transition-opacity underline">
-            Create one
+            {t("auth.signIn.createOne")}
           </Link>
         </p>
       </div>

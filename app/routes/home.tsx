@@ -14,8 +14,10 @@ import { getStreak, initStreakFromHistory } from "../lib/streak";
 import { getLunarMonthInfo } from "../lib/moonphase";
 import { getTodaySpread, drawSpread, getSpreadId } from "../lib/spread-pull";
 import type { SpreadCardResult } from "../lib/spread-pull";
-import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity, type CardDefinition } from "../lib/cards";
+import { CARD_BY_ID, RARITY_LABELS, cardSlug, type Rarity, type CardDefinition } from "../lib/cards";
 import { getSpreadType } from "../lib/spreads";
+import { useT, useLocale } from "../i18n/provider";
+import { getLocalizedCardName, getLocalizedCardDescription } from "../i18n/cards";
 import { useAutoReveal } from "../lib/useAutoReveal";
 import { DateTime } from "luxon";
 import { todayUTC, getOrigin } from "../lib/utils";
@@ -24,19 +26,6 @@ import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
 import { ArrowRight } from "@phosphor-icons/react";
 
-// Reflection prompt per arcana/suit — shown in the layered second-reveal
-function reflectionPrompt(card: CardDefinition): string {
-  if (card.arcana === "major") {
-    return `Where in your life is ${card.name}'s energy most present today?`;
-  }
-  const prompts: Record<string, string> = {
-    wands: "Where is your passion or creative will at play today?",
-    cups: "What emotions or relationships are asking for attention?",
-    swords: "What thoughts or decisions are moving through you today?",
-    pentacles: "How does this show up in your body, work, or material world?",
-  };
-  return prompts[card.suit ?? "wands"] ?? "Where do you notice this energy today?";
-}
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   if (!context.user) {
@@ -190,11 +179,15 @@ function SpreadContemplateReveal({
   isLast: boolean;
   onAdvance: () => void;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const [cardRevealed, setCardRevealed] = useState(false);
   const [showContinue, setShowContinue] = useState(false);
   const rarityLabel = RARITY_LABELS[card.rarityScore]?.toLowerCase();
-  const posLabel = positions[position]?.label ?? "";
-  const nextLabel = positions[position + 1]?.label;
+  const posLabel = t(`spreads.sunday-weekly.positions.${position}.label`);
+  const nextLabel = position + 1 < positions.length
+    ? t(`spreads.sunday-weekly.positions.${position + 1}.label`)
+    : undefined;
 
   useEffect(() => {
     if (!cardRevealed) return;
@@ -212,7 +205,7 @@ function SpreadContemplateReveal({
     >
       <div className="space-y-2">
         <p className="type-ghost">
-          {position + 1} of {positions.length}
+          {t("home.nOf", { n: position + 1, total: positions.length })}
         </p>
         <h2
           className="type-page-title text-2xl sm:text-3xl"
@@ -244,7 +237,7 @@ function SpreadContemplateReveal({
           }}
         >
           <p className="type-body-serif italic">
-            {positions[position]?.contemplationPrompt}
+            {t(`spreads.sunday-weekly.positions.${position}.contemplation`)}
           </p>
         </div>
         <div
@@ -261,13 +254,13 @@ function SpreadContemplateReveal({
           >
             {RARITY_LABELS[card.rarityScore]}
             {card.isRadiant && " ✦"}
-            {card.isReversed && " · Reversed"}
+            {card.isReversed && ` · ${t("cards.reversed")}`}
           </p>
           <h3 className="text-xl font-light tracking-wide text-muted-foreground font-serif">
-            {card.card.name}
+            {getLocalizedCardName(card.card, locale)}
           </h3>
           <p className="type-body-serif">
-            {getCardDescription(card.card, card.rarityScore, card.isReversed)}
+            {getLocalizedCardDescription(card.card, card.rarityScore as Rarity, card.isReversed, locale)}
           </p>
           <button
             onClick={onAdvance}
@@ -280,7 +273,7 @@ function SpreadContemplateReveal({
               transition: "opacity 0.4s",
             }}
           >
-            {isLast ? "See your reading" : `Continue to ${nextLabel}`}
+            {isLast ? t("home.seeYourReading") : t("home.continueTo", { position: nextLabel ?? "" })}
           </button>
         </div>
       </div>
@@ -309,10 +302,21 @@ function DailyCardReveal({
   todayStr: string;
   onNavigateToCard: (slug: string) => void;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const [revealed, revealNow] = useAutoReveal(true, 600);
   const rarityLabel = RARITY_LABELS[rarityScore]?.toLowerCase();
-  const meaning = getCardDescription(card, rarityScore, isReversed);
-  const reflection = reflectionPrompt(card);
+  const meaning = getLocalizedCardDescription(card, rarityScore, isReversed, locale);
+  const cardName = getLocalizedCardName(card, locale);
+
+  function reflectionPrompt(): string {
+    if (card.arcana === "major") {
+      return t("home.reflection.major", { name: cardName });
+    }
+    const key = card.suit ?? "default";
+    return t(`home.reflection.${key}`);
+  }
+  const reflection = reflectionPrompt();
 
   const shareUrl = username
     ? `/u/${username}/pull/${todayStr}`
@@ -345,16 +349,16 @@ function DailyCardReveal({
             <p
               className="text-xs tracking-widest uppercase"
               style={{ color: `var(--color-rarity-${rarityLabel})` }}
-              aria-label={[RARITY_LABELS[rarityScore], isRadiant ? "Radiant" : null, isReversed ? "Reversed" : null].filter(Boolean).join(", ")}
+              aria-label={[RARITY_LABELS[rarityScore], isRadiant ? t("cards.radiant") : null, isReversed ? t("cards.reversed") : null].filter(Boolean).join(", ")}
             >
               <span aria-hidden="true">
                 {RARITY_LABELS[rarityScore]}
                 {isRadiant && " ✦"}
-                {isReversed && " · Reversed"}
+                {isReversed && ` · ${t("cards.reversed")}`}
               </span>
             </p>
             <h2 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
-              {card.name}
+              {cardName}
             </h2>
             <p className="type-body-serif max-w-xs mx-auto">
               {meaning}
@@ -368,7 +372,7 @@ function DailyCardReveal({
 
             {previousPullDate && (
               <p className="text-xs text-ghost-foreground font-serif">
-                Previously drawn{" "}
+                {t("home.previouslyDrawn")}{" "}
                 {DateTime.fromISO(previousPullDate, { zone: "utc" }).toFormat("LLLL d, yyyy")}
               </p>
             )}
@@ -379,13 +383,12 @@ function DailyCardReveal({
                 onClick={(e) => { e.preventDefault(); onNavigateToCard(cardSlug(card)); }}
                 className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase text-faint-foreground hover:opacity-70 transition-opacity"
               >
-                Card history <ArrowRight weight="light" size={13} aria-hidden />
+                {t("home.cardHistory")} <ArrowRight weight="light" size={13} aria-hidden />
               </a>
               <ShareButton
-                title={`${card.name} — Arkhana`}
+                title={`${cardName} — Arkhana`}
                 url={shareUrl}
                 text=""
-                label="Share"
               />
             </div>
           </motion.div>
@@ -395,8 +398,8 @@ function DailyCardReveal({
   );
 }
 
-// Push notification permission request — shown after first successful pull
 function PushPermissionAsk({ onDismiss }: { onDismiss: () => void }) {
+  const t = useT();
   const [asking, setAsking] = useState(false);
 
   async function requestPermission() {
@@ -439,7 +442,7 @@ function PushPermissionAsk({ onDismiss }: { onDismiss: () => void }) {
       className="flex flex-col items-center gap-4 py-4 border-t border-muted"
     >
       <p className="text-xs text-faint-foreground font-serif text-center max-w-xs">
-        A card has been holding your name.
+        {t("home.push.message")}
       </p>
       <div className="flex items-center gap-4">
         <button
@@ -448,13 +451,13 @@ function PushPermissionAsk({ onDismiss }: { onDismiss: () => void }) {
           className="text-xs tracking-widest uppercase px-5 py-2 border transition-opacity hover:opacity-80 text-muted-foreground"
           style={{ borderColor: "var(--accent)" }}
         >
-          {asking ? "…" : "Allow reminders"}
+          {asking ? "…" : t("home.push.allow")}
         </button>
         <button
           onClick={onDismiss}
           className="type-ghost hover:opacity-50 transition-opacity"
         >
-          Not now
+          {t("home.push.notNow")}
         </button>
       </div>
     </motion.div>
@@ -469,6 +472,8 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
+  const t = useT();
+  const locale = useLocale();
   const fetcher = useFetcher();
   const navigate = useNavigate();
   const isPulling = fetcher.state === "submitting";
@@ -533,7 +538,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   if (!loaderData.user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-sm tracking-widest uppercase text-faint-foreground">The arkhive stirs…</p>
+        <p className="text-sm tracking-widest uppercase text-faint-foreground">{t("home.arkhiveStirs")}</p>
       </div>
     );
   }
@@ -586,15 +591,15 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   >
                     <div className="space-y-3">
                       <p className="type-label">
-                        {spreadDef.subtitle}
+                        {t("spreads.sunday-weekly.subtitle")}
                       </p>
                       <h2 className="text-3xl font-light tracking-wide text-muted-foreground font-serif">
-                        {spreadDef.name}
+                        {t("spreads.sunday-weekly.name")}
                       </h2>
                     </div>
                     <div className="w-16 h-px mx-auto opacity-20 bg-border" />
                     <p className="text-base leading-relaxed max-w-sm mx-auto text-muted-foreground font-serif">
-                      {spreadDef.description}
+                      {t("spreads.sunday-weekly.description")}
                     </p>
                     <div className="flex flex-wrap items-center justify-center gap-3">
                       {positions.map((pos) => (
@@ -602,7 +607,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                           key={pos.index}
                           className="type-ghost px-3 py-1 border border-muted"
                         >
-                          {pos.label}
+                          {t(`spreads.sunday-weekly.positions.${pos.index}.label`)}
                         </span>
                       ))}
                     </div>
@@ -614,7 +619,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       className="px-8 py-3 text-xs tracking-widest uppercase border transition-opacity hover:opacity-80 text-muted-foreground"
                       style={{ borderColor: "var(--accent)" }}
                     >
-                      Begin the reading
+                      {t("home.beginReading")}
                     </button>
                   </motion.div>
                 )}
@@ -630,15 +635,15 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   >
                     <div className="space-y-3">
                       <p className="type-label">
-                        {spreadDef.subtitle}
+                        {t("spreads.sunday-weekly.subtitle")}
                       </p>
                       <h2 className="text-3xl font-light tracking-wide text-muted-foreground font-serif">
-                        {spreadDef.name}
+                        {t("spreads.sunday-weekly.name")}
                       </h2>
                     </div>
                     <div className="w-16 h-px mx-auto opacity-20 bg-border" />
                     <p className="type-body-serif animate-pulse">
-                      The cards are gathering…
+                      {t("home.cardsGathering")}
                     </p>
                   </motion.div>
                 )}
@@ -671,20 +676,20 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   >
                     <div className="text-center space-y-3">
                       <p className="type-label">
-                        {spreadDef.subtitle}
+                        {t("spreads.sunday-weekly.subtitle")}
                       </p>
                       <h2 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
-                        {spreadDef.name}
+                        {t("spreads.sunday-weekly.name")}
                       </h2>
                     </div>
                     <SpreadSummaryGrid cards={currentCards} positions={positions} />
                     {spreadShareUrl && (
                       <div className="flex justify-center pt-2">
                         <ShareButton
-                          title={`${spreadDef.name} — Arkhana`}
+                          title={`${t("spreads.sunday-weekly.name")} — Arkhana`}
                           url={spreadShareUrl}
                           text=""
-                          label="Share reading"
+                          label={t("home.shareReading")}
                         />
                       </div>
                     )}
@@ -702,20 +707,20 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   >
                     <div className="text-center space-y-3">
                       <h2 className="text-sm tracking-widest uppercase text-faint-foreground">
-                        Sunday Reading
+                        {t("home.sundayReading")}
                       </h2>
                       <p className="text-2xl font-light text-muted-foreground font-serif">
-                        {spreadDef.name}
+                        {t("spreads.sunday-weekly.name")}
                       </p>
                     </div>
                     <SpreadSummaryGrid cards={currentCards} positions={positions} />
                     {spreadShareUrl && (
                       <div className="flex justify-center pt-2">
                         <ShareButton
-                          title={`${spreadDef.name} — Arkhana`}
+                          title={`${t("spreads.sunday-weekly.name")} — Arkhana`}
                           url={spreadShareUrl}
                           text=""
-                          label="Share reading"
+                          label={t("home.shareReading")}
                         />
                       </div>
                     )}
@@ -727,7 +732,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           ) : (
             <section className="space-y-6 text-center">
               <h2 className="text-sm sm:text-xs tracking-widest uppercase text-faint-foreground">
-                Today
+                {t("home.today")}
               </h2>
 
               {dailyResult && "card" in dailyResult ? (
@@ -758,26 +763,25 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     <p
                       className="text-xs tracking-widest uppercase"
                       style={{ color: `var(--color-rarity-${RARITY_LABELS[todayPull.rarityScore]?.toLowerCase()})` }}
-                      aria-label={[RARITY_LABELS[todayPull.rarityScore], todayPull.isRadiant ? "Radiant" : null, todayPull.isReversed ? "Reversed" : null].filter(Boolean).join(", ")}
+                      aria-label={[RARITY_LABELS[todayPull.rarityScore], todayPull.isRadiant ? t("cards.radiant") : null, todayPull.isReversed ? t("cards.reversed") : null].filter(Boolean).join(", ")}
                     >
                       <span aria-hidden="true">
                         {RARITY_LABELS[todayPull.rarityScore]}
                         {todayPull.isRadiant && " ✦"}
-                        {todayPull.isReversed && " · Reversed"}
+                        {todayPull.isReversed && ` · ${t("cards.reversed")}`}
                       </span>
                     </p>
                     <p className="text-xl font-light text-muted-foreground font-serif">
-                      {todayCard.name}
+                      {getLocalizedCardName(todayCard, locale)}
                     </p>
                     <p className="type-body-serif max-w-xs mx-auto">
-                      {getCardDescription(todayCard, todayPull.rarityScore, todayPull.isReversed)}
+                      {getLocalizedCardDescription(todayCard, todayPull.rarityScore as Rarity, todayPull.isReversed, locale)}
                     </p>
                     <div className="flex justify-center pt-2">
                       <ShareButton
-                        title={`${todayCard.name} — Arkhana`}
+                        title={`${getLocalizedCardName(todayCard, locale)} — Arkhana`}
                         url={user.username ? `/u/${user.username}/pull/${todayStr}` : `/share/${todayPull.id}`}
                         text=""
-                        label="Share"
                       />
                     </div>
                   </div>
@@ -797,7 +801,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     />
                   </div>
                   <p className="text-xl text-muted-foreground font-serif">
-                    {isPulling ? "The fates are turning…" : "The cards await your question."}
+                    {isPulling ? t("home.fatesAreTurning") : t("home.cardsAwait")}
                   </p>
                 </div>
               )}
@@ -810,12 +814,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               {/* Discovered count */}
               <div className="flex items-center justify-between">
                 <p className="type-label">
-                  Collection
+                  {t("home.collection")}
                 </p>
                 <p className="whitespace-nowrap font-serif text-sm">
                   <span className="text-primary">{totalUnique}</span>
                   <span className="text-ghost-foreground">/78</span>
-                  <span className="type-ghost ml-2">discovered</span>
+                  <span className="type-ghost ml-2">{t("home.discovered")}</span>
                 </p>
               </div>
 
@@ -823,22 +827,22 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               <Link
                 to="/streak"
                 className="flex items-center justify-between"
-                aria-label={`Moon cycle: day ${lunarMonthInfo.todayLunarIndex + 1}, ${displayStreakCount} day streak.`}
+                aria-label={t("home.aria.moonCycle", { day: lunarMonthInfo.todayLunarIndex + 1, streak: displayStreakCount })}
               >
                 <div className="space-y-0.5">
                   <p className="type-label">
-                    Moon Cycle
+                    {t("home.moonCycle")}
                   </p>
                   {displayStreakCount > 0 ? (
                     <p className="type-body-serif">
-                      Day {lunarMonthInfo.todayLunarIndex + 1} of the moon
+                      {t("home.dayOfMoon", { day: lunarMonthInfo.todayLunarIndex + 1 })}
                       <span className="ml-2 text-faint-foreground">
-                        · {displayStreakCount} day streak
+                        · {t("home.dayStreak", { streak: displayStreakCount })}
                       </span>
                     </p>
                   ) : (
                     <p className="text-sm font-serif text-ghost-foreground">
-                      Begin your practice
+                      {t("home.beginPractice")}
                     </p>
                   )}
                 </div>
@@ -868,7 +872,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           {!dailyResult && !isCeremonyActive && recentPulls.length > 0 && (
             <section className="space-y-4">
               <h2 className="type-label">
-                Recent
+                {t("home.recent")}
               </h2>
               <div className="space-y-2">
                 {recentPulls.map((pull) => {
@@ -882,15 +886,15 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       className="flex items-center justify-between py-3 border-b border-muted opacity-70 hover:opacity-100 transition-opacity"
                     >
                       <span className="text-muted-foreground font-serif">
-                        {card?.name ?? "Unknown"}
+                        {getLocalizedCardName(card, locale)}
                         {pull.isReversed && (
-                          <span className="ml-2 text-xs text-faint-foreground">(reversed)</span>
+                          <span className="ml-2 text-xs text-faint-foreground">{t("home.reversed")}</span>
                         )}
                       </span>
                       <span
                         className="text-xs tracking-widest"
                         style={{ color: `var(--color-rarity-${RARITY_LABELS[pull.rarityScore]?.toLowerCase()})` }}
-                        aria-label={[RARITY_LABELS[pull.rarityScore], pull.isRadiant ? "Radiant" : null].filter(Boolean).join(", ")}
+                        aria-label={[RARITY_LABELS[pull.rarityScore], pull.isRadiant ? t("cards.radiant") : null].filter(Boolean).join(", ")}
                       >
                         <span aria-hidden="true">
                           {RARITY_LABELS[pull.rarityScore]}
@@ -905,7 +909,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 to="/history"
                 className="inline-flex items-center justify-center gap-1.5 text-xs tracking-widest uppercase text-faint-foreground hover:opacity-70 transition-opacity pt-2"
               >
-                Full history <ArrowRight weight="light" size={13} aria-hidden />
+                {t("home.fullHistory")} <ArrowRight weight="light" size={13} aria-hidden />
               </Link>
             </section>
           )}

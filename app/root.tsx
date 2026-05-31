@@ -13,6 +13,8 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { OrientationProvider } from "./lib/orientation";
 import { getThemeFromCookie, THEME_SCRIPT, THEME_COLORS, type Theme } from "./lib/theme";
+import { getLocaleFromRequest, type Locale } from "./i18n/index";
+import { I18nProvider, useT } from "./i18n/provider";
 
 export const links: Route.LinksFunction = () => [
   { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -21,17 +23,18 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export async function loader({ request }: Route.LoaderArgs) {
-  return { theme: getThemeFromCookie(request) };
+  return { theme: getThemeFromCookie(request), locale: getLocaleFromRequest(request) };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const data = useRouteLoaderData<typeof loader>("root");
   const theme = data?.theme ?? "system";
+  const locale = (data?.locale ?? "en") as Locale;
 
   // suppressHydrationWarning: the blocking script intentionally mutates
   // document.documentElement.classList before React hydrates — not a bug.
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -55,7 +58,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
             is painted. Reads the theme cookie, falls back to matchMedia for
             'system', and toggles .dark on <html>. No flash possible. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
-        {children}
+        <I18nProvider locale={locale}>
+          {children}
+        </I18nProvider>
         <ScrollRestoration />
         <Scripts />
         <ServiceWorkerRegister />
@@ -113,20 +118,21 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
+  const t = useT();
+  let message = t("error.unexpected.title");
+  let details = t("error.unexpected.message");
   let stack: string | undefined;
   let isOffline = false;
 
   if (typeof window !== "undefined" && !navigator.onLine) {
     isOffline = true;
-    message = "The Moon";
-    details = "The cards cannot reach you here. Return when the connection is restored.";
+    message = t("error.offline.title");
+    details = t("error.offline.message");
   } else if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
+    message = error.status === 404 ? t("error.notFound.title") : "Error";
     details =
       error.status === 404
-        ? "The requested page could not be found."
+        ? t("error.notFound.message")
         : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
@@ -138,7 +144,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       <div className="max-w-md space-y-6">
         {isOffline && (
           <div className="w-32 mx-auto mb-2 rounded border border-border overflow-hidden bg-card">
-            <img src="/cards/moon.jpg" alt="The Moon" className="w-full opacity-85" />
+            <img src="/cards/moon.jpg" alt={t("error.offline.title")} className="w-full opacity-85" />
           </div>
         )}
         <p className="text-6xl font-light tracking-widest text-primary font-serif">
@@ -152,7 +158,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
           onClick={isOffline ? () => history.back() : undefined}
           className="inline-block text-xs tracking-widest uppercase opacity-40 hover:opacity-70 transition-opacity pt-4 text-muted-foreground cursor-pointer"
         >
-          ← Return home
+          {t("error.returnHome")}
         </a>
         {stack && (
           <pre className="w-full p-4 overflow-x-auto text-left text-xs mt-8 opacity-50 bg-card text-muted-foreground">

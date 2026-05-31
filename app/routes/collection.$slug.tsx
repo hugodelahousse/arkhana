@@ -9,7 +9,6 @@ import { getUserCardHistory } from "../lib/pull";
 import {
   CARD_BY_SLUG,
   RARITY_LABELS,
-  getCardDescription,
   cardSlug,
   type Rarity,
 } from "../lib/cards";
@@ -18,6 +17,8 @@ import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
 import { getOrigin } from "../lib/utils";
 import { DateTime } from "luxon";
+import { useT, useLocale } from "../i18n/provider";
+import { getLocalizedCardName, getLocalizedCardDescription } from "../i18n/cards";
 
 export async function loader({ context, params, request }: Route.LoaderArgs) {
   const card = CARD_BY_SLUG[params.slug];
@@ -49,9 +50,12 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
 
 export default function CardDetail({ loaderData, params }: Route.ComponentProps) {
   const { user, card, history } = loaderData;
+  const t = useT();
+  const locale = useLocale();
   const slug = params.slug ?? cardSlug(card);
   const mostRecent = history.length > 0 ? history[history.length - 1] : null;
   const navigate = useNavigate();
+  const localizedCardName = getLocalizedCardName(card, locale);
 
   const [activePull, setActivePull] = useState<number | null>(null);
   const displayPull =
@@ -88,7 +92,7 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
               to="/auth/signup"
               className="type-label hover:opacity-100 transition-opacity"
             >
-              Sign up
+              {t("cardDetail.signUp")}
             </Link>
           </header>
         )}
@@ -99,15 +103,15 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
               onClick={goBack}
               className="inline-flex items-center gap-1.5 type-ghost hover:opacity-60 transition-opacity mb-4"
             >
-              <ArrowLeft weight="light" size={13} aria-hidden />{user ? "Collection" : "Home"}
+              <ArrowLeft weight="light" size={13} aria-hidden />{user ? t("nav.collection") : "Arkhana"}
             </a>
             <p className="type-label">
               {card.arcana === "major"
-                ? "Major Arcana"
-                : `${card.suit} · Minor Arcana`}
+                ? t("collection.majorArcana")
+                : `${t(`collection.suits.${card.suit?.toLowerCase()}`)} · ${t("collection.minorArcana")}`}
             </p>
             <h1 className="type-page-title text-4xl">
-              {card.name}
+              {localizedCardName}
             </h1>
           </div>
 
@@ -127,17 +131,16 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
 
           <div className="flex justify-center">
             <ShareButton
-              title={`${card.name} — Arkhana`}
+              title={`${localizedCardName} — Arkhana`}
               url={`/collection/${slug}`}
-              text={`${card.name} · ${card.arcana === "major" ? "Major Arcana" : card.suit}`}
-              label="Share card"
+              text={`${localizedCardName} · ${card.arcana === "major" ? t("collection.majorArcana") : t(`collection.suits.${card.suit?.toLowerCase()}`)}`}
             />
           </div>
 
           {user && history.length > 0 ? (
             <section className="space-y-6">
               <h2 className="type-label">
-                Your pulls ({history.length})
+                {t("cardDetail.pullHistory")} ({history.length})
               </h2>
               <div className="space-y-4">
                 {[...history].reverse().map((pull) => {
@@ -145,10 +148,11 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
                   const isActive =
                     (activePull === null && pull.id === mostRecent?.id) ||
                     pull.id === activePull;
-                  const description = getCardDescription(
+                  const description = getLocalizedCardDescription(
                     card,
                     pull.rarityScore as Rarity,
                     pull.isReversed,
+                    locale,
                   );
                   const formattedDate = DateTime.fromISO(pull.pullDate, { zone: "utc" }).toFormat("LLLL d, yyyy");
                   return (
@@ -169,8 +173,8 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
                           aria-label={
                             [
                               RARITY_LABELS[pull.rarityScore as Rarity],
-                              pull.isRadiant ? "Radiant" : null,
-                              pull.isReversed ? "Reversed" : null,
+                              pull.isRadiant ? t("cards.radiant") : null,
+                              pull.isReversed ? t("cards.reversed") : null,
                             ]
                               .filter(Boolean)
                               .join(", ") || undefined
@@ -179,7 +183,7 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
                           <span aria-hidden="true">
                             {RARITY_LABELS[pull.rarityScore as Rarity]}
                             {pull.isRadiant && " ✦"}
-                            {pull.isReversed && " · Reversed"}
+                            {pull.isReversed && ` · ${t("cards.reversed")}`}
                           </span>
                         </span>
                         <span className="type-caption">
@@ -197,25 +201,25 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
           ) : user ? (
             <section className="p-6 text-center space-y-3 border border-border bg-card">
               <p className="type-body-serif">
-                You haven't drawn this card yet.
+                {t("cardDetail.noPulls")}
               </p>
               <Link
                 to="/"
                 className="inline-flex items-center gap-1.5 type-label hover:opacity-100 transition-opacity"
               >
-                Pull today's card <ArrowRight weight="light" size={13} aria-hidden />
+                {t("cardDetail.draw")} <ArrowRight weight="light" size={13} aria-hidden />
               </Link>
             </section>
           ) : (
             <div className="text-center pt-4 space-y-4 border-t border-border">
               <p className="type-body-serif">
-                Pull your own card to reveal its meaning.
+                {t("cardDetail.draw")}
               </p>
               <Link
                 to="/"
                 className="inline-flex items-center gap-2 px-6 py-3 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80"
               >
-                Draw today's card <ArrowRight weight="light" size={14} aria-hidden />
+                {t("nav.today")} <ArrowRight weight="light" size={14} aria-hidden />
               </Link>
             </div>
           )}

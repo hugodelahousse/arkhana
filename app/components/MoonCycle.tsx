@@ -1,5 +1,6 @@
 import { memo, useId } from "react";
 import { moonPhaseIconPath, moonPhaseOutlineOpacity } from "../lib/moonphase";
+import { useT } from "../i18n/provider";
 
 interface MoonCycleProps {
   currentStreak: number;
@@ -54,6 +55,7 @@ export const MoonCycle = memo(function MoonCycle({
   streakDayIndices = [],
   size = "sm",
 }: MoonCycleProps) {
+  const t = useT();
   const filterId = useId().replace(/:/g, "");
   const cfg = SIZE[size];
   const cx = cfg.total / 2;
@@ -201,7 +203,7 @@ export const MoonCycle = memo(function MoonCycle({
         opacity={0.35}
         letterSpacing="2.5"
       >
-        {currentStreak === 1 ? "DAY" : "DAYS"}
+        {currentStreak === 1 ? t("moonCycle.day").toUpperCase() : t("moonCycle.days").toUpperCase()}
       </text>
     </svg>
   );
