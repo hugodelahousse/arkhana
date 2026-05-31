@@ -271,6 +271,43 @@ export const fr = {
     copied: "Copié !",
     linkCopied: "Lien copié !",
   },
+  spreads: {
+    "sunday-weekly": {
+      name: "Esprit · Corps · Âme · Action",
+      subtitle: "Un tirage pour la semaine à venir",
+      description:
+        "Chaque dimanche, quatre lames éclairent la semaine devant vous — une pour chaque axe de votre être. Tirez-les lentement. Laissez chaque lame s'installer avant de saisir la suivante.",
+      positions: [
+        {
+          label: "Esprit",
+          contemplation:
+            "Avant de tirer, recueillez-vous en votre esprit. Quelles pensées tournent en vous ces derniers temps ? Quelle clarté cherchez-vous dans les jours qui viennent ?",
+        },
+        {
+          label: "Corps",
+          contemplation:
+            "Portez votre attention sur votre corps. Où portez-vous la tension ? Où sentez-vous votre énergie ? De quoi votre corps a-t-il besoin cette semaine ?",
+        },
+        {
+          label: "Âme",
+          contemplation:
+            "Qu'est-ce qui s'agite en vous — un désir, une intuition, un appel silencieux ? Qu'est-ce que votre âme souhaite cultiver cette semaine ?",
+        },
+        {
+          label: "Action",
+          contemplation:
+            "Après avoir médité sur l'esprit, le corps et l'âme — quelle est l'action directrice que la semaine vous demande ? Qu'est-ce que vous devez vraiment faire ?",
+        },
+      ],
+    },
+  },
+  moonCycle: {
+    day: "Jour",
+    days: "Jours",
+    allReadings: "Tous les tirages",
+    reversed: "Renversée",
+    close: "Fermer",
+  },
   error: {
     unexpected: {
       title: "Oups !",

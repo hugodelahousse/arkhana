@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, LayoutGroup } from "motion/react";
 import { TarotCard } from "./TarotCard";
-import { RARITY_LABELS, getCardDescription, type Rarity } from "../lib/cards";
+import { RARITY_LABELS, type Rarity } from "../lib/cards";
 import type { SpreadCardResult } from "../lib/spread-pull";
+import { useT, useLocale } from "../i18n/provider";
+import { getLocalizedCardName, getLocalizedCardDescription } from "../i18n/cards";
 
 function CardDetailOverlay({
   card,
@@ -14,6 +16,8 @@ function CardDetailOverlay({
   posLabel: string;
   onClose: () => void;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const rarityLabel = RARITY_LABELS[card.rarityScore]?.toLowerCase();
 
   useEffect(() => {
@@ -82,13 +86,13 @@ function CardDetailOverlay({
             {card.isRadiant && " ✦"}
           </p>
           <p className="text-lg text-primary font-serif">
-            {card.card.name}
+            {getLocalizedCardName(card.card, locale)}
             {card.isReversed && (
-              <span className="ml-2 text-sm text-faint-foreground">(reversed)</span>
+              <span className="ml-2 text-sm text-faint-foreground">{t("moonCycle.reversed")}</span>
             )}
           </p>
           <p className="type-body-serif max-w-[260px]">
-            {getCardDescription(card.card, card.rarityScore, card.isReversed)}
+            {getLocalizedCardDescription(card.card, card.rarityScore as Rarity, card.isReversed, locale)}
           </p>
         </motion.div>
 
@@ -101,7 +105,7 @@ function CardDetailOverlay({
           className="mt-2 text-xs tracking-widest uppercase hover:opacity-90 transition-opacity text-primary"
           style={{ textShadow: "0 1px 6px rgba(0,0,0,.9)" }}
         >
-          close
+          {t("moonCycle.close")}
         </motion.button>
       </div>
       </div>
@@ -119,6 +123,8 @@ function SpreadCardCell({
   posLabel: string;
   onSelect: () => void;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const rarityLabel = RARITY_LABELS[card.rarityScore]?.toLowerCase();
   return (
     <div className="flex flex-col items-center gap-3">
@@ -149,9 +155,9 @@ function SpreadCardCell({
           {card.isRadiant && " ✦"}
         </p>
         <p className="type-body-serif font-light">
-          {card.card.name}
+          {getLocalizedCardName(card.card, locale)}
           {card.isReversed && (
-            <span className="ml-1 text-xs text-faint-foreground">(reversed)</span>
+            <span className="ml-1 text-xs text-faint-foreground">{t("moonCycle.reversed")}</span>
           )}
         </p>
       </div>
@@ -162,14 +168,23 @@ function SpreadCardCell({
 export function SpreadSummaryGrid({
   cards,
   positions,
+  spreadId = "sunday-weekly",
 }: {
   cards: SpreadCardResult[];
   positions: { index: number; label: string }[];
+  spreadId?: string;
 }) {
+  const t = useT();
   const [selected, setSelected] = useState<number | null>(null);
   const sorted = [...cards].sort((a, b) => a.position - b.position);
   const selectedCard = selected !== null ? sorted.find((c) => c.position === selected) ?? null : null;
-  const selectedPosLabel = selected !== null ? (positions[selected]?.label ?? String(selected)) : "";
+  const selectedPosLabel = selected !== null
+    ? t(`spreads.${spreadId}.positions.${selected}.label`)
+    : "";
+
+  function posLabel(i: number): string {
+    return t(`spreads.${spreadId}.positions.${i}.label`);
+  }
 
   const grid =
     sorted.length === 4 ? (
@@ -177,24 +192,24 @@ export function SpreadSummaryGrid({
       <div className="flex flex-col items-center gap-6">
         <SpreadCardCell
           card={sorted[0]}
-          posLabel={positions[sorted[0].position]?.label ?? "0"}
+          posLabel={posLabel(sorted[0].position)}
           onSelect={() => setSelected(sorted[0].position)}
         />
         <div className="flex gap-8 sm:gap-12">
           <SpreadCardCell
             card={sorted[1]}
-            posLabel={positions[sorted[1].position]?.label ?? "1"}
+            posLabel={posLabel(sorted[1].position)}
             onSelect={() => setSelected(sorted[1].position)}
           />
           <SpreadCardCell
             card={sorted[2]}
-            posLabel={positions[sorted[2].position]?.label ?? "2"}
+            posLabel={posLabel(sorted[2].position)}
             onSelect={() => setSelected(sorted[2].position)}
           />
         </div>
         <SpreadCardCell
           card={sorted[3]}
-          posLabel={positions[sorted[3].position]?.label ?? "3"}
+          posLabel={posLabel(sorted[3].position)}
           onSelect={() => setSelected(sorted[3].position)}
         />
       </div>
@@ -205,7 +220,7 @@ export function SpreadSummaryGrid({
           <SpreadCardCell
             key={card.position}
             card={card}
-            posLabel={positions[card.position]?.label ?? String(card.position)}
+            posLabel={posLabel(card.position)}
             onSelect={() => setSelected(card.position)}
           />
         ))}

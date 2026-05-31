@@ -184,8 +184,10 @@ function SpreadContemplateReveal({
   const [cardRevealed, setCardRevealed] = useState(false);
   const [showContinue, setShowContinue] = useState(false);
   const rarityLabel = RARITY_LABELS[card.rarityScore]?.toLowerCase();
-  const posLabel = positions[position]?.label ?? "";
-  const nextLabel = positions[position + 1]?.label;
+  const posLabel = t(`spreads.sunday-weekly.positions.${position}.label`);
+  const nextLabel = position + 1 < positions.length
+    ? t(`spreads.sunday-weekly.positions.${position + 1}.label`)
+    : undefined;
 
   useEffect(() => {
     if (!cardRevealed) return;
@@ -235,7 +237,7 @@ function SpreadContemplateReveal({
           }}
         >
           <p className="type-body-serif italic">
-            {positions[position]?.contemplationPrompt}
+            {t(`spreads.sunday-weekly.positions.${position}.contemplation`)}
           </p>
         </div>
         <div
@@ -589,15 +591,15 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   >
                     <div className="space-y-3">
                       <p className="type-label">
-                        {spreadDef.subtitle}
+                        {t("spreads.sunday-weekly.subtitle")}
                       </p>
                       <h2 className="text-3xl font-light tracking-wide text-muted-foreground font-serif">
-                        {spreadDef.name}
+                        {t("spreads.sunday-weekly.name")}
                       </h2>
                     </div>
                     <div className="w-16 h-px mx-auto opacity-20 bg-border" />
                     <p className="text-base leading-relaxed max-w-sm mx-auto text-muted-foreground font-serif">
-                      {spreadDef.description}
+                      {t("spreads.sunday-weekly.description")}
                     </p>
                     <div className="flex flex-wrap items-center justify-center gap-3">
                       {positions.map((pos) => (
@@ -605,7 +607,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                           key={pos.index}
                           className="type-ghost px-3 py-1 border border-muted"
                         >
-                          {pos.label}
+                          {t(`spreads.sunday-weekly.positions.${pos.index}.label`)}
                         </span>
                       ))}
                     </div>
@@ -633,10 +635,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   >
                     <div className="space-y-3">
                       <p className="type-label">
-                        {spreadDef.subtitle}
+                        {t("spreads.sunday-weekly.subtitle")}
                       </p>
                       <h2 className="text-3xl font-light tracking-wide text-muted-foreground font-serif">
-                        {spreadDef.name}
+                        {t("spreads.sunday-weekly.name")}
                       </h2>
                     </div>
                     <div className="w-16 h-px mx-auto opacity-20 bg-border" />
@@ -674,17 +676,17 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   >
                     <div className="text-center space-y-3">
                       <p className="type-label">
-                        {spreadDef.subtitle}
+                        {t("spreads.sunday-weekly.subtitle")}
                       </p>
                       <h2 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
-                        {spreadDef.name}
+                        {t("spreads.sunday-weekly.name")}
                       </h2>
                     </div>
                     <SpreadSummaryGrid cards={currentCards} positions={positions} />
                     {spreadShareUrl && (
                       <div className="flex justify-center pt-2">
                         <ShareButton
-                          title={`${spreadDef.name} — Arkhana`}
+                          title={`${t("spreads.sunday-weekly.name")} — Arkhana`}
                           url={spreadShareUrl}
                           text=""
                           label={t("home.shareReading")}
@@ -708,14 +710,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                         {t("home.sundayReading")}
                       </h2>
                       <p className="text-2xl font-light text-muted-foreground font-serif">
-                        {spreadDef.name}
+                        {t("spreads.sunday-weekly.name")}
                       </p>
                     </div>
                     <SpreadSummaryGrid cards={currentCards} positions={positions} />
                     {spreadShareUrl && (
                       <div className="flex justify-center pt-2">
                         <ShareButton
-                          title={`${spreadDef.name} — Arkhana`}
+                          title={`${t("spreads.sunday-weekly.name")} — Arkhana`}
                           url={spreadShareUrl}
                           text=""
                           label={t("home.shareReading")}

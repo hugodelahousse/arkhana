@@ -11,6 +11,7 @@ import { ShareButton } from "../components/ShareButton";
 import { getSpreadType } from "../lib/spreads";
 import { getTodaySpread } from "../lib/spread-pull";
 import { getOrigin } from "../lib/utils";
+import { useT } from "../i18n/provider";
 
 export async function loader({ context, params, request }: Route.LoaderArgs) {
   if (!context.user) return redirect("/");
@@ -30,6 +31,7 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
 
   return {
     user: context.user,
+    spreadId: params.type,
     name: spreadDef.name,
     subtitle: spreadDef.subtitle,
     positions: spreadDef.positions,
@@ -64,7 +66,10 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
 }
 
 export default function SpreadDateRoute({ loaderData, params }: Route.ComponentProps) {
-  const { user, name, subtitle, positions, cards, formattedDate, isToday } = loaderData;
+  const { user, spreadId, positions, cards, formattedDate, isToday } = loaderData;
+  const t = useT();
+  const spreadName = t(`spreads.${spreadId}.name`);
+  const spreadSubtitle = t(`spreads.${spreadId}.subtitle`);
 
   return (
     <DirectionalTransition>
@@ -79,32 +84,31 @@ export default function SpreadDateRoute({ loaderData, params }: Route.ComponentP
           >
             <div className="text-center space-y-3">
               <p className="type-label">
-                {isToday ? subtitle : formattedDate}
+                {isToday ? spreadSubtitle : formattedDate}
               </p>
               <h1 className="type-page-title text-2xl">
-                {name}
+                {spreadName}
               </h1>
               {!isToday && (
                 <p className="type-label">
-                  {subtitle}
+                  {spreadSubtitle}
                 </p>
               )}
             </div>
 
-            <SpreadSummaryGrid cards={cards} positions={positions} />
+            <SpreadSummaryGrid cards={cards} positions={positions} spreadId={spreadId} />
 
             <div className="flex flex-col items-center pt-4 space-y-4">
               <ShareButton
-                title={`${name} — Arkhana`}
+                title={`${spreadName} — Arkhana`}
                 url={user.username ? `/u/${user.username}/pull/${params.date}` : `/spread/${params.type}/${params.date}`}
-                text={`${name}: ${subtitle}`}
-                label="Share reading"
+                text={`${spreadName}: ${spreadSubtitle}`}
               />
               <Link
                 to="/history"
                 className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase text-faint-foreground hover:text-foreground transition-colors"
               >
-                <ArrowLeft weight="light" size={13} aria-hidden />All readings
+                <ArrowLeft weight="light" size={13} aria-hidden />{t("moonCycle.allReadings")}
               </Link>
             </div>
           </motion.div>

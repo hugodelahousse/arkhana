@@ -268,6 +268,43 @@ export const en = {
     copied: "Copied!",
     linkCopied: "Link copied!",
   },
+  spreads: {
+    "sunday-weekly": {
+      name: "Mind · Body · Spirit · Action",
+      subtitle: "A reading for the week ahead",
+      description:
+        "Each Sunday, four cards illuminate the week before you — one for each axis of your being. Draw them slowly. Let each card settle before reaching for the next.",
+      positions: [
+        {
+          label: "Mind",
+          contemplation:
+            "Before you draw, sit with your mind. What thoughts have been circling lately? What clarity are you seeking in the days ahead?",
+        },
+        {
+          label: "Body",
+          contemplation:
+            "Turn your attention to your body. Where do you carry tension? Where do you feel your energy? What does your body need from this week?",
+        },
+        {
+          label: "Spirit",
+          contemplation:
+            "What stirs in you — a longing, an intuition, a quiet pull? What does your spirit wish to tend to this week?",
+        },
+        {
+          label: "Action",
+          contemplation:
+            "Having sat with mind, body, and spirit — what is the one guiding action the week asks of you? What must you actually do?",
+        },
+      ],
+    },
+  },
+  moonCycle: {
+    day: "Day",
+    days: "Days",
+    allReadings: "All readings",
+    reversed: "Reversed",
+    close: "Close",
+  },
   error: {
     unexpected: {
       title: "Oops!",
