@@ -466,12 +466,12 @@ function SpreadOG({
   username: string | null;
   date: string | null;
 }) {
-  const PANEL_W = 560;
-  const CARD_GAP = 10;
-  const ROW_GAP = 12;
-  // 2×2: two columns, cardH chosen so two rows fit in 630px with comfortable breathing room
-  const cardW = Math.floor((PANEL_W - 3 * CARD_GAP) / 2); // 265px
-  const cardH = 250;
+  const PANEL_W = 370;
+  const CARD_GAP = 8;
+  const ROW_GAP = 8;
+  // Maintain the same ~1:1.73 aspect ratio as the single-card preview (365×630)
+  const cardW = Math.floor((PANEL_W - 3 * CARD_GAP) / 2); // 173px
+  const cardH = Math.round(cardW * 1.726); // 299px
 
   const cardNames = cardIds.map((id) => CARD_BY_ID[id]?.name ?? "");
   const attribution = [username ? `@${username}` : null, date].filter(Boolean).join("  /  ") || undefined;
@@ -541,7 +541,7 @@ function SpreadOG({
       >
         <div style={{ display: "flex", flexDirection: "column" }}>
           <OGLabel mb={24}>{spreadSubtitle}</OGLabel>
-          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
             {positions.map((label, i) => {
               const cardName = cardNames[i] ?? "";
               const rarityColor = RARITY_COLORS[rarities[i]] ?? BONE_400;
@@ -550,7 +550,7 @@ function SpreadOG({
                 <div key={i} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   <span
                     style={{
-                      fontSize: 14,
+                      fontSize: 18,
                       letterSpacing: 4,
                       color: BONE_400,
                       fontFamily: "DM Sans",
@@ -560,10 +560,10 @@ function SpreadOG({
                   >
                     {label}
                   </span>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
                     <span
                       style={{
-                        fontSize: 28,
+                        fontSize: 38,
                         color: rarityColor,
                         fontFamily: "Cormorant Garamond",
                         fontWeight: 600,
