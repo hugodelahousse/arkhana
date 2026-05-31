@@ -167,7 +167,7 @@ function SpreadCardCell({
 
 export function SpreadSummaryGrid({
   cards,
-  positions,
+  positions: _positions,
   spreadId = "sunday-weekly",
 }: {
   cards: SpreadCardResult[];
