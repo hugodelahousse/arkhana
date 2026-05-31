@@ -1,6 +1,7 @@
 import { redirect, data, Form, useNavigation, Link } from "react-router";
 import type { Route } from "./+types/forgot-password";
 import { config } from "../../../config/index.js";
+import { useT } from "../../i18n/provider";
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (context.user && !context.user.isAnonymous) return redirect("/");
@@ -47,6 +48,7 @@ export function meta() {
 }
 
 export default function ForgotPassword({ actionData }: Route.ComponentProps) {
+  const t = useT();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const error = actionData && "error" in actionData ? actionData.error : null;
@@ -60,20 +62,20 @@ export default function ForgotPassword({ actionData }: Route.ComponentProps) {
             ARKHANA
           </Link>
           <p className="type-caption">
-            Recover your account
+            {t("auth.forgotPassword.title")}
           </p>
         </div>
 
         {sent ? (
           <div className="space-y-4 text-center">
             <p className="text-sm text-primary/80">
-              If an account exists for that email, we've sent a reset link. Check your inbox and spam folder.
+              {t("auth.forgotPassword.sent")}
             </p>
             <Link
               to="/auth/signin"
               className="inline-block type-caption hover:opacity-100 transition-opacity underline"
             >
-              Back to sign in
+              {t("auth.forgotPassword.backToSignIn")}
             </Link>
           </div>
         ) : (
@@ -82,7 +84,7 @@ export default function ForgotPassword({ actionData }: Route.ComponentProps) {
               {error && (
                 <p id="form-error" role="alert" className="text-sm text-rarity-arcane text-center">{error}</p>
               )}
-              <label htmlFor="email" className="sr-only">Email address</label>
+              <label htmlFor="email" className="sr-only">{t("auth.forgotPassword.emailLabel")}</label>
               <input
                 id="email"
                 name="email"
@@ -97,14 +99,14 @@ export default function ForgotPassword({ actionData }: Route.ComponentProps) {
                 disabled={isSubmitting}
                 className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-accent text-accent hover:opacity-80 disabled:opacity-40 transition-opacity"
               >
-                {isSubmitting ? "…" : "Send reset link"}
+                {isSubmitting ? "…" : t("auth.forgotPassword.submit")}
               </button>
             </Form>
 
             <p className="text-center type-caption">
-              Remember your password?{" "}
+              {t("auth.forgotPassword.remember")}{" "}
               <Link to="/auth/signin" className="hover:opacity-100 transition-opacity underline">
-                Sign in
+                {t("auth.forgotPassword.signIn")}
               </Link>
             </p>
           </>

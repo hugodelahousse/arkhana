@@ -1,6 +1,7 @@
 import { redirect, data, Form, useNavigation, Link, useSearchParams } from "react-router";
 import type { Route } from "./+types/reset-password";
 import { config } from "../../../config/index.js";
+import { useT } from "../../i18n/provider";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   if (context.user && !context.user.isAnonymous) return redirect("/");
@@ -41,6 +42,7 @@ export function meta() {
 }
 
 export default function ResetPassword({ actionData, loaderData }: Route.ComponentProps) {
+  const t = useT();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const [searchParams] = useSearchParams();
@@ -56,20 +58,20 @@ export default function ResetPassword({ actionData, loaderData }: Route.Componen
             ARKHANA
           </Link>
           <p className="type-caption">
-            Choose a new password
+            {t("auth.resetPassword.title")}
           </p>
         </div>
 
         {tokenError ? (
           <div className="space-y-4 text-center">
             <p className="text-sm text-rarity-arcane">
-              This reset link is invalid or has expired.
+              {t("auth.resetPassword.invalidToken")}
             </p>
             <Link
               to="/auth/forgot-password"
               className="inline-block w-full px-6 py-3 text-sm tracking-widest uppercase border border-border text-primary hover:opacity-80 transition-opacity text-center"
             >
-              Request a new link
+              {t("auth.resetPassword.requestNewLink")}
             </Link>
           </div>
         ) : (
@@ -79,25 +81,25 @@ export default function ResetPassword({ actionData, loaderData }: Route.Componen
                 <p id="form-error" role="alert" className="text-sm text-rarity-arcane text-center">{error}</p>
               )}
               <input type="hidden" name="token" value={token} />
-              <label htmlFor="password" className="sr-only">New password</label>
+              <label htmlFor="password" className="sr-only">{t("auth.resetPassword.newPasswordLabel")}</label>
               <input
                 id="password"
                 name="password"
                 type="password"
                 required
                 minLength={8}
-                placeholder="New password (min 8 characters)"
+                placeholder={t("auth.resetPassword.newPasswordPlaceholder")}
                 autoComplete="new-password"
                 className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-muted-foreground"
               />
-              <label htmlFor="confirmPassword" className="sr-only">Confirm new password</label>
+              <label htmlFor="confirmPassword" className="sr-only">{t("auth.resetPassword.confirmPasswordLabel")}</label>
               <input
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
                 required
                 minLength={8}
-                placeholder="Confirm new password"
+                placeholder={t("auth.resetPassword.confirmPasswordPlaceholder")}
                 autoComplete="new-password"
                 className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-muted-foreground"
               />
@@ -106,14 +108,14 @@ export default function ResetPassword({ actionData, loaderData }: Route.Componen
                 disabled={isSubmitting}
                 className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-accent text-accent hover:opacity-80 disabled:opacity-40 transition-opacity"
               >
-                {isSubmitting ? "…" : "Reset password"}
+                {isSubmitting ? "…" : t("auth.resetPassword.submit")}
               </button>
             </Form>
 
             <p className="text-center type-caption">
-              Remember your password?{" "}
+              {t("auth.resetPassword.remember")}{" "}
               <Link to="/auth/signin" className="hover:opacity-100 transition-opacity underline">
-                Sign in
+                {t("auth.resetPassword.signIn")}
               </Link>
             </p>
           </>

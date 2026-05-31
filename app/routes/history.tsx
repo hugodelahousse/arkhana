@@ -8,7 +8,9 @@ import { Nav } from "../components/layout/nav";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { TarotCard } from "../components/TarotCard";
 import { SpreadSummaryGrid } from "../components/SpreadSummaryGrid";
-import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity } from "../lib/cards";
+import { CARD_BY_ID, RARITY_LABELS, cardSlug, type Rarity } from "../lib/cards";
+import { useT, useLocale } from "../i18n/provider";
+import { getLocalizedCardName, getLocalizedCardDescription } from "../i18n/cards";
 import { getSpreadType } from "../lib/spreads";
 import { getDailyPullHistory } from "../lib/pull";
 import { getSpreadHistory } from "../lib/spread-pull";
@@ -75,6 +77,7 @@ export function meta() {
 
 export default function History({ loaderData }: Route.ComponentProps) {
   const { user, entries } = loaderData;
+  const t = useT();
 
   return (
     <DirectionalTransition>
@@ -83,16 +86,16 @@ export default function History({ loaderData }: Route.ComponentProps) {
         <main className="max-w-2xl mx-auto px-6 py-12 space-y-12">
           <div className="space-y-1">
             <h1 className="type-page-title text-2xl">
-              History
+              {t("history.title")}
             </h1>
             <p className="type-label">
-              All your pulls, in order
+              {t("history.subtitle")}
             </p>
           </div>
 
           {entries.length === 0 ? (
             <p className="type-body-serif text-center py-12">
-              No readings yet. Draw your first card.
+              {t("history.empty")}
             </p>
           ) : (
             <div className="space-y-10">
@@ -108,6 +111,8 @@ export default function History({ loaderData }: Route.ComponentProps) {
 }
 
 function HistoryItem({ entry }: { entry: HistoryEntry }) {
+  const t = useT();
+  const locale = useLocale();
   if (entry.kind === "daily") {
     const card = CARD_BY_ID[entry.cardId];
     const rarityLabel = RARITY_LABELS[entry.rarityScore]?.toLowerCase();
@@ -142,13 +147,13 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
             >
               {RARITY_LABELS[entry.rarityScore]}
               {entry.isRadiant && " ✦"}
-              {entry.isReversed && " · Reversed"}
+              {entry.isReversed && ` · ${t("cards.reversed")}`}
             </p>
             <p className="text-lg font-light text-muted-foreground font-serif">
-              {card.name}
+              {getLocalizedCardName(card, locale)}
             </p>
             <p className="type-body-serif">
-              {getCardDescription(card, entry.rarityScore as Rarity, entry.isReversed)}
+              {getLocalizedCardDescription(card, entry.rarityScore as Rarity, entry.isReversed, locale)}
             </p>
           </div>
         </div>
@@ -182,7 +187,7 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
         to={`/spread/${entry.spreadType}/${entry.spreadDate}`}
         className="inline-flex items-center gap-1.5 type-label hover:opacity-70 transition-opacity"
       >
-        View full reading <ArrowRight weight="light" size={13} aria-hidden />
+        {t("history.viewFullReading")} <ArrowRight weight="light" size={13} aria-hidden />
       </Link>
     </motion.div>
   );

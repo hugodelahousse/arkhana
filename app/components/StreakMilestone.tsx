@@ -2,26 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Moon, MoonStars, Sparkle } from "@phosphor-icons/react";
 import type { Milestone } from "../lib/streak.js";
+import { useT } from "../i18n/provider";
 
 interface StreakMilestoneProps {
   milestone: Milestone;
   onDismiss: () => void;
 }
-
-const MILESTONE_COPY: Record<Milestone, { heading: string; body: string }> = {
-  7: {
-    heading: "Seven Days",
-    body: "A week of listening. You've established a practice.",
-  },
-  28: {
-    heading: "A Full Cycle",
-    body: "Twenty-eight nights. The moon has turned once. The cards have marked you.",
-  },
-  100: {
-    heading: "One Hundred Days",
-    body: "The arkhive remembers every card you've drawn. So does the universe.",
-  },
-};
 
 const MILESTONE_ICON: Record<Milestone, React.ReactNode> = {
   7: <Moon weight="thin" size={56} />,
@@ -30,8 +16,8 @@ const MILESTONE_ICON: Record<Milestone, React.ReactNode> = {
 };
 
 export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) {
+  const t = useT();
   const [visible, setVisible] = useState(true);
-  const copy = MILESTONE_COPY[milestone];
 
   const dismiss = useCallback(() => {
     setVisible(false);
@@ -39,9 +25,12 @@ export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) 
   }, [onDismiss]);
 
   useEffect(() => {
-    const t = setTimeout(dismiss, 8000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(dismiss, 8000);
+    return () => clearTimeout(timer);
   }, [dismiss]);
+
+  const heading = t(`milestone.${milestone}.heading`);
+  const body = t(`milestone.${milestone}.body`);
 
   return (
     <AnimatePresence>
@@ -76,27 +65,27 @@ export function StreakMilestone({ milestone, onDismiss }: StreakMilestoneProps) 
 
             <div className="space-y-3">
               <p className="type-label">
-                {milestone}-day milestone
+                {t("milestone.label", { days: milestone })}
               </p>
               <h2
                 className="text-3xl font-light tracking-wide font-serif"
                 style={{ color: "var(--accent-text)" }}
               >
-                {copy.heading}
+                {heading}
               </h2>
             </div>
 
             <div className="w-12 h-px mx-auto opacity-20 bg-border" />
 
             <p className="type-body-serif text-base">
-              {copy.body}
+              {body}
             </p>
 
             <button
               onClick={dismiss}
               className="mt-4 text-xs tracking-widest uppercase text-faint-foreground hover:text-foreground transition-colors"
             >
-              Continue
+              {t("milestone.continue")}
             </button>
           </motion.div>
         </motion.div>

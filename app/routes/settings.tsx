@@ -6,6 +6,8 @@ import { db } from "../../db/index.js";
 import { user, passkey as passkeyTable } from "../../db/schema/auth.js";
 import { eq, and, ne } from "drizzle-orm";
 import { getThemeFromCookie, setThemeCookie, type Theme } from "../lib/theme";
+import { getLocaleFromRequest, setLocaleCookie, SUPPORTED_LOCALES, type Locale } from "../i18n/index";
+import { useT, useLocale } from "../i18n/provider";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   if (!context.user || context.user.isAnonymous) return redirect("/");
@@ -28,6 +30,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     username: profile?.displayUsername ?? profile?.username ?? "",
     passkeys,
     theme: getThemeFromCookie(request),
+    locale: getLocaleFromRequest(request),
   };
 }
 
@@ -51,6 +54,16 @@ export async function action({ request, context }: Route.ActionArgs) {
     return data(
       { success: true },
       { headers: { "Set-Cookie": setThemeCookie(theme as Theme) } },
+    );
+  }
+
+  if (intent === "set-locale") {
+    const locale = String(form.get("locale") ?? "en");
+    if (!SUPPORTED_LOCALES.includes(locale as Locale))
+      return data({ error: "Invalid locale." }, { status: 400 });
+    return data(
+      { success: true },
+      { headers: { "Set-Cookie": setLocaleCookie(locale as Locale) } },
     );
   }
 
@@ -105,13 +118,18 @@ async function getPasskeyClient() {
 }
 
 export default function Settings({ loaderData, actionData }: Route.ComponentProps) {
+  const t = useT();
+  const currentLocale = useLocale();
   const navigation = useNavigation();
   const revalidator = useRevalidator();
   const isSubmitting = navigation.state === "submitting";
   const themeFetcher = useFetcher();
+  const localeFetcher = useFetcher();
   // Optimistic: show the in-flight value immediately while the request is live
   const activeTheme: Theme =
     (themeFetcher.formData?.get("theme") as Theme) ?? loaderData.theme;
+  const activeLocale: Locale =
+    (localeFetcher.formData?.get("locale") as Locale) ?? currentLocale;
 
   function setTheme(t: Theme) {
     // Apply class instantly for zero-latency feedback
@@ -196,12 +214,12 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
       const client = await getPasskeyClient();
       const { error } = await client.passkey.addPasskey();
       if (error) {
-        setPasskeyError("Failed to register passkey. Try again.");
+        setPasskeyError(t("settings.passkeys.errors.failed"));
         return;
       }
       revalidator.revalidate();
     } catch {
-      setPasskeyError("Passkey registration was cancelled or is not supported.");
+      setPasskeyError(t("settings.passkeys.errors.notSupported"));
     } finally {
       setPasskeyAdding(false);
     }
@@ -213,7 +231,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
       <main className="max-w-lg mx-auto px-6 py-16 space-y-10">
         <div className="space-y-2">
           <h1 className="type-page-title text-2xl">
-            Settings
+            {t("settings.title")}
           </h1>
           <p className="type-caption">
             {loaderData.user.email}
@@ -222,10 +240,10 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
 
         <section className="p-6 space-y-6 border border-border bg-card">
           <h2 className="type-label">
-            Username
+            {t("settings.username.title")}
           </h2>
           <p className="type-caption">
-            Your username appears on your public profile at{" "}
+            {t("settings.username.description")}{" "}
             <span className="text-primary">
               arkhana.delaho-h.com/u/{loaderData.username || "username"}
             </span>
@@ -234,7 +252,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
           <Form method="post" className="space-y-3">
             <div className="flex gap-3">
               <label htmlFor="username" className="sr-only">
-                Username
+                {t("settings.username.title")}
               </label>
               <input
                 id="username"
@@ -244,7 +262,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                 minLength={1}
                 maxLength={30}
                 pattern="[a-zA-Z0-9_-]+"
-                placeholder="your-username"
+                placeholder={t("settings.username.placeholder")}
                 autoComplete="username"
                 className="flex-1 bg-transparent border border-border px-4 py-2 text-base sm:text-sm placeholder:opacity-40 focus:outline-none focus-visible:ring-1 transition-colors text-muted-foreground"
               />
@@ -253,7 +271,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                 disabled={isSubmitting}
                 className="px-4 py-2 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80 disabled:opacity-40"
               >
-                {isSubmitting ? "…" : "Save"}
+                {isSubmitting ? "…" : t("settings.username.save")}
               </button>
             </div>
             {error && (
@@ -263,7 +281,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
             )}
             {success && (
               <p className="type-caption" role="status">
-                Saved.
+                {t("settings.username.saved")}
               </p>
             )}
           </Form>
@@ -271,25 +289,25 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
 
         <section className="p-6 space-y-6 border border-border bg-card">
           <h2 className="type-label">
-            Theme
+            {t("settings.theme.title")}
           </h2>
           <p className="type-caption">
-            Control the color scheme. System follows your OS preference.
+            {t("settings.theme.description")}
           </p>
           <div className="flex border border-border overflow-hidden">
-            {(["system", "light", "dark"] as const).map((t) => (
+            {(["system", "light", "dark"] as const).map((themeOption) => (
               <button
-                key={t}
+                key={themeOption}
                 type="button"
-                onClick={() => setTheme(t)}
-                aria-pressed={activeTheme === t}
+                onClick={() => setTheme(themeOption)}
+                aria-pressed={activeTheme === themeOption}
                 className={`flex-1 px-4 py-2.5 text-xs tracking-widest uppercase transition-colors ${
-                  activeTheme === t
+                  activeTheme === themeOption
                     ? "bg-primary text-primary-foreground"
                     : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
-                {t}
+                {t(`settings.theme.${themeOption}`)}
               </button>
             ))}
           </div>
@@ -297,10 +315,40 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
 
         <section className="p-6 space-y-6 border border-border bg-card">
           <h2 className="type-label">
-            Passkeys
+            {t("settings.language.title")}
+          </h2>
+          <p className="type-caption">
+            {t("settings.language.description")}
+          </p>
+          <localeFetcher.Form method="post">
+            <input type="hidden" name="intent" value="set-locale" />
+            <div className="flex border border-border overflow-hidden">
+              {SUPPORTED_LOCALES.map((loc) => (
+                <button
+                  key={loc}
+                  name="locale"
+                  value={loc}
+                  type="submit"
+                  aria-pressed={activeLocale === loc}
+                  className={`flex-1 px-4 py-2.5 text-xs tracking-widest uppercase transition-colors ${
+                    activeLocale === loc
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {t(`settings.language.${loc}`)}
+                </button>
+              ))}
+            </div>
+          </localeFetcher.Form>
+        </section>
+
+        <section className="p-6 space-y-6 border border-border bg-card">
+          <h2 className="type-label">
+            {t("settings.passkeys.title")}
           </h2>
           <p className="type-caption leading-relaxed">
-            Passkeys let you sign in with biometrics or your device PIN instead of a password.
+            {t("settings.passkeys.description")}
           </p>
 
           {loaderData.passkeys.length > 0 && (
@@ -313,7 +361,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                     </p>
                     {pk.createdAt && (
                       <p className="type-ghost">
-                        Added {new Date(pk.createdAt).toLocaleDateString()}
+                        {t("settings.passkeys.added", { date: new Date(pk.createdAt).toLocaleDateString() })}
                       </p>
                     )}
                   </div>
@@ -324,7 +372,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                       type="submit"
                       className="type-ghost hover:opacity-80 hover:text-rarity-arcane transition-all"
                     >
-                      Remove
+                      {t("settings.passkeys.remove")}
                     </button>
                   </Form>
                 </li>
@@ -342,22 +390,21 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
             disabled={passkeyAdding}
             className="w-full px-4 py-3 text-xs tracking-widest uppercase border border-border text-muted-foreground hover:text-primary hover:border-primary disabled:opacity-40 transition-all"
           >
-            {passkeyAdding ? "…" : "Add passkey"}
+            {passkeyAdding ? "…" : t("settings.passkeys.addPasskey")}
           </button>
         </section>
         {pushSupported && (
           <section className="p-6 space-y-6 border border-border bg-card">
             <h2 className="type-label">
-              Notifications
+              {t("settings.notifications.title")}
             </h2>
             <p className="type-caption leading-relaxed">
-              Get a daily reminder when you haven't drawn your card, plus streak milestones
-              and celestial events.
+              {t("settings.notifications.description")}
             </p>
 
             {pushPermission === "denied" ? (
               <p className="text-xs text-rarity-arcane">
-                Notifications are blocked. Update your browser settings to allow them.
+                {t("settings.notifications.blocked")}
               </p>
             ) : (
               <button
@@ -366,7 +413,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                 disabled={pushLoading}
                 className="w-full px-4 py-3 text-xs tracking-widest uppercase border border-border text-muted-foreground hover:text-primary hover:border-primary disabled:opacity-40 transition-all"
               >
-                {pushLoading ? "…" : pushSubscribed ? "Disable notifications" : "Enable notifications"}
+                {pushLoading ? "…" : pushSubscribed ? t("settings.notifications.disable") : t("settings.notifications.enable")}
               </button>
             )}
           </section>

@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router";
 import { Moon, MoonStars, Sparkle } from "@phosphor-icons/react";
 import { Nav } from "../components/layout/nav";
 import { MoonCycle } from "../components/MoonCycle";
+import { useT } from "../i18n/provider";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { getStreak } from "../lib/streak";
 import { getPullDates } from "../lib/pull";
@@ -73,6 +74,7 @@ export function meta() {
 export default function StreakPage({ loaderData }: Route.ComponentProps) {
   const { user, streakState, pullDates, lunarMonths } = loaderData;
   const navigate = useNavigate();
+  const t = useT();
 
   const { currentStreak, longestStreak, graceNightsUsed } = streakState;
   const graceRemaining = 2 - graceNightsUsed;
@@ -101,10 +103,10 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
           {/* Header */}
           <div className="text-center space-y-2">
             <p className="type-label">
-              Practice
+              {t("streak.practice")}
             </p>
             <h1 className="type-page-title text-3xl">
-              Moon Cycle
+              {t("streak.title")}
             </h1>
           </div>
 
@@ -141,21 +143,21 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
                   {isCurrentMonth && currentStreak > 0 ? (
                     <>
                       <p className="type-body-serif">
-                        Day {todayLunarIndex + 1} of the moon · {currentStreak} day streak
+                        {t("streak.dayOfMoon", { day: todayLunarIndex + 1, streak: currentStreak })}
                       </p>
                       {graceRemaining > 0 && (
                         <p className="text-xs text-ghost-foreground">
-                          {graceRemaining === 2 ? "Two grace nights remain" : "One grace night remains"} this cycle
+                          {graceRemaining === 2 ? t("streak.graceTwo") : t("streak.graceOne")}
                         </p>
                       )}
                     </>
                   ) : isCurrentMonth ? (
                     <p className="type-body-serif">
-                      Pull your first card to begin
+                      {t("streak.pullFirstCard")}
                     </p>
                   ) : (
                     <p className="type-body-serif">
-                      {activeMonth.pulledDayIndices.length} of {activeMonth.lunarMonthLength} days practiced
+                      {t("streak.daysPracticed", { pulled: activeMonth.pulledDayIndices.length, total: activeMonth.lunarMonthLength })}
                     </p>
                   )}
                 </div>
@@ -166,9 +168,9 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-px bg-muted rounded-sm overflow-hidden">
             {[
-              { label: "Streak", value: currentStreak },
-              { label: "Longest", value: longestStreak },
-              { label: "Total", value: totalPulls },
+              { label: t("streak.stats.streak"), value: currentStreak },
+              { label: t("streak.stats.longest"), value: longestStreak },
+              { label: t("streak.stats.total"), value: totalPulls },
             ].map(({ label, value }) => (
               <div key={label} className="bg-card px-4 py-5 text-center space-y-1">
                 <p
@@ -187,14 +189,14 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
           {longestStreak > 0 && (
             <section className="space-y-4">
               <h2 className="type-label">
-                Milestones
+                {t("streak.milestones.title")}
               </h2>
               <div className="flex gap-3">
                 {([
-                  { days: 7,   Icon: Moon,      label: "Seven days" },
-                  { days: 28,  Icon: MoonStars, label: "Full cycle" },
-                  { days: 100, Icon: Sparkle,   label: "Hundred days" },
-                ] as const).map(({ days, Icon, label: _label }) => {
+                  { days: 7,   Icon: Moon,      labelKey: "streak.milestones.sevenDays" },
+                  { days: 28,  Icon: MoonStars, labelKey: "streak.milestones.fullCycle" },
+                  { days: 100, Icon: Sparkle,   labelKey: "streak.milestones.hundredDays" },
+                ] as const).map(({ days, Icon, labelKey: _labelKey }) => {
                   const reached = longestStreak >= days;
                   return (
                     <div
@@ -240,14 +242,14 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
           {currentStreak === 0 && (
             <div className="text-center py-8 space-y-4">
               <p className="type-body-serif">
-                Your lunar practice hasn't begun yet.
+                {t("streak.noStreak.message")}
               </p>
               <Link
                 to="/"
                 onClick={(e) => { e.preventDefault(); goBack(); }}
                 className="inline-flex items-center gap-2 text-xs tracking-widest uppercase text-faint-foreground hover:opacity-80 transition-opacity"
               >
-                Draw today's card
+                {t("streak.noStreak.drawCard")}
               </Link>
             </div>
           )}

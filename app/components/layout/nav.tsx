@@ -2,17 +2,19 @@ import { Link, Form, useLocation } from "react-router";
 import { Cards, ClockCounterClockwise, GridFour, Gear, Moon } from "@phosphor-icons/react";
 import { buttonClass } from "../Button";
 import { KofiButton } from "../KofiButton";
-
-const TABS = [
-  { to: "/", label: "Today", Icon: Cards },
-  { to: "/streak", label: "Moon", Icon: Moon },
-  { to: "/collection", label: "Cards", Icon: GridFour },
-  { to: "/history", label: "History", Icon: ClockCounterClockwise },
-  { to: "/settings", label: "Settings", Icon: Gear },
-] as const;
+import { useT } from "../../i18n/provider";
 
 export function Nav({ userName: _userName, isAnonymous }: { userName: string; isAnonymous?: boolean }) {
   const location = useLocation();
+  const t = useT();
+
+  const TABS = [
+    { to: "/", label: t("nav.today"), Icon: Cards },
+    { to: "/streak", label: t("nav.moon"), Icon: Moon },
+    { to: "/collection", label: t("nav.cards"), Icon: GridFour },
+    { to: "/history", label: t("nav.history"), Icon: ClockCounterClockwise },
+    { to: "/settings", label: t("nav.settings"), Icon: Gear },
+  ] as const;
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -32,7 +34,7 @@ export function Nav({ userName: _userName, isAnonymous }: { userName: string; is
           <KofiButton />
           {isAnonymous ? (
             <Link to="/auth/signup" className="text-faint-foreground hover:text-foreground transition-colors">
-              Sign up
+              {t("nav.signUp")}
             </Link>
           ) : (
             <>
@@ -40,33 +42,33 @@ export function Nav({ userName: _userName, isAnonymous }: { userName: string; is
                 to="/streak"
                 className="hidden sm:inline text-faint-foreground hover:text-foreground transition-colors"
               >
-                Moon Cycle
+                {t("nav.moonCycle")}
               </Link>
               <Link
                 to="/history"
                 className="hidden sm:inline text-faint-foreground hover:text-foreground transition-colors"
               >
-                History
+                {t("nav.history")}
               </Link>
               <Link
                 to="/collection"
                 className="hidden sm:inline text-faint-foreground hover:text-foreground transition-colors"
               >
-                Collection
+                {t("nav.collection")}
               </Link>
               <Link
                 to="/settings"
                 className="hidden sm:inline text-faint-foreground hover:text-foreground transition-colors"
               >
-                Settings
+                {t("nav.settings")}
               </Link>
               <Form method="post" action="/auth/signout">
                 <button
                   type="submit"
-                  aria-label="Sign out"
+                  aria-label={t("nav.signOut")}
                   className="uppercase text-faint-foreground hover:text-foreground transition-colors"
                 >
-                  Sign out
+                  {t("nav.signOut")}
                 </button>
               </Form>
             </>
@@ -76,16 +78,16 @@ export function Nav({ userName: _userName, isAnonymous }: { userName: string; is
 
       {isAnonymous && (
         <div className="flex items-center justify-between gap-4 px-4 sm:px-6 py-2 border-b border-border bg-card text-xs tracking-widest">
-          <p className="type-label">Your reading is ephemeral — create an account to save it</p>
+          <p className="type-label">{t("nav.ephemeralBanner")}</p>
           <div className="flex items-center gap-4 shrink-0">
             <Link to="/auth/signup" className={buttonClass("sm")}>
-              Create account
+              {t("nav.createAccount")}
             </Link>
             <Link
               to="/auth/signin"
               className="uppercase text-faint-foreground hover:text-foreground transition-colors"
             >
-              Sign in
+              {t("nav.signIn")}
             </Link>
           </div>
         </div>

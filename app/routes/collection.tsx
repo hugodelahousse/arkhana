@@ -7,6 +7,8 @@ import { TarotCard } from "../components/TarotCard";
 import { Button } from "../components/Button";
 import { getAllPulls } from "../lib/pull";
 import { MAJOR_ARCANA, MINOR_BY_SUIT, cardSlug } from "../lib/cards";
+import { useT, useLocale } from "../i18n/provider";
+import { getLocalizedCardName } from "../i18n/cards";
 import type { CardDefinition, Rarity } from "../lib/cards";
 import { Link, useNavigate } from "react-router";
 import { DirectionalTransition } from "../components/DirectionalTransition";
@@ -73,6 +75,7 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
   const { user, bestByCard } = loaderData;
   const discoveredCount = Object.keys(bestByCard).length;
   const [hideUndiscovered, setHideUndiscovered] = useState(true);
+  const t = useT();
 
   const majorDiscovered = MAJOR_ARCANA.filter((c) => bestByCard[c.id]).length;
 
@@ -84,13 +87,13 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
 
           <div className="text-center space-y-3">
             <h1 className="type-page-title text-2xl">
-              Collection
+              {t("collection.title")}
             </h1>
             <p className="type-ghost whitespace-nowrap">
-              {discoveredCount}/78 discovered
+              {t("collection.discovered", { count: discoveredCount })}
             </p>
             <Button size="sm" onClick={() => setHideUndiscovered((v) => !v)}>
-              {hideUndiscovered ? "Show all" : "Discovered only"}
+              {hideUndiscovered ? t("collection.showAll") : t("collection.discoveredOnly")}
             </Button>
           </div>
 
@@ -100,7 +103,7 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
               <a href="#major-arcana" className="flex flex-col items-center gap-2 group text-center">
                 <Moon weight="light" size={28} className="opacity-50 group-hover:opacity-90 transition-opacity" />
                 <p className="type-label group-hover:opacity-70 transition-opacity">
-                  Major Arcana
+                  {t("collection.majorArcana")}
                 </p>
                 <p className="text-ghost-foreground text-xs">
                   {majorDiscovered}/{MAJOR_ARCANA.length}
@@ -115,7 +118,7 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
                 <a key={suit} href={`#${suit}`} className="flex flex-col items-center gap-2 group text-center">
                   <Icon weight="light" size={28} className="opacity-50 group-hover:opacity-90 transition-opacity" />
                   <p className="type-label capitalize group-hover:opacity-70 transition-opacity">
-                    {suit}
+                    {t(`collection.suits.${suit}`)}
                   </p>
                   <p className="text-ghost-foreground text-xs">
                     {discovered}/{cards.length}
@@ -128,7 +131,7 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
           {(!hideUndiscovered || majorDiscovered > 0) && (
             <section id="major-arcana" className="space-y-4">
               <h2 className="type-label flex items-baseline gap-2">
-                Major Arcana
+                {t("collection.majorArcana")}
                 <span className="text-ghost-foreground">
                   {majorDiscovered}/{MAJOR_ARCANA.length}
                 </span>
@@ -146,7 +149,7 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
             return (
               <section key={suit} id={suit} className="space-y-4">
                 <h2 className="type-label capitalize flex items-baseline gap-2">
-                  {suit}
+                  {t(`collection.suits.${suit}`)}
                   <span className="text-ghost-foreground">
                     {suitDiscovered}/{cards.length}
                   </span>
@@ -173,6 +176,8 @@ const CardTile = memo(function CardTile({
   best?: BestPull;
 }) {
   const navigate = useNavigate();
+  const t = useT();
+  const locale = useLocale();
   const discovered = !!best;
 
   const handleClick = useCallback(
@@ -201,7 +206,7 @@ const CardTile = memo(function CardTile({
           padding: "0.4rem",
           opacity: 0.35,
         }}
-        aria-label={`${card.name} — not yet discovered`}
+        aria-label={t("collection.notDiscovered", { name: getLocalizedCardName(card, locale) })}
       >
         <span
           style={{
@@ -219,7 +224,7 @@ const CardTile = memo(function CardTile({
           }}
           aria-hidden="true"
         >
-          {card.name}
+          {getLocalizedCardName(card, locale)}
         </span>
       </div>
     );

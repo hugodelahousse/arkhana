@@ -1,6 +1,7 @@
 import { redirect, data, Form, useNavigation, Link } from "react-router";
 import type { Route } from "./+types/signup";
 import { config } from "../../../config/index.js";
+import { useT } from "../../i18n/provider";
 
 export async function loader({ context }: Route.LoaderArgs) {
   if (context.user && !context.user.isAnonymous) return redirect("/");
@@ -57,6 +58,7 @@ export function meta() {
 }
 
 export default function SignUp({ actionData }: Route.ComponentProps) {
+  const t = useT();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const error = actionData && "error" in actionData ? actionData.error : null;
@@ -69,7 +71,7 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             ARKHANA
           </Link>
           <p className="type-caption">
-            Create your account
+            {t("auth.signUp.title")}
           </p>
         </div>
 
@@ -77,7 +79,7 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
           {error && (
             <p id="form-error" role="alert" className="text-sm text-rarity-arcane text-center">{error}</p>
           )}
-          <label htmlFor="email" className="sr-only">Email address</label>
+          <label htmlFor="email" className="sr-only">{t("auth.signUp.emailLabel")}</label>
           <input
             id="email"
             name="email"
@@ -87,32 +89,32 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             autoComplete="email"
             className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-muted-foreground"
           />
-          <label htmlFor="password" className="sr-only">Password, minimum 8 characters</label>
+          <label htmlFor="password" className="sr-only">{t("auth.signUp.passwordLabel")}</label>
           <input
             id="password"
             name="password"
             type="password"
             required
             minLength={8}
-            placeholder="Password (min 8 characters)"
+            placeholder={t("auth.signUp.passwordPlaceholder")}
             autoComplete="new-password"
             className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-muted-foreground"
           />
-          <label htmlFor="name" className="sr-only">Name (optional)</label>
+          <label htmlFor="name" className="sr-only">{t("auth.signUp.nameLabel")}</label>
           <input
             id="name"
             name="name"
             type="text"
-            placeholder="Name (optional)"
+            placeholder={t("auth.signUp.namePlaceholder")}
             autoComplete="name"
             className="w-full bg-transparent border border-border/50 focus:border-border px-4 py-3 text-base sm:text-sm placeholder:opacity-50 focus:outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors text-muted-foreground"
           />
-          <label htmlFor="username" className="sr-only">Username (optional)</label>
+          <label htmlFor="username" className="sr-only">{t("auth.signUp.usernameLabel")}</label>
           <input
             id="username"
             name="username"
             type="text"
-            placeholder="Username (optional)"
+            placeholder={t("auth.signUp.usernamePlaceholder")}
             autoComplete="username"
             minLength={1}
             maxLength={30}
@@ -124,14 +126,14 @@ export default function SignUp({ actionData }: Route.ComponentProps) {
             disabled={isSubmitting}
             className="w-full px-6 py-3 text-sm tracking-widest uppercase border border-accent text-accent hover:opacity-80 disabled:opacity-40 transition-opacity"
           >
-            {isSubmitting ? "…" : "Enter the arkhive"}
+            {isSubmitting ? "…" : t("auth.signUp.submit")}
           </button>
         </Form>
 
         <p className="text-center type-caption">
-          Already a keeper?{" "}
+          {t("auth.signUp.alreadyMember")}{" "}
           <Link to="/auth/signin" className="hover:opacity-100 transition-opacity underline">
-            Sign in
+            {t("auth.signUp.signIn")}
           </Link>
         </p>
       </div>
