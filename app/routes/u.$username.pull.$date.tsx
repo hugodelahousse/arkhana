@@ -130,7 +130,8 @@ export function meta({ data: loaderData, params: _params }: Route.MetaArgs) {
       `&spreadName=${encodeURIComponent(d.spreadName)}` +
       `&spreadSubtitle=${encodeURIComponent(d.spreadSubtitle)}` +
       `&positions=${encodeURIComponent(positionLabels)}` +
-      `&cardIds=${cardIds}&rarities=${rarities}&reversals=${reversals}`;
+      `&cardIds=${cardIds}&rarities=${rarities}&reversals=${reversals}` +
+      `&username=${encodeURIComponent(d.handle)}&date=${d.date}`;
     return [
       { title: `@${d.handle}'s ${d.spreadName} — Arkhana` },
       { property: "og:title", content: `@${d.handle}'s ${d.spreadName}` },

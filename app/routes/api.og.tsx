@@ -490,26 +490,36 @@ function CollectionOG({
   );
 }
 
-// 4-card spread: cards in a row, spread name on the right
+// 4-card spread: cards in a row, spread name + card list on the right
 function SpreadOG({
   spreadName,
   spreadSubtitle,
   positions,
   cardImages,
   rarities,
+  cardIds,
+  reversals,
+  username,
+  date,
 }: {
   spreadName: string;
   spreadSubtitle: string;
   positions: string[];
   cardImages: (string | null)[];
   rarities: number[];
+  cardIds: number[];
+  reversals: boolean[];
+  username: string | null;
+  date: string | null;
 }) {
   const count = positions.length;
-  // Fit cards in the left ~560px with equal spacing
   const PANEL_W = 560;
-  const CARD_H = 480;
+  const CARD_H = 452;
   const gap = 12;
   const cardW = Math.floor((PANEL_W - gap * (count + 1)) / count);
+
+  const cardNames = cardIds.map((id) => CARD_BY_ID[id]?.name ?? "");
+  const drewByLine = username ? `@${username}` : null;
 
   return (
     <div
@@ -522,6 +532,19 @@ function SpreadOG({
         overflow: "hidden",
       }}
     >
+      {/* Same radial glow as CardOG */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: "flex",
+          background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(168, 85, 247, 0.15) 0%, rgba(10, 10, 15, 0) 70%)",
+        }}
+      />
+
       {/* Cards panel */}
       <div
         style={{
@@ -538,6 +561,8 @@ function SpreadOG({
         {positions.map((label, i) => {
           const img = cardImages[i] ?? null;
           const rarityColor = RARITY_COLORS[rarities[i]] ?? BONE_400;
+          const reversed = reversals[i] ?? false;
+          const cardName = cardNames[i] ?? "";
           return (
             <div
               key={i}
@@ -560,7 +585,16 @@ function SpreadOG({
                 }}
               >
                 {img ? (
-                  <img src={img} width={cardW} height={CARD_H} style={{ objectFit: "cover", objectPosition: "center top" }} />
+                  <img
+                    src={img}
+                    width={cardW}
+                    height={CARD_H}
+                    style={{
+                      objectFit: "cover",
+                      objectPosition: "center top",
+                      ...(reversed ? { transform: "rotate(180deg)" } : {}),
+                    }}
+                  />
                 ) : (
                   <div
                     style={{
@@ -572,22 +606,37 @@ function SpreadOG({
                       justifyContent: "center",
                     }}
                   >
-                    <span style={{ color: BONE_400, fontSize: 24, fontFamily: "Cormorant Garamond", opacity: 0.2 }}>*</span>
+                    <SparkleFill size={32} color={BONE_400} />
                   </div>
                 )}
               </div>
               <span
                 style={{
-                  fontSize: 10,
-                  letterSpacing: 3,
+                  fontSize: 9,
+                  letterSpacing: 2,
                   color: BONE_400,
                   fontFamily: "DM Sans",
                   textTransform: "uppercase",
-                  opacity: 0.5,
+                  opacity: 0.4,
                 }}
               >
                 {label}
               </span>
+              {cardName && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: BONE_100,
+                    fontFamily: "Cormorant Garamond",
+                    fontWeight: 600,
+                    textAlign: "center",
+                    lineHeight: 1.2,
+                    opacity: 0.8,
+                  }}
+                >
+                  {cardName}
+                </span>
+              )}
             </div>
           );
         })}
@@ -602,52 +651,128 @@ function SpreadOG({
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
-          padding: "56px 64px",
+          justifyContent: "space-between",
+          padding: "48px 56px",
         }}
       >
-        <p
-          style={{
-            fontSize: 13,
-            letterSpacing: 5,
-            color: BONE_400,
-            fontFamily: "DM Sans",
-            textTransform: "uppercase",
-            opacity: 0.45,
-            margin: 0,
-            marginBottom: 24,
-          }}
-        >
-          {spreadSubtitle}
-        </p>
-        <h1
-          style={{
-            fontSize: 52,
-            color: BONE_100,
-            fontFamily: "Cormorant Garamond",
-            fontWeight: 400,
-            margin: 0,
-            lineHeight: 1.1,
-            marginBottom: 32,
-          }}
-        >
-          {spreadName}
-        </h1>
-        <div style={{ width: 40, height: 2, background: BONE_400, opacity: 0.25, display: "flex", marginBottom: "auto" }} />
-        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8 }}>
-          <span
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <p
             style={{
-              fontSize: 13,
+              fontSize: 12,
               letterSpacing: 5,
               color: BONE_400,
               fontFamily: "DM Sans",
               textTransform: "uppercase",
-              opacity: 0.3,
+              opacity: 0.4,
+              margin: 0,
+              marginBottom: 20,
             }}
           >
-            ARKHANA
+            {spreadSubtitle}
+          </p>
+          <h1
+            style={{
+              fontSize: 52,
+              color: BONE_100,
+              fontFamily: "Cormorant Garamond",
+              fontWeight: 600,
+              margin: 0,
+              lineHeight: 1.0,
+              marginBottom: 20,
+            }}
+          >
+            {spreadName}
+          </h1>
+          <div
+            style={{
+              width: 40,
+              height: 2,
+              background: "linear-gradient(90deg, #a855f7, #60a5fa)",
+              display: "flex",
+              marginBottom: 28,
+            }}
+          />
+          {/* Position → card name list */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {positions.map((label, i) => {
+              const cardName = cardNames[i] ?? "";
+              const rarityColor = RARITY_COLORS[rarities[i]] ?? BONE_400;
+              const reversed = reversals[i] ?? false;
+              return (
+                <div key={i} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      letterSpacing: 4,
+                      color: BONE_400,
+                      fontFamily: "DM Sans",
+                      textTransform: "uppercase",
+                      opacity: 0.4,
+                    }}
+                  >
+                    {label}
+                  </span>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+                    <span
+                      style={{
+                        fontSize: 26,
+                        color: rarityColor,
+                        fontFamily: "Cormorant Garamond",
+                        fontWeight: 600,
+                        lineHeight: 1,
+                      }}
+                    >
+                      {cardName}
+                    </span>
+                    {reversed && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          letterSpacing: 3,
+                          color: BONE_400,
+                          fontFamily: "DM Sans",
+                          textTransform: "uppercase",
+                          opacity: 0.45,
+                        }}
+                      >
+                        Reversed
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span
+            style={{
+              fontSize: 14,
+              letterSpacing: 3,
+              color: BONE_400,
+              fontFamily: "DM Sans",
+              textTransform: "uppercase",
+              opacity: 0.45,
+            }}
+          >
+            {[drewByLine, date].filter(Boolean).join("  /  ")}
           </span>
-          <SparkleFill size={12} color={BONE_400} />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
+                fontSize: 13,
+                letterSpacing: 5,
+                color: BONE_400,
+                fontFamily: "DM Sans",
+                textTransform: "uppercase",
+                opacity: 0.3,
+              }}
+            >
+              ARKHANA
+            </span>
+            <SparkleFill size={12} color={BONE_400} />
+          </div>
         </div>
       </div>
     </div>
@@ -681,10 +806,12 @@ export async function loader({ request }: Route.LoaderArgs) {
     // cardIds, rarities, reversed are comma-separated; positions is comma-separated labels
     const cardIds = (url.searchParams.get("cardIds") ?? "").split(",").map(Number).filter((n) => !isNaN(n));
     const rarityList = (url.searchParams.get("rarities") ?? "").split(",").map(Number);
-    const _reversedList = (url.searchParams.get("reversals") ?? "").split(",").map((v) => v === "true");
+    const reversedList = (url.searchParams.get("reversals") ?? "").split(",").map((v) => v === "true");
     const positionLabels = (url.searchParams.get("positions") ?? "").split(",").filter(Boolean);
     const spreadName = url.searchParams.get("spreadName") ?? "Reading";
     const spreadSubtitle = url.searchParams.get("spreadSubtitle") ?? "";
+    const spreadUsername = url.searchParams.get("username") ?? null;
+    const spreadDate = url.searchParams.get("date") ?? null;
 
     const cardImages = await Promise.all(
       positionLabels.map((_, i) => {
@@ -700,6 +827,10 @@ export async function loader({ request }: Route.LoaderArgs) {
         positions={positionLabels}
         cardImages={cardImages}
         rarities={rarityList}
+        cardIds={cardIds}
+        reversals={reversedList}
+        username={spreadUsername}
+        date={spreadDate}
       />
     );
   } else {

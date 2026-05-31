@@ -34,6 +34,7 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
     subtitle: spreadDef.subtitle,
     positions: spreadDef.positions,
     cards,
+    spreadDate,
     formattedDate,
     isToday,
     origin: getOrigin(request),
@@ -42,17 +43,19 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
 
 export function meta({ data: loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "Arkhana" }];
-  const { name, subtitle, positions, cards, origin } = loaderData;
+  const { name, subtitle, positions, cards, spreadDate, user, origin } = loaderData;
   const positionLabels = positions.map((p) => p.label).join(",");
   const cardIds = cards.map((c) => c.cardId).join(",");
   const rarities = cards.map((c) => c.rarityScore).join(",");
   const reversals = cards.map((c) => c.isReversed).join(",");
+  const usernameParam = user.username ? `&username=${encodeURIComponent(user.username)}` : "";
   const ogImage =
     `${origin}/api/og.png?type=spread` +
     `&spreadName=${encodeURIComponent(name)}` +
     `&spreadSubtitle=${encodeURIComponent(subtitle)}` +
     `&positions=${encodeURIComponent(positionLabels)}` +
-    `&cardIds=${cardIds}&rarities=${rarities}&reversals=${reversals}`;
+    `&cardIds=${cardIds}&rarities=${rarities}&reversals=${reversals}` +
+    usernameParam + `&date=${spreadDate}`;
   return [
     { title: `${name} — Arkhana` },
     { property: "og:title", content: `${name} — Arkhana` },
