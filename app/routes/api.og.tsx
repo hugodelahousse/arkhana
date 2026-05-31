@@ -467,14 +467,60 @@ function SpreadOG({
   username: string | null;
   date: string | null;
 }) {
-  const count = positions.length;
   const PANEL_W = 560;
-  const CARD_H = 452;
-  const gap = 12;
-  const cardW = Math.floor((PANEL_W - gap * (count + 1)) / count);
+  const CARD_GAP = 10;
+  const ROW_GAP = 12;
+  // 2×2: two columns, cardH chosen so two rows fit in 630px with comfortable breathing room
+  const cardW = Math.floor((PANEL_W - 3 * CARD_GAP) / 2); // 265px
+  const cardH = 250;
 
   const cardNames = cardIds.map((id) => CARD_BY_ID[id]?.name ?? "");
   const attribution = [username ? `@${username}` : null, date].filter(Boolean).join("  /  ") || undefined;
+
+  const cardCell = (i: number) => {
+    const rarityColor = RARITY_COLORS[rarities[i]] ?? BONE_400;
+    return (
+      <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+        {/* Position label above — bigger and bolder than before */}
+        <span
+          style={{
+            fontSize: 14,
+            letterSpacing: 3,
+            color: BONE_400,
+            fontFamily: "DM Sans",
+            textTransform: "uppercase",
+            opacity: 0.6,
+          }}
+        >
+          {positions[i]}
+        </span>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
+          <CardTile
+            width={cardW}
+            height={cardH}
+            image={cardImages[i] ?? null}
+            rarityColor={rarityColor}
+            isReversed={reversals[i] ?? false}
+          />
+          {cardNames[i] && (
+            <span
+              style={{
+                fontSize: 11,
+                color: rarityColor,
+                fontFamily: "Cormorant Garamond",
+                fontWeight: 600,
+                textAlign: "center",
+                lineHeight: 1.2,
+                opacity: 0.9,
+              }}
+            >
+              {cardNames[i]}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div
@@ -489,62 +535,33 @@ function SpreadOG({
     >
       <RadialGlow />
 
-      {/* Cards strip */}
+      {/* 2×2 card grid */}
       <div
         style={{
           width: PANEL_W,
           height: 630,
           display: "flex",
-          alignItems: "center",
+          flexDirection: "column",
           justifyContent: "center",
-          gap,
+          alignItems: "center",
+          gap: ROW_GAP,
           flexShrink: 0,
-          padding: `0 ${gap}px`,
         }}
       >
-        {positions.map((label, i) => {
-          const rarityColor = RARITY_COLORS[rarities[i]] ?? BONE_400;
-          const reversed = reversals[i] ?? false;
-          const cardName = cardNames[i] ?? "";
-          return (
-            <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-              <CardTile width={cardW} height={CARD_H} image={cardImages[i] ?? null} rarityColor={rarityColor} isReversed={reversed} />
-              <span
-                style={{
-                  fontSize: 9,
-                  letterSpacing: 2,
-                  color: BONE_400,
-                  fontFamily: "DM Sans",
-                  textTransform: "uppercase",
-                  opacity: 0.4,
-                }}
-              >
-                {label}
-              </span>
-              {cardName && (
-                <span
-                  style={{
-                    fontSize: 11,
-                    color: BONE_100,
-                    fontFamily: "Cormorant Garamond",
-                    fontWeight: 600,
-                    textAlign: "center",
-                    lineHeight: 1.2,
-                    opacity: 0.8,
-                  }}
-                >
-                  {cardName}
-                </span>
-              )}
-            </div>
-          );
-        })}
+        <div style={{ display: "flex", gap: CARD_GAP }}>
+          {cardCell(0)}
+          {cardCell(1)}
+        </div>
+        <div style={{ display: "flex", gap: CARD_GAP }}>
+          {cardCell(2)}
+          {cardCell(3)}
+        </div>
       </div>
 
       {/* Divider */}
       <div style={{ width: 1, height: "100%", background: STONE, flexShrink: 0, display: "flex" }} />
 
-      {/* Right panel */}
+      {/* Right panel — context only, no card list */}
       <div
         style={{
           flex: 1,
@@ -575,62 +592,9 @@ function SpreadOG({
               height: 2,
               background: "linear-gradient(90deg, #a855f7, #60a5fa)",
               display: "flex",
-              marginBottom: 28,
             }}
           />
-          {/* Position → card name list */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {positions.map((label, i) => {
-              const cardName = cardNames[i] ?? "";
-              const rarityColor = RARITY_COLORS[rarities[i]] ?? BONE_400;
-              const reversed = reversals[i] ?? false;
-              return (
-                <div key={i} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                  <span
-                    style={{
-                      fontSize: 10,
-                      letterSpacing: 4,
-                      color: BONE_400,
-                      fontFamily: "DM Sans",
-                      textTransform: "uppercase",
-                      opacity: 0.4,
-                    }}
-                  >
-                    {label}
-                  </span>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-                    <span
-                      style={{
-                        fontSize: 26,
-                        color: rarityColor,
-                        fontFamily: "Cormorant Garamond",
-                        fontWeight: 600,
-                        lineHeight: 1,
-                      }}
-                    >
-                      {cardName}
-                    </span>
-                    {reversed && (
-                      <span
-                        style={{
-                          fontSize: 10,
-                          letterSpacing: 3,
-                          color: BONE_400,
-                          fontFamily: "DM Sans",
-                          textTransform: "uppercase",
-                          opacity: 0.45,
-                        }}
-                      >
-                        Reversed
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </div>
-
         <OGFooter attribution={attribution} />
       </div>
     </div>
