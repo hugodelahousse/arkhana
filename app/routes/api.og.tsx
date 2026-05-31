@@ -447,7 +447,6 @@ function CollectionOG({
 }
 
 function SpreadOG({
-  spreadName,
   spreadSubtitle,
   positions,
   cardImages,
