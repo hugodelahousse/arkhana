@@ -102,7 +102,7 @@ export default function SpreadByIdRoute({ loaderData }: Route.ComponentProps) {
               )}
             </p>
           )}
-          <h1 className="type-page-title text-2xl">
+          <h1 className="type-page-title text-3xl">
             {name}
           </h1>
           <p className="type-label">

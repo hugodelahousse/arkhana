@@ -188,7 +188,7 @@ export default function PublicPull({ loaderData }: Route.ComponentProps) {
             {" · "}{d.formattedDate}
           </p>
           {d.type === "spread" && (
-            <h1 className="type-page-title text-2xl">
+            <h1 className="type-page-title text-3xl">
               {d.spreadName}
             </h1>
           )}

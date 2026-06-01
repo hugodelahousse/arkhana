@@ -60,15 +60,21 @@ export async function drawSpread(
     return { status: "already_pulled", spreadId: spreadRow.id, cards: existing };
   }
 
-  // Roll all cards upfront
-  const rolls = spreadDef.positions.map((pos) => ({
-    position: pos.index,
-    positionKey: pos.label.toLowerCase(),
-    cardId: Math.floor(Math.random() * 78),
-    rarityScore: rollRarity(),
-    isRadiant: rollRadiant(),
-    isReversed: rollReversed("spread"),
-  }));
+  // Roll all cards upfront — each card must be unique within the spread
+  const usedCardIds = new Set<number>();
+  const rolls = spreadDef.positions.map((pos) => {
+    let cardId: number;
+    do { cardId = Math.floor(Math.random() * 78); } while (usedCardIds.has(cardId));
+    usedCardIds.add(cardId);
+    return {
+      position: pos.index,
+      positionKey: pos.label.toLowerCase(),
+      cardId,
+      rarityScore: rollRarity(),
+      isRadiant: rollRadiant(),
+      isReversed: rollReversed("spread"),
+    };
+  });
 
   const result = await db.transaction(async (tx) => {
     const [spreadRow] = await tx

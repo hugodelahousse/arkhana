@@ -263,7 +263,7 @@ function SpreadContemplateReveal({
             {card.isRadiant && " ✦"}
             {card.isReversed && " · Reversed"}
           </p>
-          <h3 className="text-xl font-light tracking-wide text-muted-foreground font-serif">
+          <h3 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
             {card.card.name}
           </h3>
           <p className="type-body-serif">
@@ -673,7 +673,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       <p className="type-label">
                         {spreadDef.subtitle}
                       </p>
-                      <h2 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
+                      <h2 className="text-3xl font-light tracking-wide text-muted-foreground font-serif">
                         {spreadDef.name}
                       </h2>
                     </div>

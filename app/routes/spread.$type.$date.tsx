@@ -84,7 +84,7 @@ export default function SpreadDateRoute({ loaderData, params }: Route.ComponentP
               <p className="type-label">
                 {isToday ? subtitle : formattedDate}
               </p>
-              <h1 className="type-page-title text-2xl">
+              <h1 className="type-page-title text-3xl">
                 {name}
               </h1>
               {!isToday && (
