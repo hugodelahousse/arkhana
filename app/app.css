@@ -156,18 +156,24 @@ body::before {
   z-index: 100;
 }
 
-/* Bottom tab bar — push main content up so last items aren't obscured */
+/* Floating pill nav — push main content up so last items clear the pill */
 @media (max-width: 639px) {
   body:has(nav[aria-label="Main navigation"]) main {
     padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
   }
 }
 
-/* Ko-fi floating widget — raise above mobile bottom nav */
+/* Ko-fi floating widget — raise above mobile floating pill */
 @media (max-width: 639px) {
   #kofi-widget-overlay {
-    bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
   }
+}
+
+/* Floating pill stays fixed during page view transitions */
+::view-transition-group(mobile-nav-pill) {
+  animation: none;
+  z-index: 50;
 }
 
 /* Reduced motion — collapse all VT animations and disable smooth scroll */

@@ -1,13 +1,12 @@
 import { Link, Form, useLocation } from "react-router";
-import { Cards, ClockCounterClockwise, GridFour, Gear, Moon } from "@phosphor-icons/react";
+import { Cards, GridFour, Gear, Moon } from "@phosphor-icons/react";
 import { buttonClass } from "../Button";
 import { KofiButton } from "../KofiButton";
 
 const TABS = [
   { to: "/", label: "Today", Icon: Cards },
-  { to: "/streak", label: "Moon", Icon: Moon },
-  { to: "/collection", label: "Cards", Icon: GridFour },
-  { to: "/history", label: "History", Icon: ClockCounterClockwise },
+  { to: "/collection", label: "Collection", Icon: GridFour },
+  { to: "/streak", label: "Moon Cycle", Icon: Moon },
   { to: "/settings", label: "Settings", Icon: Gear },
 ] as const;
 
@@ -94,22 +93,36 @@ export function Nav({ userName: _userName, isAnonymous }: { userName: string; is
       {!isAnonymous && (
         <nav
           aria-label="Main navigation"
-          className="sm:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background"
-          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+          className="sm:hidden fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
         >
-          <div className="flex">
-            {TABS.map(({ to, label, Icon }) => (
-              <Link
-                key={to}
-                to={to}
-                className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${
-                  isActive(to) ? "text-primary" : "text-ghost-foreground"
-                }`}
-              >
-                <Icon weight="light" size={20} aria-hidden />
-                <span className="text-[8px] tracking-widest uppercase">{label}</span>
-              </Link>
-            ))}
+          <div
+            className="pointer-events-auto flex items-center bg-card/90 backdrop-blur-md border border-border rounded-full p-1.5 gap-0.5 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.08)] dark:shadow-[0_8px_40px_-4px_rgba(0,0,0,0.85),0_2px_24px_-4px_rgba(168,85,247,0.12),inset_0_1px_0_rgba(255,255,255,0.05)]"
+            style={{ viewTransitionName: "mobile-nav-pill" } as React.CSSProperties}
+          >
+            {TABS.map(({ to, label, Icon }) => {
+              const active = isActive(to);
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  aria-label={label}
+                  className={`relative flex items-center justify-center w-14 h-10 rounded-full transition-colors duration-200 ${
+                    active
+                      ? "text-primary bg-muted"
+                      : "text-ghost-foreground hover:text-faint-foreground"
+                  }`}
+                >
+                  <Icon weight={active ? "regular" : "light"} size={22} aria-hidden />
+                  {active && (
+                    <span
+                      className="absolute bottom-[7px] left-1/2 -translate-x-1/2 w-[3px] h-[3px] rounded-full bg-accent opacity-75"
+                      aria-hidden
+                    />
+                  )}
+                </Link>
+              );
+            })}
           </div>
         </nav>
       )}
