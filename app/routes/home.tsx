@@ -61,7 +61,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       todayStr: todayUTC(),
       origin: getOrigin(request),
       streak: null as { currentStreak: number; longestStreak: number; cycleStartDate: string | null } | null,
-      lunarMonthInfo: getLunarMonthInfo(new Date(), []),
+      lunarMonthInfo: getLunarMonthInfo(DateTime.utc(), []),
       previousPullDate: null as string | null,
     };
   }
@@ -79,7 +79,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     getPullDates(userId),
   ]);
 
-  const lunarMonthInfo = getLunarMonthInfo(new Date(todayStr + "T12:00:00Z"), pullDates);
+  const lunarMonthInfo = getLunarMonthInfo(DateTime.fromISO(todayStr, { zone: "utc" }).set({ hour: 12 }), pullDates);
 
   const spreadDef = isSundayToday ? (() => {
     const d = getSpreadType("sunday-weekly")!;
@@ -263,7 +263,7 @@ function SpreadContemplateReveal({
             {card.isRadiant && " ✦"}
             {card.isReversed && " · Reversed"}
           </p>
-          <h3 className="text-xl font-light tracking-wide text-muted-foreground font-serif">
+          <h3 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
             {card.card.name}
           </h3>
           <p className="type-body-serif">
@@ -288,7 +288,6 @@ function SpreadContemplateReveal({
   );
 }
 
-// Layered reveal: brief energy first, full meaning on demand
 function DailyCardReveal({
   card,
   rarityScore,
@@ -311,18 +310,9 @@ function DailyCardReveal({
   onNavigateToCard: (slug: string) => void;
 }) {
   const [revealed, revealNow] = useAutoReveal(true, 600);
-  const [showFullMeaning, setShowFullMeaning] = useState(false);
-  const [showExpandHint, setShowExpandHint] = useState(false);
   const rarityLabel = RARITY_LABELS[rarityScore]?.toLowerCase();
-  const briefEnergy = card.descriptions[0]; // mundane description — always 1-2 sentences
-  const fullMeaning = getCardDescription(card, rarityScore, isReversed);
+  const meaning = getCardDescription(card, rarityScore, isReversed);
   const reflection = reflectionPrompt(card);
-
-  useEffect(() => {
-    if (!revealed) return;
-    const t = setTimeout(() => setShowExpandHint(true), 1400);
-    return () => clearTimeout(t);
-  }, [revealed]);
 
   const shareUrl = username
     ? `/u/${username}/pull/${todayStr}`
@@ -343,54 +333,10 @@ function DailyCardReveal({
         />
       </div>
 
-      <AnimatePresence mode="wait">
-        {!revealed ? null : !showFullMeaning ? (
+      <AnimatePresence>
+        {revealed && (
           <motion.div
-            key="brief"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.5 }}
-            className="space-y-3 text-center"
-          >
-            <p
-              className="text-xs tracking-widest uppercase"
-              style={{ color: `var(--color-rarity-${rarityLabel})` }}
-              aria-label={[RARITY_LABELS[rarityScore], isRadiant ? "Radiant" : null, isReversed ? "Reversed" : null].filter(Boolean).join(", ")}
-            >
-              <span aria-hidden="true">
-                {RARITY_LABELS[rarityScore]}
-                {isRadiant && " ✦"}
-                {isReversed && " · Reversed"}
-              </span>
-            </p>
-            <h2 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
-              {card.name}
-            </h2>
-            <p className="type-body-serif max-w-xs mx-auto">
-              {briefEnergy}
-            </p>
-            {previousPullDate && (
-              <p className="text-xs text-ghost-foreground font-serif">
-                You've drawn this card before —{" "}
-                {DateTime.fromISO(previousPullDate, { zone: "utc" }).toFormat("LLLL d, yyyy")}
-              </p>
-            )}
-            <button
-              onClick={() => setShowFullMeaning(true)}
-              className="text-xs tracking-widest uppercase transition-opacity hover:opacity-80 text-muted-foreground"
-              style={{
-                opacity: showExpandHint ? 0.5 : 0,
-                pointerEvents: showExpandHint ? "auto" : "none",
-                transition: "opacity 0.5s",
-              }}
-            >
-              Reveal the full meaning ↓
-            </button>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="full"
+            key="meaning"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -411,10 +357,9 @@ function DailyCardReveal({
               {card.name}
             </h2>
             <p className="type-body-serif max-w-xs mx-auto">
-              {fullMeaning}
+              {meaning}
             </p>
 
-            {/* Reflection prompt */}
             <div className="pt-2 border-t border-muted max-w-xs mx-auto">
               <p className="text-xs text-faint-foreground font-serif italic leading-relaxed">
                 {reflection}
@@ -437,7 +382,7 @@ function DailyCardReveal({
                 Card history <ArrowRight weight="light" size={13} aria-hidden />
               </a>
               <ShareButton
-                title={`${card.name} — Arkhana`}
+                title={username ? `@${username} drew ${card.name} — Arkhana` : `${card.name} — Arkhana`}
                 url={shareUrl}
                 text=""
                 label="Share"
@@ -728,7 +673,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       <p className="type-label">
                         {spreadDef.subtitle}
                       </p>
-                      <h2 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
+                      <h2 className="text-3xl font-light tracking-wide text-muted-foreground font-serif">
                         {spreadDef.name}
                       </h2>
                     </div>
@@ -736,7 +681,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     {spreadShareUrl && (
                       <div className="flex justify-center pt-2">
                         <ShareButton
-                          title={`${spreadDef.name} — Arkhana`}
+                          title={user.username ? `@${user.username}'s ${spreadDef.name} — Arkhana` : `${spreadDef.name} — Arkhana`}
                           url={spreadShareUrl}
                           text=""
                           label="Share reading"
@@ -767,7 +712,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     {spreadShareUrl && (
                       <div className="flex justify-center pt-2">
                         <ShareButton
-                          title={`${spreadDef.name} — Arkhana`}
+                          title={user.username ? `@${user.username}'s ${spreadDef.name} — Arkhana` : `${spreadDef.name} — Arkhana`}
                           url={spreadShareUrl}
                           text=""
                           label="Share reading"
@@ -829,7 +774,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     </p>
                     <div className="flex justify-center pt-2">
                       <ShareButton
-                        title={`${todayCard.name} — Arkhana`}
+                        title={user.username ? `@${user.username} drew ${todayCard.name} — Arkhana` : `${todayCard.name} — Arkhana`}
                         url={user.username ? `/u/${user.username}/pull/${todayStr}` : `/share/${todayPull.id}`}
                         text=""
                         label="Share"
@@ -838,10 +783,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-6">
-                  <p className="text-xl text-muted-foreground font-serif">
-                    {isPulling ? "The fates are turning…" : "The cards await your question."}
-                  </p>
+                <div className="space-y-4">
                   <div className={`flex justify-center ${isPulling ? "animate-pulse pointer-events-none" : ""}`}>
                     <TarotCard
                       card={CARD_BY_ID[0]}
@@ -854,6 +796,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       showHint={!isPulling}
                     />
                   </div>
+                  <p className="text-xl text-muted-foreground font-serif">
+                    {isPulling ? "The fates are turning…" : "The cards await your question."}
+                  </p>
                 </div>
               )}
             </section>

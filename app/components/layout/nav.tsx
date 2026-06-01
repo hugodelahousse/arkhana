@@ -1,6 +1,7 @@
 import { Link, Form, useLocation } from "react-router";
 import { Cards, ClockCounterClockwise, GridFour, Gear, Moon } from "@phosphor-icons/react";
 import { buttonClass } from "../Button";
+import { KofiButton } from "../KofiButton";
 
 const TABS = [
   { to: "/", label: "Today", Icon: Cards },
@@ -28,6 +29,7 @@ export function Nav({ userName: _userName, isAnonymous }: { userName: string; is
           ARKHANA
         </Link>
         <div className="flex items-center gap-3 sm:gap-6 text-xs tracking-widest uppercase">
+          <KofiButton />
           {isAnonymous ? (
             <Link to="/auth/signup" className="text-faint-foreground hover:text-foreground transition-colors">
               Sign up

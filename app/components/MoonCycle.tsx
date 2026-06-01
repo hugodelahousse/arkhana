@@ -1,21 +1,23 @@
 import { memo, useId } from "react";
-import { moonIlluminatedPath, SYNODIC_MONTH_DAYS } from "../lib/moonphase";
+import { moonPhaseIconPath, moonPhaseOutlineOpacity } from "../lib/moonphase";
 
 interface MoonCycleProps {
   currentStreak: number;
-  todayLunarIndex: number;    // 0-based position today in the current lunar month
+  todayLunarIndex: number;    // 0-based position today in the current lunar month (-1 if not this month)
   lunarMonthLength: number;   // 29 or 30
   pulledDayIndices: number[]; // which days in this lunar month the user pulled
+  graceDayIndices?: number[]; // days where streak survived without a pull
+  streakDayIndices?: number[]; // pulled days that are part of the active streak
   size?: "sm" | "md" | "lg";
 }
 
-const GAP_DEG = 2.5;
-
 const SIZE = {
-  sm: { total: 120, radius: 46, thickness: 3,  numSize: 20, labelSize: 7 },
-  md: { total: 160, radius: 62, thickness: 5,  numSize: 28, labelSize: 8 },
-  lg: { total: 280, radius: 110, thickness: 9, numSize: 52, labelSize: 12 },
+  sm: { total: 120, radius: 46, moonSize: 8, numSize: 20, labelSize: 7 },
+  md: { total: 160, radius: 62, moonSize: 11, numSize: 28, labelSize: 8 },
+  lg: { total: 280, radius: 110, moonSize: 17, numSize: 52, labelSize: 12 },
 } as const;
+
+type MoonState = "today-pulled" | "today" | "streak" | "grace" | "pulled" | "future" | "missed";
 
 function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
   const rad = (deg * Math.PI) / 180;
@@ -25,31 +27,22 @@ function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
   };
 }
 
-function segmentPath(
-  cx: number,
-  cy: number,
-  outerR: number,
-  innerR: number,
-  index: number,
-  total: number
-): string {
-  const arcDeg = 360 / total - GAP_DEG;
-  const startDeg = (index * 360) / total - 90;
-  const endDeg = startDeg + arcDeg;
-  const largeArc = arcDeg > 180 ? 1 : 0;
-
-  const os = polarToCartesian(cx, cy, outerR, startDeg);
-  const oe = polarToCartesian(cx, cy, outerR, endDeg);
-  const ie = polarToCartesian(cx, cy, innerR, endDeg);
-  const is_ = polarToCartesian(cx, cy, innerR, startDeg);
-
-  return [
-    `M ${os.x} ${os.y}`,
-    `A ${outerR} ${outerR} 0 ${largeArc} 1 ${oe.x} ${oe.y}`,
-    `L ${ie.x} ${ie.y}`,
-    `A ${innerR} ${innerR} 0 ${largeArc} 0 ${is_.x} ${is_.y}`,
-    "Z",
-  ].join(" ");
+function getMoonState(
+  i: number,
+  todayLunarIndex: number,
+  todayPulled: boolean,
+  pulledSet: Set<number>,
+  streakSet: Set<number>,
+  graceSet: Set<number>,
+): MoonState {
+  const isToday = i === todayLunarIndex;
+  if (isToday && todayPulled) return "today-pulled";
+  if (isToday) return "today";
+  if (streakSet.has(i)) return "streak";
+  if (graceSet.has(i)) return "grace";
+  if (pulledSet.has(i)) return "pulled";
+  if (i > todayLunarIndex) return "future";
+  return "missed";
 }
 
 export const MoonCycle = memo(function MoonCycle({
@@ -57,6 +50,8 @@ export const MoonCycle = memo(function MoonCycle({
   todayLunarIndex,
   lunarMonthLength,
   pulledDayIndices,
+  graceDayIndices = [],
+  streakDayIndices = [],
   size = "sm",
 }: MoonCycleProps) {
   const filterId = useId().replace(/:/g, "");
@@ -64,11 +59,10 @@ export const MoonCycle = memo(function MoonCycle({
   const cx = cfg.total / 2;
   const cy = cfg.total / 2;
 
-  const outerR = cfg.radius + cfg.thickness / 2;
-  const innerR = cfg.radius - cfg.thickness / 2;
-
   const pulledSet = new Set(pulledDayIndices);
-  const todayPulled = pulledSet.has(todayLunarIndex);
+  const graceSet = new Set(graceDayIndices);
+  const streakSet = new Set(streakDayIndices);
+  const todayPulled = todayLunarIndex >= 0 && pulledSet.has(todayLunarIndex);
 
   return (
     <svg
@@ -81,8 +75,9 @@ export const MoonCycle = memo(function MoonCycle({
     >
       <defs>
         <filter id={`glow-${filterId}`} x="-60%" y="-60%" width="220%" height="220%">
-          <feGaussianBlur stdDeviation="2.5" result="blur" />
+          <feGaussianBlur stdDeviation="4" result="blur" />
           <feMerge>
+            <feMergeNode in="blur" />
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
@@ -100,69 +95,83 @@ export const MoonCycle = memo(function MoonCycle({
       </defs>
 
       {Array.from({ length: lunarMonthLength }, (_, i) => {
-        const pulled = pulledSet.has(i);
         const isToday = i === todayLunarIndex;
-        const isFuture = i > todayLunarIndex;
+        const phase = i / lunarMonthLength;
+        const litPath = moonPhaseIconPath(phase);
+        const outlineOpacity = moonPhaseOutlineOpacity(phase);
+        const deg = (i * 360) / lunarMonthLength - 90;
+        const pos = polarToCartesian(cx, cy, cfg.radius, deg);
+        const state = getMoonState(i, todayLunarIndex, todayPulled, pulledSet, streakSet, graceSet);
+        const highlighted = state === "today-pulled" || state === "today" || state === "streak";
+        const glowMaskId = `moon-glow-mask-${filterId}-${i}`;
 
-        let fill: string;
-        let opacity: number;
-        let filter: string | undefined;
-
-        if (isToday && todayPulled) {
-          fill = "var(--accent)";
-          opacity = 1;
-          filter = `url(#glow-${filterId})`;
-        } else if (isToday) {
-          // Today, not yet pulled — soft ring highlight
-          fill = "var(--muted-foreground)";
-          opacity = 0.45;
-          filter = `url(#glow-${filterId})`;
-        } else if (pulled) {
-          fill = "var(--muted-foreground)";
-          opacity = 0.5;
-        } else if (isFuture) {
-          fill = "var(--border)";
-          opacity = 0.18;
-        } else {
-          // Past, not pulled
-          fill = "var(--border)";
-          opacity = 0.28;
-        }
-
-        return (
-          <path
-            key={i}
-            d={segmentPath(cx, cy, outerR, innerR, i, lunarMonthLength)}
-            fill={fill}
-            opacity={opacity}
-            filter={filter}
-          />
-        );
-      })}
-
-      {/* Cardinal moon phase markers — new/quarter/full/quarter — only on lg */}
-      {size === "lg" && ([
-        { frac: 0,    age: 0 },
-        { frac: 0.25, age: SYNODIC_MONTH_DAYS * 0.25 },
-        { frac: 0.5,  age: SYNODIC_MONTH_DAYS * 0.5 },
-        { frac: 0.75, age: SYNODIC_MONTH_DAYS * 0.75 },
-      ] as const).map(({ frac, age }) => {
-        const deg = frac * 360 - 90;
-        const markerR = outerR + 18;
-        const pos = polarToCartesian(cx, cy, markerR, deg);
-        const glyphPx = 13;
-        const scale = glyphPx / 100;
-        const path = moonIlluminatedPath(age);
         return (
           <g
-            key={frac}
-            transform={`translate(${pos.x - glyphPx / 2}, ${pos.y - glyphPx / 2}) scale(${scale})`}
-            color="var(--muted-foreground)"
-            opacity={0.28}
+            key={i}
+            className="moon-day"
+            data-state={state}
+            transform={`translate(${pos.x}, ${pos.y})`}
           >
-            <circle cx={50} cy={50} r={45} fill="none" stroke="currentColor" strokeWidth={3} />
-            {path === "full" && <circle cx={50} cy={50} r={45} fill="currentColor" />}
-            {path !== "new" && path !== "full" && <path d={path} fill="currentColor" />}
+            {isToday && (
+              <>
+                <mask
+                  id={glowMaskId}
+                  maskUnits="userSpaceOnUse"
+                  x={-cfg.moonSize * 2}
+                  y={-cfg.moonSize * 2}
+                  width={cfg.moonSize * 4}
+                  height={cfg.moonSize * 4}
+                >
+                  <rect
+                    x={-cfg.moonSize * 2}
+                    y={-cfg.moonSize * 2}
+                    width={cfg.moonSize * 4}
+                    height={cfg.moonSize * 4}
+                    fill="white"
+                  />
+                  <circle r={cfg.moonSize * 0.5} fill="black" />
+                </mask>
+                <circle
+                  className="moon-glow"
+                  r={cfg.moonSize * 0.76}
+                  fill="currentColor"
+                  filter={`url(#glow-${filterId})`}
+                  mask={`url(#${glowMaskId})`}
+                />
+              </>
+            )}
+            <g
+              transform={`translate(${-cfg.moonSize / 2}, ${-cfg.moonSize / 2}) scale(${
+                cfg.moonSize / 100
+              })`}
+            >
+              <circle
+                className="moon-shadow"
+                cx={50}
+                cy={50}
+                r={45}
+                fill={highlighted ? "var(--moon-phase-active-shadow)" : "currentColor"}
+                stroke={highlighted ? "var(--moon-phase-active-shadow)" : "currentColor"}
+                strokeWidth={5}
+                opacity="var(--moon-phase-shadow-opacity)"
+              />
+              {litPath === "full" && (
+                <circle cx={50} cy={50} r={45} fill={highlighted ? "currentColor" : "var(--moon-phase-lit)"} />
+              )}
+              {litPath !== "new" && litPath !== "full" && (
+                <path d={litPath} fill={highlighted ? "currentColor" : "var(--moon-phase-lit)"} />
+              )}
+              <circle
+                cx={50}
+                cy={50}
+                r={45}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={5}
+                opacity={outlineOpacity}
+                filter={isToday ? `url(#glow-${filterId})` : undefined}
+              />
+            </g>
           </g>
         );
       })}

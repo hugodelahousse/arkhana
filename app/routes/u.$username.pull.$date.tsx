@@ -130,7 +130,8 @@ export function meta({ data: loaderData, params: _params }: Route.MetaArgs) {
       `&spreadName=${encodeURIComponent(d.spreadName)}` +
       `&spreadSubtitle=${encodeURIComponent(d.spreadSubtitle)}` +
       `&positions=${encodeURIComponent(positionLabels)}` +
-      `&cardIds=${cardIds}&rarities=${rarities}&reversals=${reversals}`;
+      `&cardIds=${cardIds}&rarities=${rarities}&reversals=${reversals}` +
+      `&username=${encodeURIComponent(d.handle)}&date=${d.date}`;
     return [
       { title: `@${d.handle}'s ${d.spreadName} — Arkhana` },
       { property: "og:title", content: `@${d.handle}'s ${d.spreadName}` },
@@ -187,7 +188,7 @@ export default function PublicPull({ loaderData }: Route.ComponentProps) {
             {" · "}{d.formattedDate}
           </p>
           {d.type === "spread" && (
-            <h1 className="type-page-title text-2xl">
+            <h1 className="type-page-title text-3xl">
               {d.spreadName}
             </h1>
           )}
@@ -198,8 +199,8 @@ export default function PublicPull({ loaderData }: Route.ComponentProps) {
         <div className="flex justify-center">
           <ShareButton
             title={d.type === "spread"
-              ? `${d.spreadName} — Arkhana`
-              : `${CARD_BY_ID[d.pull.cardId].name} — Arkhana`}
+              ? `@${d.handle}'s ${d.spreadName} — Arkhana`
+              : `@${d.handle} drew ${CARD_BY_ID[d.pull.cardId].name} — Arkhana`}
             url={`/u/${d.handle}/pull/${d.date}`}
             text={d.type === "spread"
               ? d.spreadSubtitle
