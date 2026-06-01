@@ -199,8 +199,8 @@ export default function PublicPull({ loaderData }: Route.ComponentProps) {
         <div className="flex justify-center">
           <ShareButton
             title={d.type === "spread"
-              ? `${d.spreadName} — Arkhana`
-              : `${CARD_BY_ID[d.pull.cardId].name} — Arkhana`}
+              ? `@${d.handle}'s ${d.spreadName} — Arkhana`
+              : `@${d.handle} drew ${CARD_BY_ID[d.pull.cardId].name} — Arkhana`}
             url={`/u/${d.handle}/pull/${d.date}`}
             text={d.type === "spread"
               ? d.spreadSubtitle

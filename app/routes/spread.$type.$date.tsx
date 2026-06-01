@@ -98,7 +98,7 @@ export default function SpreadDateRoute({ loaderData, params }: Route.ComponentP
 
             <div className="flex flex-col items-center pt-4 space-y-4">
               <ShareButton
-                title={`${name} — Arkhana`}
+                title={user.username ? `@${user.username}'s ${name} — Arkhana` : `${name} — Arkhana`}
                 url={user.username ? `/u/${user.username}/pull/${params.date}` : `/spread/${params.type}/${params.date}`}
                 text={`${name}: ${subtitle}`}
                 label="Share reading"

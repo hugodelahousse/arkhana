@@ -114,7 +114,7 @@ export default function SpreadByIdRoute({ loaderData }: Route.ComponentProps) {
 
         <div className="flex justify-center">
           <ShareButton
-            title={`${name} — Arkhana`}
+            title={handle ? `@${handle}'s ${name} — Arkhana` : `${name} — Arkhana`}
             url={shareUrl}
             text=""
             label="Share reading"
