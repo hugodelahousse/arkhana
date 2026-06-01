@@ -263,7 +263,7 @@ function SpreadContemplateReveal({
             {card.isRadiant && " ✦"}
             {card.isReversed && " · Reversed"}
           </p>
-          <h3 className="text-xl font-light tracking-wide text-muted-foreground font-serif">
+          <h3 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
             {card.card.name}
           </h3>
           <p className="type-body-serif">
@@ -382,7 +382,7 @@ function DailyCardReveal({
                 Card history <ArrowRight weight="light" size={13} aria-hidden />
               </a>
               <ShareButton
-                title={`${card.name} — Arkhana`}
+                title={username ? `@${username} drew ${card.name} — Arkhana` : `${card.name} — Arkhana`}
                 url={shareUrl}
                 text=""
                 label="Share"
@@ -673,7 +673,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       <p className="type-label">
                         {spreadDef.subtitle}
                       </p>
-                      <h2 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
+                      <h2 className="text-3xl font-light tracking-wide text-muted-foreground font-serif">
                         {spreadDef.name}
                       </h2>
                     </div>
@@ -681,7 +681,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     {spreadShareUrl && (
                       <div className="flex justify-center pt-2">
                         <ShareButton
-                          title={`${spreadDef.name} — Arkhana`}
+                          title={user.username ? `@${user.username}'s ${spreadDef.name} — Arkhana` : `${spreadDef.name} — Arkhana`}
                           url={spreadShareUrl}
                           text=""
                           label="Share reading"
@@ -712,7 +712,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     {spreadShareUrl && (
                       <div className="flex justify-center pt-2">
                         <ShareButton
-                          title={`${spreadDef.name} — Arkhana`}
+                          title={user.username ? `@${user.username}'s ${spreadDef.name} — Arkhana` : `${spreadDef.name} — Arkhana`}
                           url={spreadShareUrl}
                           text=""
                           label="Share reading"
@@ -774,7 +774,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     </p>
                     <div className="flex justify-center pt-2">
                       <ShareButton
-                        title={`${todayCard.name} — Arkhana`}
+                        title={user.username ? `@${user.username} drew ${todayCard.name} — Arkhana` : `${todayCard.name} — Arkhana`}
                         url={user.username ? `/u/${user.username}/pull/${todayStr}` : `/share/${todayPull.id}`}
                         text=""
                         label="Share"

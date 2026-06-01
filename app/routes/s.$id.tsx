@@ -46,18 +46,21 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
 export function meta({ data: loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: "Arkhana" }];
-  const { name, subtitle, positions, cards, handle, origin } = loaderData;
+  const { name, subtitle, positions, cards, handle, spreadDate, origin } = loaderData;
   const positionLabels = positions.map((p: SpreadPosition) => p.label).join(",");
   const cardIds = cards.map((c: SpreadCardResult) => c.cardId).join(",");
   const rarities = cards.map((c: SpreadCardResult) => c.rarityScore).join(",");
   const reversals = cards.map((c: SpreadCardResult) => c.isReversed).join(",");
   const who = handle ? `@${handle}'s ` : "";
+  const usernameParam = handle ? `&username=${encodeURIComponent(handle)}` : "";
+  const dateParam = spreadDate ? `&date=${spreadDate}` : "";
   const ogImage =
     `${origin}/api/og.png?type=spread` +
     `&spreadName=${encodeURIComponent(name)}` +
     `&spreadSubtitle=${encodeURIComponent(subtitle)}` +
     `&positions=${encodeURIComponent(positionLabels)}` +
-    `&cardIds=${cardIds}&rarities=${rarities}&reversals=${reversals}`;
+    `&cardIds=${cardIds}&rarities=${rarities}&reversals=${reversals}` +
+    usernameParam + dateParam;
   return [
     { title: `${who}${name} — Arkhana` },
     { property: "og:title", content: `${who}${name} — Arkhana` },
@@ -99,7 +102,7 @@ export default function SpreadByIdRoute({ loaderData }: Route.ComponentProps) {
               )}
             </p>
           )}
-          <h1 className="type-page-title text-2xl">
+          <h1 className="type-page-title text-3xl">
             {name}
           </h1>
           <p className="type-label">
@@ -111,7 +114,7 @@ export default function SpreadByIdRoute({ loaderData }: Route.ComponentProps) {
 
         <div className="flex justify-center">
           <ShareButton
-            title={`${name} — Arkhana`}
+            title={handle ? `@${handle}'s ${name} — Arkhana` : `${name} — Arkhana`}
             url={shareUrl}
             text=""
             label="Share reading"
