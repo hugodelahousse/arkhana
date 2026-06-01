@@ -4,11 +4,14 @@ import cron from "node-cron";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./auth.js";
 import { db } from "../db/index.js";
+import { user as userTable } from "../db/schema/auth.js";
 import { pushSubscriptions } from "../db/schema/push-subscriptions.js";
 import { eq } from "drizzle-orm";
 import { getVapidPublicKey, testPushToUser, sendDailyReminders, sendCelestialNotification } from "../app/lib/push.js";
 import { getUpcomingCelestialEvents } from "../app/lib/moonphase.js";
 import { todayUTC } from "../app/lib/utils.js";
+import { userCards } from "../db/schema/user-cards.js";
+import { prefetchAll } from "../app/lib/procgen-prefetch.js";
 
 export const app = express();
 
@@ -104,6 +107,26 @@ app.post("/api/push/test", async (req, res) => {
   res.json(result);
 });
 
+app.post("/api/procgen/prefetch", async (req, res) => {
+  const session = await auth.api.getSession({
+    headers: new Headers(req.headers as Record<string, string>),
+  });
+  if (!session?.user) return res.status(401).json({ error: "Unauthorized" });
+
+  const { seed, width = 752, palette } = req.body ?? {};
+  if (!seed || typeof seed !== "number") return res.status(400).json({ error: "Missing seed" });
+
+  const collected = await db
+    .select({ cardId: userCards.cardId })
+    .from(userCards)
+    .where(eq(userCards.userId, session.user.id));
+  const priorityCardIds = [...new Set(collected.map((r) => r.cardId))];
+
+  res.json({ ok: true, count: 78, priority: priorityCardIds.length });
+
+  prefetchAll(seed, width, palette, priorityCardIds).catch(() => {});
+});
+
 app.use(
   createRequestHandler({
     build: () => import("virtual:react-router/server-build"),
@@ -111,18 +134,23 @@ app.use(
       const session = await auth.api.getSession({
         headers: new Headers(req.headers as Record<string, string>),
       });
+      if (!session?.user) return { user: null };
+      const [profile] = await db
+        .select({ preferences: userTable.preferences })
+        .from(userTable)
+        .where(eq(userTable.id, session.user.id))
+        .limit(1);
       return {
-        user: session?.user
-          ? {
-              id: session.user.id,
-              name: session.user.name,
-              email: session.user.email,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              username: (session.user as any).username ?? null,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              isAnonymous: (session.user as any).isAnonymous ?? false,
-            }
-          : null,
+        user: {
+          id: session.user.id,
+          name: session.user.name,
+          email: session.user.email,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          username: (session.user as any).username ?? null,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          isAnonymous: (session.user as any).isAnonymous ?? false,
+          cardStyle: profile?.preferences?.cardStyle ?? "classic",
+        },
       };
     },
   })

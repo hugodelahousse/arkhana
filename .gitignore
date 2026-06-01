@@ -6,3 +6,5 @@
 /.react-router/
 /build/
 .lockbox/
+lab/output/
+data/procgen-cache/

@@ -4,13 +4,15 @@ import type { Route } from "./+types/settings";
 import { Nav } from "../components/layout/nav";
 import { db } from "../../db/index.js";
 import { user, passkey as passkeyTable } from "../../db/schema/auth.js";
+import type { CardStyle } from "../../db/schema/auth.js";
 import { eq, and, ne } from "drizzle-orm";
 import { getThemeFromCookie, setThemeCookie, type Theme } from "../lib/theme";
+import { setCardStyleCookie } from "../lib/cardStyle";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   if (!context.user || context.user.isAnonymous) return redirect("/");
   const [profile] = await db
-    .select({ username: user.username, displayUsername: user.displayUsername })
+    .select({ username: user.username, displayUsername: user.displayUsername, preferences: user.preferences })
     .from(user)
     .where(eq(user.id, context.user.id))
     .limit(1);
@@ -23,12 +25,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     })
     .from(passkeyTable)
     .where(eq(passkeyTable.userId, context.user.id));
-  return {
+  const cardStyle = (profile?.preferences?.cardStyle ?? "classic") as CardStyle;
+  const headers = new Headers();
+  headers.set("Set-Cookie", setCardStyleCookie(cardStyle));
+  return data({
     user: context.user,
     username: profile?.displayUsername ?? profile?.username ?? "",
+    cardStyle,
     passkeys,
     theme: getThemeFromCookie(request),
-  };
+  }, { headers });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -51,6 +57,23 @@ export async function action({ request, context }: Route.ActionArgs) {
     return data(
       { success: true },
       { headers: { "Set-Cookie": setThemeCookie(theme as Theme) } },
+    );
+  }
+
+  if (intent === "set-card-style") {
+    const style = String(form.get("cardStyle") ?? "classic");
+    if (!["classic", "procgen"].includes(style))
+      return data({ error: "Invalid card style." }, { status: 400 });
+    const [row] = await db
+      .select({ preferences: user.preferences })
+      .from(user)
+      .where(eq(user.id, context.user.id))
+      .limit(1);
+    const prefs = { ...(row?.preferences ?? {}), cardStyle: style as CardStyle };
+    await db.update(user).set({ preferences: prefs }).where(eq(user.id, context.user.id));
+    return data(
+      { success: true },
+      { headers: { "Set-Cookie": setCardStyleCookie(style as CardStyle) } },
     );
   }
 
@@ -109,9 +132,12 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
   const revalidator = useRevalidator();
   const isSubmitting = navigation.state === "submitting";
   const themeFetcher = useFetcher();
+  const cardStyleFetcher = useFetcher();
   // Optimistic: show the in-flight value immediately while the request is live
   const activeTheme: Theme =
     (themeFetcher.formData?.get("theme") as Theme) ?? loaderData.theme;
+  const activeCardStyle: CardStyle =
+    (cardStyleFetcher.formData?.get("cardStyle") as CardStyle) ?? loaderData.cardStyle;
 
   function setTheme(t: Theme) {
     // Apply class instantly for zero-latency feedback
@@ -290,6 +316,59 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                 }`}
               >
                 {t}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="p-6 space-y-6 border border-border bg-card">
+          <h2 className="type-label">
+            Card Art
+          </h2>
+          <p className="type-caption">
+            Choose the art style for your tarot cards.
+            {activeCardStyle === "procgen" && (
+              <span className="block mt-2 text-ghost-foreground">
+                Procedural generation based on{" "}
+                <a href="https://watabou.itch.io/procgen-tarot" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary transition-colors">
+                  watabou&rsquo;s Procgen Tarot
+                </a>
+                .
+              </span>
+            )}
+          </p>
+          <div className="flex border border-border overflow-hidden">
+            {([
+              { value: "classic", label: "Rider-Waite-Smith" },
+              { value: "procgen", label: "Procgen" },
+            ] as const).map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  cardStyleFetcher.submit(
+                    { intent: "set-card-style", cardStyle: value },
+                    { method: "post" },
+                  );
+                  if (value === "procgen") {
+                    let h = 0;
+                    const id = loaderData.user.id;
+                    for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+                    fetch("/api/procgen/prefetch", {
+                      method: "POST",
+                      headers: { "content-type": "application/json" },
+                      body: JSON.stringify({ seed: Math.abs(h) || 1 }),
+                    });
+                  }
+                }}
+                aria-pressed={activeCardStyle === value}
+                className={`flex-1 px-4 py-2.5 text-xs tracking-widest uppercase transition-colors ${
+                  activeCardStyle === value
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                {label}
               </button>
             ))}
           </div>

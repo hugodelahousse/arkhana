@@ -868,3 +868,66 @@
   .card-scene[data-rarity="5"][data-revealed] .card-shine { opacity: .25; }
   .card-scene[data-rarity="3"][data-revealed] .card-shine { opacity: .15; }
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   PROCGEN SVG CARDS
+   ═══════════════════════════════════════════════════════════ */
+
+.procgen-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.procgen-svg > svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: var(--card-radius);
+  transform-style: preserve-3d;
+  overflow: visible;
+}
+
+.card-scene[data-procgen] {
+  --card-radius: 5.32%;
+  --card-radius-xy: 5.32% / 3.15%;
+}
+
+.card-scene[data-procgen] .card-flipper {
+  aspect-ratio: 376 / 634;
+}
+
+.card-scene[data-procgen] .card-edge-l,
+.card-scene[data-procgen] .card-edge-r {
+  top: var(--card-radius);
+  height: calc(100% - var(--card-radius) * 2);
+}
+
+.card-scene[data-procgen] .card-edge-t,
+.card-scene[data-procgen] .card-edge-b {
+  left: var(--card-radius);
+  width: calc(100% - var(--card-radius) * 2);
+}
+
+.card-scene[data-procgen] .card-front {
+  border-radius: var(--card-radius-xy);
+  overflow: hidden;
+}
+
+.card-scene[data-procgen] .card-shine,
+.card-scene[data-procgen] .card-shine::before,
+.card-scene[data-procgen] .card-shine::after,
+.card-scene[data-procgen] .card-glare {
+  border-radius: var(--card-radius-xy);
+}
+
+.card-scene[data-procgen] .card-back {
+  border-radius: var(--card-radius-xy);
+}
+
+.card-scene[data-procgen][data-revealed] [data-layer="fg"] {
+  transform: translateZ(var(--procgen-parallax, 8px));
+}

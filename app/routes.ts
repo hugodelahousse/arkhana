@@ -10,6 +10,7 @@ export default [
   route("s/:id", "routes/s.$id.tsx"),
   route("settings", "routes/settings.tsx"),
   route("api/og.png", "routes/api.og.tsx"),
+  route("api/procgen.png", "routes/api.procgen.tsx"),
   route("spread/:type/:date", "routes/spread.$type.$date.tsx"),
   route("spread/:type", "routes/spread.$type.tsx"),
   route("streak", "routes/streak.tsx"),
@@ -23,4 +24,5 @@ export default [
   route("lab/spreads", "routes/lab/spreads.tsx"),
   route("lab/layers", "routes/lab/layers.tsx"),
   route("lab/push", "routes/lab/push.tsx"),
+  route("lab/procgen", "routes/lab/procgen.tsx"),
 ] satisfies RouteConfig;

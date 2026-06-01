@@ -13,6 +13,9 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { OrientationProvider } from "./lib/orientation";
 import { getThemeFromCookie, THEME_SCRIPT, THEME_COLORS, type Theme } from "./lib/theme";
+import { getCardStyleFromCookie } from "./lib/cardStyle";
+import { CardStyleContext } from "./lib/CardStyleContext";
+import type { CardStyleConfig } from "./lib/CardStyleContext";
 
 export const links: Route.LinksFunction = () => [
   { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -20,8 +23,12 @@ export const links: Route.LinksFunction = () => [
   { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
 ];
 
-export async function loader({ request }: Route.LoaderArgs) {
-  return { theme: getThemeFromCookie(request) };
+export async function loader({ request, context }: Route.LoaderArgs) {
+  return {
+    theme: getThemeFromCookie(request),
+    cardStyle: getCardStyleFromCookie(request),
+    userId: context.user?.id ?? null,
+  };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -76,6 +83,10 @@ function ServiceWorkerRegister() {
 export default function App() {
   const data = useRouteLoaderData<typeof loader>("root");
   const theme = data?.theme ?? "system";
+  const cardStyleConfig: CardStyleConfig = {
+    style: (data?.cardStyle as CardStyleConfig["style"]) ?? "classic",
+    userId: data?.userId ?? undefined,
+  };
 
   // Keep .dark in sync with theme and OS preference after hydration.
   // The blocking script handles initial load; this effect handles:
@@ -106,9 +117,11 @@ export default function App() {
   }, [theme]);
 
   return (
-    <OrientationProvider>
-      <Outlet />
-    </OrientationProvider>
+    <CardStyleContext value={cardStyleConfig}>
+      <OrientationProvider>
+        <Outlet />
+      </OrientationProvider>
+    </CardStyleContext>
   );
 }
 
