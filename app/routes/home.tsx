@@ -17,7 +17,7 @@ import type { SpreadCardResult } from "../lib/spread-pull";
 import { CARD_BY_ID, RARITY_LABELS, cardSlug, type Rarity, type CardDefinition } from "../lib/cards";
 import { getSpreadType } from "../lib/spreads";
 import { useT, useLocale } from "../i18n/provider";
-import { getLocalizedCardName, getLocalizedCardDescription } from "../i18n/cards";
+import { getLocalizedCardName, getLocalizedCardDescription, getLocalizedRarityLabel } from "../i18n/cards";
 import { useAutoReveal } from "../lib/useAutoReveal";
 import { DateTime } from "luxon";
 import { todayUTC, getOrigin } from "../lib/utils";
@@ -252,7 +252,7 @@ function SpreadContemplateReveal({
             className="text-xs tracking-widest uppercase"
             style={{ color: `var(--color-rarity-${rarityLabel})` }}
           >
-            {RARITY_LABELS[card.rarityScore]}
+            {getLocalizedRarityLabel(card.rarityScore as Rarity, t)}
             {card.isRadiant && " ✦"}
             {card.isReversed && ` · ${t("cards.reversed")}`}
           </p>
@@ -349,10 +349,10 @@ function DailyCardReveal({
             <p
               className="text-xs tracking-widest uppercase"
               style={{ color: `var(--color-rarity-${rarityLabel})` }}
-              aria-label={[RARITY_LABELS[rarityScore], isRadiant ? t("cards.radiant") : null, isReversed ? t("cards.reversed") : null].filter(Boolean).join(", ")}
+              aria-label={[getLocalizedRarityLabel(rarityScore, t), isRadiant ? t("cards.radiant") : null, isReversed ? t("cards.reversed") : null].filter(Boolean).join(", ")}
             >
               <span aria-hidden="true">
-                {RARITY_LABELS[rarityScore]}
+                {getLocalizedRarityLabel(rarityScore, t)}
                 {isRadiant && " ✦"}
                 {isReversed && ` · ${t("cards.reversed")}`}
               </span>
@@ -763,10 +763,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     <p
                       className="text-xs tracking-widest uppercase"
                       style={{ color: `var(--color-rarity-${RARITY_LABELS[todayPull.rarityScore]?.toLowerCase()})` }}
-                      aria-label={[RARITY_LABELS[todayPull.rarityScore], todayPull.isRadiant ? t("cards.radiant") : null, todayPull.isReversed ? t("cards.reversed") : null].filter(Boolean).join(", ")}
+                      aria-label={[getLocalizedRarityLabel(todayPull.rarityScore as Rarity, t), todayPull.isRadiant ? t("cards.radiant") : null, todayPull.isReversed ? t("cards.reversed") : null].filter(Boolean).join(", ")}
                     >
                       <span aria-hidden="true">
-                        {RARITY_LABELS[todayPull.rarityScore]}
+                        {getLocalizedRarityLabel(todayPull.rarityScore as Rarity, t)}
                         {todayPull.isRadiant && " ✦"}
                         {todayPull.isReversed && ` · ${t("cards.reversed")}`}
                       </span>
@@ -894,10 +894,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       <span
                         className="text-xs tracking-widest"
                         style={{ color: `var(--color-rarity-${RARITY_LABELS[pull.rarityScore]?.toLowerCase()})` }}
-                        aria-label={[RARITY_LABELS[pull.rarityScore], pull.isRadiant ? t("cards.radiant") : null].filter(Boolean).join(", ")}
+                        aria-label={[getLocalizedRarityLabel(pull.rarityScore as Rarity, t), pull.isRadiant ? t("cards.radiant") : null].filter(Boolean).join(", ")}
                       >
                         <span aria-hidden="true">
-                          {RARITY_LABELS[pull.rarityScore]}
+                          {getLocalizedRarityLabel(pull.rarityScore as Rarity, t)}
                           {pull.isRadiant && " ✦"}
                         </span>
                       </span>

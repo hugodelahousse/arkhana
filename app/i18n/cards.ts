@@ -1,5 +1,6 @@
-import { getCardDescription, type CardDefinition, type Rarity } from "../lib/cards";
+import { getCardDescription, RARITY_LABELS, type CardDefinition, type Rarity } from "../lib/cards";
 import type { Locale } from "./index";
+import type { TFunction } from "./provider";
 import { FR_CARDS } from "./locales/cards-fr";
 
 export function getLocalizedCardName(card: CardDefinition, locale: Locale): string {
@@ -20,4 +21,9 @@ export function getLocalizedCardDescription(
     }
   }
   return getCardDescription(card, rarityScore, isReversed);
+}
+
+export function getLocalizedRarityLabel(rarity: Rarity, t: TFunction): string {
+  const key = RARITY_LABELS[rarity]?.toLowerCase() ?? "mundane";
+  return t(`cards.rarity.${key}`);
 }

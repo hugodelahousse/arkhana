@@ -18,7 +18,7 @@ import { ShareButton } from "../components/ShareButton";
 import { getOrigin } from "../lib/utils";
 import { DateTime } from "luxon";
 import { useT, useLocale } from "../i18n/provider";
-import { getLocalizedCardName, getLocalizedCardDescription } from "../i18n/cards";
+import { getLocalizedCardName, getLocalizedCardDescription, getLocalizedRarityLabel } from "../i18n/cards";
 
 export async function loader({ context, params, request }: Route.LoaderArgs) {
   const card = CARD_BY_SLUG[params.slug];
@@ -172,7 +172,7 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
                           style={{ color: `var(--color-rarity-${rarityLabel})` }}
                           aria-label={
                             [
-                              RARITY_LABELS[pull.rarityScore as Rarity],
+                              getLocalizedRarityLabel(pull.rarityScore as Rarity, t),
                               pull.isRadiant ? t("cards.radiant") : null,
                               pull.isReversed ? t("cards.reversed") : null,
                             ]
@@ -181,7 +181,7 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
                           }
                         >
                           <span aria-hidden="true">
-                            {RARITY_LABELS[pull.rarityScore as Rarity]}
+                            {getLocalizedRarityLabel(pull.rarityScore as Rarity, t)}
                             {pull.isRadiant && " ✦"}
                             {pull.isReversed && ` · ${t("cards.reversed")}`}
                           </span>

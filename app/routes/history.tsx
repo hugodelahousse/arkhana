@@ -10,7 +10,7 @@ import { TarotCard } from "../components/TarotCard";
 import { SpreadSummaryGrid } from "../components/SpreadSummaryGrid";
 import { CARD_BY_ID, RARITY_LABELS, cardSlug, type Rarity } from "../lib/cards";
 import { useT, useLocale } from "../i18n/provider";
-import { getLocalizedCardName, getLocalizedCardDescription } from "../i18n/cards";
+import { getLocalizedCardName, getLocalizedCardDescription, getLocalizedRarityLabel } from "../i18n/cards";
 import { getSpreadType } from "../lib/spreads";
 import { getDailyPullHistory } from "../lib/pull";
 import { getSpreadHistory } from "../lib/spread-pull";
@@ -145,7 +145,7 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
               className="text-xs tracking-widest uppercase"
               style={{ color: `var(--color-rarity-${rarityLabel})` }}
             >
-              {RARITY_LABELS[entry.rarityScore]}
+              {getLocalizedRarityLabel(entry.rarityScore as Rarity, t)}
               {entry.isRadiant && " ✦"}
               {entry.isReversed && ` · ${t("cards.reversed")}`}
             </p>

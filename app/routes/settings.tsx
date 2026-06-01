@@ -250,7 +250,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
             .
           </p>
           <Form method="post" className="space-y-3">
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <label htmlFor="username" className="sr-only">
                 {t("settings.username.title")}
               </label>
@@ -264,12 +264,12 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
                 pattern="[a-zA-Z0-9_-]+"
                 placeholder={t("settings.username.placeholder")}
                 autoComplete="username"
-                className="flex-1 bg-transparent border border-border px-4 py-2 text-base sm:text-sm placeholder:opacity-40 focus:outline-none focus-visible:ring-1 transition-colors text-muted-foreground"
+                className="flex-1 min-w-0 bg-transparent border border-border px-4 py-2 text-base sm:text-sm placeholder:opacity-40 focus:outline-none focus-visible:ring-1 transition-colors text-muted-foreground"
               />
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-4 py-2 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80 disabled:opacity-40"
+                className="w-full sm:w-auto px-4 py-2 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80 disabled:opacity-40"
               >
                 {isSubmitting ? "…" : t("settings.username.save")}
               </button>

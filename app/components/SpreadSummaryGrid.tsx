@@ -5,7 +5,7 @@ import { TarotCard } from "./TarotCard";
 import { RARITY_LABELS, type Rarity } from "../lib/cards";
 import type { SpreadCardResult } from "../lib/spread-pull";
 import { useT, useLocale } from "../i18n/provider";
-import { getLocalizedCardName, getLocalizedCardDescription } from "../i18n/cards";
+import { getLocalizedCardName, getLocalizedCardDescription, getLocalizedRarityLabel } from "../i18n/cards";
 
 function CardDetailOverlay({
   card,
@@ -82,7 +82,7 @@ function CardDetailOverlay({
             className="text-xs tracking-widest uppercase"
             style={{ color: `var(--color-rarity-${rarityLabel})` }}
           >
-            {RARITY_LABELS[card.rarityScore]}
+            {getLocalizedRarityLabel(card.rarityScore as Rarity, t)}
             {card.isRadiant && " ✦"}
           </p>
           <p className="text-lg text-primary font-serif">
