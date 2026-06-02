@@ -106,7 +106,7 @@ export function Nav({ userName: _userName, isAnonymous }: { userName: string; is
                 {/* Sliding background — translates to the active tab position */}
                 <span
                   className="absolute top-1.5 left-1.5 bottom-1.5 w-14 rounded-full bg-muted pointer-events-none"
-                  style={{ transform: `translateX(${activeIndex * 58}px)`, transition: "transform 240ms cubic-bezier(0.4, 0, 0.2, 1)" }}
+                  style={{ transform: `translateX(${activeIndex * 58}px)`, transition: "transform 240ms cubic-bezier(0.4, 0, 0.2, 1)", viewTransitionName: "nav-indicator" } as React.CSSProperties}
                   aria-hidden
                 />
 
@@ -116,6 +116,7 @@ export function Nav({ userName: _userName, isAnonymous }: { userName: string; is
                     <Link
                       key={to}
                       to={to}
+                      viewTransition
                       aria-label={label}
                       className={`relative z-10 flex items-center justify-center w-14 h-10 rounded-full transition-colors duration-200 ${
                         active
