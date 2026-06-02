@@ -83,11 +83,12 @@ export const TarotCard = memo(function TarotCard({
       data-radiant={isRadiant || undefined}
       style={{
         "--rarity-color": `var(--color-rarity-${rarityLabel})`,
+        touchAction: "none",
         ...(hasSubjectMask ? { "--mask-url": `url(${cardMaskUrl(card.id)})` } : {}),
       } as React.CSSProperties}
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={() => { tilt.onMouseLeave(); if (!revealed) hold.cancel(); }}
-      onMouseDown={!revealed ? hold.start : undefined}
+      onMouseDown={(e) => { tilt.onMouseDown(e); if (!revealed) hold.start(); }}
       onMouseUp={!revealed ? hold.cancel : undefined}
       onTouchStart={(e) => {
         if (!revealed) { e.preventDefault(); hold.start(); }
