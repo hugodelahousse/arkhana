@@ -15,7 +15,7 @@
     "db:seed": "tsx db/seed/run.ts",
     "lint": "eslint . && stylelint \"app/**/*.css\"",
     "format": "prettier --write .",
-    "test": "set -a && . ./.env && vitest run",
+    "test": "vitest run",
     "push:generate-keys": "node scripts/generate-vapid-keys.js",
     "prepare": "husky"
   },
