@@ -53,6 +53,8 @@ export function useCardMotion(
   const isDraggingRef    = useRef(false);
   const isHoveringRef    = useRef(false);
   const isDeceleratingRef = useRef(false); // prevents idle fighting the spin loop
+  const isPointerDownRef  = useRef(false);
+  const cleanupDragRef    = useRef<(() => void) | null>(null);
 
   const touchStartRef  = useRef<{ x: number; y: number } | null>(null);
   const baseRotYRef    = useRef(0);   // normalised rotateY at touch-start
@@ -86,7 +88,7 @@ export function useCardMotion(
   useEffect(() => {
     let rafId: number;
     const loop = (ts: number) => {
-      if (!isDraggingRef.current && !isHoveringRef.current && !isDeceleratingRef.current) {
+      if (!isDraggingRef.current && !isHoveringRef.current && !isDeceleratingRef.current && !isPointerDownRef.current) {
         const t = ts / 1000;
         const { idleAmplitude: amp, idleSpeed: spd, overrideRotateY } = cfgRef.current;
         const ny = Math.sin(t * spd * 0.87)         * amp
@@ -153,6 +155,7 @@ export function useCardMotion(
 
         isDeceleratingRef.current = false;
         decelRafRef.current = null;
+        omegaRef.current = 0;
 
         if (Math.abs(normalised - snapped) < 0.5) {
           rotateY.set(0);
@@ -257,21 +260,23 @@ export function useCardMotion(
 
     const { touchHScale } = cfgRef.current;
     const degsPerPx = touchHScale / cardWidthRef.current;
-    omegaRef.current = velocityRef.current * degsPerPx * 1000; // px/ms → deg/s
+    omegaRef.current += velocityRef.current * degsPerPx * 1000; // px/ms → deg/s
     startDeceleration();
   }, [rotateX, resetCSSVars, startDeceleration]);
 
   // ── Mouse hover (desktop) ────────────────────────────────────────────────
 
   const onMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!ref.current) return;
+    if (!ref.current || isPointerDownRef.current) return;
     isHoveringRef.current = true;
     const { left, top, width, height } = ref.current.getBoundingClientRect();
     const nx = ((e.clientX - left) / width)  * 2 - 1;
     const ny = ((e.clientY - top)  / height) * 2 - 1;
-    rotateX.set(-ny * 15);
-    if (cfgRef.current.overrideRotateY === undefined) {
-      rotateY.set(nx * 15);
+    if (!isDeceleratingRef.current) {
+      rotateX.set(-ny * 15);
+      if (cfgRef.current.overrideRotateY === undefined) {
+        rotateY.set(nx * 15);
+      }
     }
     ref.current.style.setProperty("--ratio-x", String((nx + 1) / 2));
     ref.current.style.setProperty("--ratio-y", String((ny + 1) / 2));
@@ -283,14 +288,106 @@ export function useCardMotion(
 
   const onMouseLeave = useCallback(() => {
     isHoveringRef.current = false;
+    if (isPointerDownRef.current || isDeceleratingRef.current) return;
     const { springStiffness: stiffness, springDamping: damping } = cfgRef.current;
     rotateX.set(0);
     animate(rotateY, 0, { type: "spring", stiffness, damping });
     resetCSSVars();
   }, [rotateX, rotateY, resetCSSVars]);
 
+  // ── Mouse drag (desktop spin) ──────────────────────────────────────────────
+
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+
+    if (decelRafRef.current !== null) {
+      cancelAnimationFrame(decelRafRef.current);
+      decelRafRef.current = null;
+    }
+    snapAnimRef.current?.stop?.();
+    isDeceleratingRef.current = false;
+
+    touchStartRef.current = { x: e.clientX, y: e.clientY };
+
+    if (cfgRef.current.maxRotateYDeg !== undefined) {
+      baseRotYRef.current = rotateY.get();
+    } else {
+      const normalised = normalise360(rotateY.get());
+      rotateY.set(normalised);
+      baseRotYRef.current = normalised;
+    }
+
+    if (ref.current) cardWidthRef.current = ref.current.getBoundingClientRect().width;
+    lastXRef.current    = e.clientX;
+    lastTimeRef.current = performance.now();
+    velocityRef.current = 0;
+    isDraggingRef.current = false;
+    isPointerDownRef.current = true;
+
+    const onWindowMove = (ev: MouseEvent) => {
+      if (!ref.current || !touchStartRef.current) return;
+      const now = performance.now();
+      const dt  = Math.max(1, now - lastTimeRef.current);
+      velocityRef.current = 0.7 * velocityRef.current + 0.3 * ((ev.clientX - lastXRef.current) / dt);
+      lastXRef.current    = ev.clientX;
+      lastTimeRef.current = now;
+
+      const dx = ev.clientX - touchStartRef.current.x;
+      const dy = ev.clientY - touchStartRef.current.y;
+
+      if (!isDraggingRef.current && Math.hypot(dx, dy) > 8) {
+        isDraggingRef.current = true;
+        onDragStartRef.current?.();
+      }
+      if (!isDraggingRef.current) return;
+
+      const { touchHScale, touchVMax, maxRotateYDeg, overrideRotateY } = cfgRef.current;
+      const degsPerPx = touchHScale / cardWidthRef.current;
+
+      if (overrideRotateY === undefined) {
+        const rawY = baseRotYRef.current + dx * degsPerPx;
+        rotateY.set(maxRotateYDeg !== undefined ? Math.max(-maxRotateYDeg, Math.min(maxRotateYDeg, rawY)) : rawY);
+      }
+
+      const { height } = ref.current.getBoundingClientRect();
+      const ny = Math.max(-1, Math.min(1, (dy / height) * 2));
+      rotateX.set(-ny * touchVMax);
+      setCSSVars(Math.max(-1, Math.min(1, (dx * degsPerPx) / 90)), ny);
+    };
+
+    const onWindowUp = () => {
+      window.removeEventListener("mousemove", onWindowMove);
+      window.removeEventListener("mouseup", onWindowUp);
+      cleanupDragRef.current = null;
+
+      isPointerDownRef.current = false;
+      const wasDragging = isDraggingRef.current;
+      isDraggingRef.current = false;
+      touchStartRef.current = null;
+      rotateX.set(0);
+      resetCSSVars();
+
+      if (!wasDragging) return;
+
+      const { touchHScale } = cfgRef.current;
+      const degsPerPx = touchHScale / cardWidthRef.current;
+      omegaRef.current += velocityRef.current * degsPerPx * 1000;
+      startDeceleration();
+    };
+
+    window.addEventListener("mousemove", onWindowMove);
+    window.addEventListener("mouseup", onWindowUp);
+    cleanupDragRef.current = () => {
+      window.removeEventListener("mousemove", onWindowMove);
+      window.removeEventListener("mouseup", onWindowUp);
+    };
+  }, [ref, rotateX, rotateY, setCSSVars, resetCSSVars, startDeceleration]);
+
+  useEffect(() => () => { cleanupDragRef.current?.(); }, []);
+
   return {
     style: { rotateX, rotateY } as MotionStyle,
+    onMouseDown,
     onMouseMove,
     onMouseLeave,
     onTouchStart,
