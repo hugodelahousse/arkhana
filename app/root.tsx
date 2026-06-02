@@ -47,6 +47,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <meta name="theme-color" content={theme === "light" ? THEME_COLORS.light : THEME_COLORS.dark} />
         )}
         <link rel="manifest" href="/site.webmanifest" />
+        <script src="/tz.js" />
         <Meta />
         <Links />
       </head>

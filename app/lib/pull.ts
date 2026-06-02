@@ -3,7 +3,7 @@ import { db } from "../../db/index.js";
 import { userCards } from "../../db/schema/user-cards.js";
 import { CARD_BY_ID, type CardDefinition, type Rarity } from "./cards.js";
 import { rollRarity, rollRadiant, rollReversed } from "./rarity.js";
-import { todayUTC } from "./utils.js";
+import { todayForUser } from "./utils.js";
 import { updateStreak } from "./streak.js";
 import type { Milestone } from "./streak.js";
 
@@ -29,8 +29,8 @@ export type PullResult =
       milestone: Milestone | null;
     };
 
-export async function dailyPull(userId: string): Promise<PullResult> {
-  const pullDate = todayUTC();
+export async function dailyPull(userId: string, timezone: string | null = null): Promise<PullResult> {
+  const pullDate = todayForUser(timezone);
 
   const existing = await db
     .select()
@@ -115,7 +115,7 @@ async function getPreviousPullDate(
         ne(userCards.pullDate, excludeDate)
       )
     )
-    .orderBy(desc(userCards.pulledAt))
+    .orderBy(desc(userCards.pullDate))
     .limit(1);
   return row?.pullDate ?? null;
 }
@@ -127,7 +127,6 @@ const pullFields = {
   isRadiant: userCards.isRadiant,
   isReversed: userCards.isReversed,
   pullDate: userCards.pullDate,
-  pulledAt: userCards.pulledAt,
 };
 
 export async function getTodayPull(userId: string, pullDate: string) {
@@ -144,7 +143,7 @@ export async function getRecentPulls(userId: string, limit = 5) {
     .select(pullFields)
     .from(userCards)
     .where(and(eq(userCards.userId, userId), eq(userCards.pullType, "daily")))
-    .orderBy(desc(userCards.pulledAt))
+    .orderBy(desc(userCards.pullDate))
     .limit(limit);
 }
 
@@ -198,7 +197,7 @@ export async function getUserCardHistory(userId: string, cardId: number) {
     .select()
     .from(userCards)
     .where(and(eq(userCards.userId, userId), eq(userCards.cardId, cardId)))
-    .orderBy(userCards.pulledAt);
+    .orderBy(userCards.pullDate);
 }
 
 export async function getPullById(pullId: number) {
@@ -210,7 +209,6 @@ export async function getPullById(pullId: number) {
       isRadiant: userCards.isRadiant,
       isReversed: userCards.isReversed,
       pullDate: userCards.pullDate,
-      pulledAt: userCards.pulledAt,
       userId: userCards.userId,
       pullType: userCards.pullType,
     })
@@ -239,7 +237,7 @@ export async function getUserPublicStats(userId: string) {
     })
     .from(userCards)
     .where(and(eq(userCards.userId, userId), eq(userCards.pullType, "daily")))
-    .orderBy(desc(userCards.pulledAt))
+    .orderBy(desc(userCards.pullDate))
     .limit(6);
 
   return {

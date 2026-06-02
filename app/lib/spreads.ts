@@ -49,12 +49,10 @@ export const SPREAD_REGISTRY: Record<string, SpreadTypeDefinition> = {
           "Having sat with mind, body, and spirit — what is the one guiding action the week asks of you? What must you actually do?",
       },
     ],
-    // Luxon weekday: 1=Monday … 7=Sunday
-    isAvailable: (date: DateTime) => date.setZone("utc").weekday === 7,
+    isAvailable: (date: DateTime) => date.weekday === 7,
     nextAvailable: (date: DateTime) => {
-      const utc = date.setZone("utc");
-      const daysUntil = (7 - utc.weekday) % 7 || 7;
-      return utc.plus({ days: daysUntil }).startOf("day");
+      const daysUntil = (7 - date.weekday) % 7 || 7;
+      return date.plus({ days: daysUntil }).startOf("day");
     },
   },
 };

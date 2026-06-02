@@ -7,7 +7,7 @@ import prettierConfig from "eslint-config-prettier";
 /** @type {import("eslint").Linter.Config[]} */
 export default [
   {
-    ignores: ["build/**", "node_modules/**", ".react-router/**"],
+    ignores: ["build/**", "node_modules/**", ".react-router/**", ".claude/worktrees/**", "tmp-reference/**"],
   },
   js.configs.recommended,
   {
@@ -36,6 +36,15 @@ export default [
     files: ["scripts/**/*.mjs", "scripts/**/*.js", "server.js"],
     languageOptions: {
       globals: { Buffer: "readonly", process: "readonly", console: "readonly" },
+    },
+  },
+  {
+    files: ["public/tz.js"],
+    languageOptions: {
+      globals: {
+        document: "readonly",
+        Intl: "readonly",
+      },
     },
   },
   {

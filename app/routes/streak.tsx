@@ -12,7 +12,7 @@ import {
   getLunarMonthsInfo,
   type LunarMonthDetail,
 } from "../lib/moonphase";
-import { todayUTC } from "../lib/utils";
+import { todayForUser } from "../lib/utils";
 import { DateTime } from "luxon";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ export async function loader({ context }: Route.LoaderArgs) {
   if (!context.user) return redirect("/");
 
   const userId = context.user.id;
-  const today = todayUTC();
+  const today = todayForUser(context.user.timezone);
   const todayDt = DateTime.fromISO(today, { zone: "utc" }).set({ hour: 12 });
 
   const [streakState, pullDates] = await Promise.all([

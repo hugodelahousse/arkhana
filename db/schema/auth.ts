@@ -15,6 +15,7 @@ export const user = pgTable("user", {
   image: text("image"),
   isAnonymous: boolean("is_anonymous").default(false),
   preferences: jsonb("preferences").$type<UserPreferences>().default({}),
+  timezone: text("timezone"),
   username: text("username").unique(),
   displayUsername: text("display_username"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
