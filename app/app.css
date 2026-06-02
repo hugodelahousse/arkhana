@@ -161,18 +161,6 @@ body::before {
   z-index: 100;
 }
 
-/* Pill indicator slides between tabs — group animates position, image pair stays static */
-::view-transition-group(nav-indicator) {
-  animation-duration: 240ms;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-::view-transition-old(nav-indicator) {
-  display: none;
-}
-::view-transition-new(nav-indicator) {
-  animation: none;
-}
-
 /* Floating pill nav — push main content up so last items clear the pill */
 @media (max-width: 639px) {
   body:has(nav[aria-label="Main navigation"]) main {

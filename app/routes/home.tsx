@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "motion/react";
 import { addTransitionType } from "react";
 import type { Route } from "./+types/home";
 import { Link, useNavigate } from "react-router";
-import { Nav } from "../components/layout/nav";
 import { TarotCard } from "../components/TarotCard";
 import { SpreadSummaryGrid } from "../components/SpreadSummaryGrid";
 import { MoonCycle } from "../components/MoonCycle";
@@ -559,8 +558,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   return (
     <DirectionalTransition>
       <div className="min-h-screen">
-        <Nav userName={user.name} isAnonymous={user.isAnonymous} />
-
         {/* Milestone overlay */}
         {milestone && !milestoneShown && (
           <StreakMilestone

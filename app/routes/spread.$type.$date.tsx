@@ -4,7 +4,6 @@ import { DateTime } from "luxon";
 import { ArrowLeft } from "@phosphor-icons/react";
 import type { Route } from "./+types/spread.$type.$date";
 import { Link } from "react-router";
-import { Nav } from "../components/layout/nav";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { SpreadSummaryGrid } from "../components/SpreadSummaryGrid";
 import { ShareButton } from "../components/ShareButton";
@@ -72,7 +71,6 @@ export default function SpreadDateRoute({ loaderData, params }: Route.ComponentP
   return (
     <DirectionalTransition>
       <div className="min-h-screen">
-        <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-lg mx-auto px-6 py-12">
           <motion.div
             initial={{ opacity: 0, y: 16 }}

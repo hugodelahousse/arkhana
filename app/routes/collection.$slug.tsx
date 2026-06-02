@@ -3,7 +3,6 @@ import { useState, startTransition } from "react";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react";
 import { ViewTransition, addTransitionType } from "react";
 import type { Route } from "./+types/collection.$slug";
-import { Nav } from "../components/layout/nav";
 import { TarotCard } from "../components/TarotCard";
 import { getUserCardHistory } from "../lib/pull";
 import {
@@ -74,9 +73,7 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
   return (
     <DirectionalTransition>
       <div className="min-h-screen">
-        {user ? (
-          <Nav userName={user.name} isAnonymous={user.isAnonymous} />
-        ) : (
+        {!user && (
           <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border opacity-80">
             <Link
               to="/"

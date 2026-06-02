@@ -4,7 +4,6 @@ import { addTransitionType } from "react";
 import type { Route } from "./+types/streak";
 import { Link, useNavigate } from "react-router";
 import { Moon, MoonStars, Sparkle } from "@phosphor-icons/react";
-import { Nav } from "../components/layout/nav";
 import { MoonCycle } from "../components/MoonCycle";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { getStreak } from "../lib/streak";
@@ -71,7 +70,7 @@ export function meta() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StreakPage({ loaderData }: Route.ComponentProps) {
-  const { user, streakState, pullDates, lunarMonths } = loaderData;
+  const { streakState, pullDates, lunarMonths } = loaderData;
   const navigate = useNavigate();
 
   const { currentStreak, longestStreak, graceNightsUsed } = streakState;
@@ -95,7 +94,6 @@ export default function StreakPage({ loaderData }: Route.ComponentProps) {
   return (
     <DirectionalTransition>
       <div className="min-h-screen">
-        <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-xl mx-auto px-6 py-8 sm:py-14 space-y-14">
 
           {/* Header */}

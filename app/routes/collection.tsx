@@ -2,7 +2,6 @@ import { redirect } from "react-router";
 import { memo, startTransition, useCallback, useState } from "react";
 import { ViewTransition, addTransitionType } from "react";
 import type { Route } from "./+types/collection";
-import { Nav } from "../components/layout/nav";
 import { TarotCard } from "../components/TarotCard";
 import { Button } from "../components/Button";
 import { getAllPulls } from "../lib/pull";
@@ -70,7 +69,7 @@ const SUIT_ICONS: Record<string, Icon> = {
 };
 
 export default function Collection({ loaderData }: Route.ComponentProps) {
-  const { user, bestByCard } = loaderData;
+  const { bestByCard } = loaderData;
   const discoveredCount = Object.keys(bestByCard).length;
   const [hideUndiscovered, setHideUndiscovered] = useState(true);
 
@@ -79,7 +78,6 @@ export default function Collection({ loaderData }: Route.ComponentProps) {
   return (
     <DirectionalTransition>
       <div className="min-h-screen">
-        <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-4xl mx-auto px-6 py-12 space-y-12">
 
           <div className="text-center space-y-3">
