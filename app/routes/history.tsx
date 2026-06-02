@@ -4,7 +4,6 @@ import { DateTime } from "luxon";
 import { ArrowRight } from "@phosphor-icons/react";
 import type { Route } from "./+types/history";
 import { Link } from "react-router";
-import { Nav } from "../components/layout/nav";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { TarotCard } from "../components/TarotCard";
 import { SpreadSummaryGrid } from "../components/SpreadSummaryGrid";
@@ -74,12 +73,11 @@ export function meta() {
 }
 
 export default function History({ loaderData }: Route.ComponentProps) {
-  const { user, entries } = loaderData;
+  const { entries } = loaderData;
 
   return (
     <DirectionalTransition>
       <div className="min-h-screen">
-        <Nav userName={user.name} isAnonymous={user.isAnonymous} />
         <main className="max-w-2xl mx-auto px-6 py-12 space-y-12">
           <div className="space-y-1">
             <h1 className="type-page-title text-2xl">

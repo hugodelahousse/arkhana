@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "motion/react";
 import { addTransitionType } from "react";
 import type { Route } from "./+types/home";
 import { Link, useNavigate } from "react-router";
-import { Nav } from "../components/layout/nav";
 import { TarotCard } from "../components/TarotCard";
 import { SpreadSummaryGrid } from "../components/SpreadSummaryGrid";
 import { MoonCycle } from "../components/MoonCycle";
@@ -538,7 +537,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     );
   }
 
-  const { user, todayPull, recentPulls, totalUnique, streak, lunarMonthInfo } = loaderData;
+  const { user, todayPull, recentPulls, streak, lunarMonthInfo } = loaderData;
   const todayCard = todayPull ? CARD_BY_ID[todayPull.cardId] : null;
   const spreadShareUrl = user.username
     ? `/u/${user.username}/pull/${todayStr}`
@@ -559,8 +558,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   return (
     <DirectionalTransition>
       <div className="min-h-screen">
-        <Nav userName={user.name} isAnonymous={user.isAnonymous} />
-
         {/* Milestone overlay */}
         {milestone && !milestoneShown && (
           <StreakMilestone
@@ -807,17 +804,18 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           {/* Stats + streak — always visible, not ceremony */}
           {!isCeremonyActive && (
             <section className="border-t border-muted pt-6 space-y-6">
-              {/* Discovered count */}
-              <div className="flex items-center justify-between">
-                <p className="type-label">
-                  Collection
-                </p>
-                <p className="whitespace-nowrap font-serif text-sm">
-                  <span className="text-primary">{totalUnique}</span>
-                  <span className="text-ghost-foreground">/78</span>
-                  <span className="type-ghost ml-2">discovered</span>
-                </p>
-              </div>
+              {/* History link — only shown once there is at least one pull */}
+              {recentPulls.length > 0 && (
+                <Link
+                  to="/history"
+                  className="flex items-center justify-between"
+                >
+                  <p className="type-label">History</p>
+                  <span className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase text-faint-foreground hover:opacity-70 transition-opacity">
+                    All readings <ArrowRight weight="light" size={13} aria-hidden />
+                  </span>
+                </Link>
+              )}
 
               {/* Streak widget — always visible, links to /streak */}
               <Link

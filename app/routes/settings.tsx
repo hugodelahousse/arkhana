@@ -1,7 +1,6 @@
 import { redirect, data, Form, useNavigation, useRevalidator, useFetcher } from "react-router";
 import { useState, useEffect } from "react";
 import type { Route } from "./+types/settings";
-import { Nav } from "../components/layout/nav";
 import { db } from "../../db/index.js";
 import { user, passkey as passkeyTable } from "../../db/schema/auth.js";
 import { eq, and, ne } from "drizzle-orm";
@@ -209,7 +208,6 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
 
   return (
     <div className="min-h-screen">
-      <Nav userName={loaderData.user.name} isAnonymous={false} />
       <main className="max-w-lg mx-auto px-6 py-16 space-y-10">
         <div className="space-y-2">
           <h1 className="type-page-title text-2xl">
