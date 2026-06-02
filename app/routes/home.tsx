@@ -819,6 +819,19 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 </p>
               </div>
 
+              {/* History link — only shown once there is at least one pull */}
+              {recentPulls.length > 0 && (
+                <Link
+                  to="/history"
+                  className="flex items-center justify-between"
+                >
+                  <p className="type-label">History</p>
+                  <span className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase text-faint-foreground hover:opacity-70 transition-opacity">
+                    All readings <ArrowRight weight="light" size={13} aria-hidden />
+                  </span>
+                </Link>
+              )}
+
               {/* Streak widget — always visible, links to /streak */}
               <Link
                 to="/streak"
