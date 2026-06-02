@@ -35,6 +35,7 @@
   position: relative;
   perspective: 1200px;
   --card-radius: 0px;
+  --parallax-sign: 1;
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
@@ -60,6 +61,8 @@
 
 .card-scene:not([data-revealed]) { margin-bottom: 2rem; }
 .card-scene[data-revealed] { cursor: default; }
+.card-scene[data-reversed] { --parallax-sign: -1; }
+.card-scene[data-reversed] .card-front { rotate: 180deg; }
 
 /* ─── Hold-to-reveal glow ─── */
 /* Soft halo that fades in with --hold-progress (0–1), driven by RAF in useHoldReveal.
@@ -261,8 +264,6 @@
   object-fit: cover;
   display: block;
 }
-
-.card-scene[data-reversed] .card-front img { transform: rotate(180deg); }
 
 
 /* ═══════════════════════════════════════════════════════════
@@ -620,8 +621,6 @@
   filter: drop-shadow(0 2px 8px rgba(0,0,0,.45));
 }
 
-.card-scene[data-reversed] .card-subject { transform: rotate(180deg); }
-
 .card-text-layer {
   position: absolute;
   inset: 0;
@@ -644,42 +643,24 @@
 
 .card-scene[data-rarity="5"] .card-text-layer {
   transform: translate(
-    calc((var(--ratio-x, .5) - .5) * 10px),
-    calc((var(--ratio-y, .5) - .5) * 10px)
-  );
-}
-.card-scene[data-rarity="5"][data-reversed] .card-text-layer {
-  transform: rotate(180deg) translate(
-    calc((var(--ratio-x, .5) - .5) * 10px),
-    calc((var(--ratio-y, .5) - .5) * 10px)
+    calc((var(--ratio-x, .5) - .5) * var(--parallax-sign, 1) * 10px),
+    calc((var(--ratio-y, .5) - .5) * var(--parallax-sign, 1) * 10px)
   );
 }
 
 .card-scene[data-rarity="4"] .card-subject {
   transform: translate(
-    calc((var(--ratio-x, .5) - .5) * 5px),
-    calc((var(--ratio-y, .5) - .5) * 5px)
-  );
-}
-.card-scene[data-rarity="4"][data-reversed] .card-subject {
-  transform: rotate(180deg) translate(
-    calc((var(--ratio-x, .5) - .5) * 5px),
-    calc((var(--ratio-y, .5) - .5) * 5px)
+    calc((var(--ratio-x, .5) - .5) * var(--parallax-sign, 1) * 5px),
+    calc((var(--ratio-y, .5) - .5) * var(--parallax-sign, 1) * 5px)
   );
 }
 
 .card-scene[data-rarity="5"] .card-subject {
   transform: translate(
-    calc((var(--ratio-x, .5) - .5) * 10px),
-    calc((var(--ratio-y, .5) - .5) * 10px)
+    calc((var(--ratio-x, .5) - .5) * var(--parallax-sign, 1) * 10px),
+    calc((var(--ratio-y, .5) - .5) * var(--parallax-sign, 1) * 10px)
   );
   filter: drop-shadow(0 4px 14px rgba(0,0,0,.6));
-}
-.card-scene[data-rarity="5"][data-reversed] .card-subject {
-  transform: rotate(180deg) translate(
-    calc((var(--ratio-x, .5) - .5) * 10px),
-    calc((var(--ratio-y, .5) - .5) * 10px)
-  );
 }
 
 
@@ -742,21 +723,7 @@
   transition: opacity 0.3s ease;
 }
 
-.card-name-foil {
-  -webkit-mask-image: var(--name-mask-url, none);
-  -webkit-mask-size: cover;
-  mask-image: var(--name-mask-url, none);
-  mask-size: cover;
-  mask-mode: alpha;
-}
-
-.card-top-foil {
-  -webkit-mask-image: var(--top-mask-url, none);
-  -webkit-mask-size: cover;
-  mask-image: var(--top-mask-url, none);
-  mask-size: cover;
-  mask-mode: alpha;
-}
+/* masks applied via inline style — same preserve-3d var() workaround as .card-text-layer */
 
 /* Rarity 3 — Mystic: subtle text foil */
 .card-scene[data-rarity="3"][data-revealed]:hover .card-name-foil,
@@ -776,8 +743,8 @@
 .card-scene[data-rarity="4"] .card-name-foil,
 .card-scene[data-rarity="4"] .card-top-foil {
   transform: translate(
-    calc((var(--ratio-x, .5) - .5) * 5px),
-    calc((var(--ratio-y, .5) - .5) * 5px)
+    calc((var(--ratio-x, .5) - .5) * var(--parallax-sign, 1) * 5px),
+    calc((var(--ratio-y, .5) - .5) * var(--parallax-sign, 1) * 5px)
   );
 }
 
@@ -793,8 +760,8 @@
 .card-scene[data-rarity="5"] .card-name-foil,
 .card-scene[data-rarity="5"] .card-top-foil {
   transform: translate(
-    calc((var(--ratio-x, .5) - .5) * 10px),
-    calc((var(--ratio-y, .5) - .5) * 10px)
+    calc((var(--ratio-x, .5) - .5) * var(--parallax-sign, 1) * 10px),
+    calc((var(--ratio-y, .5) - .5) * var(--parallax-sign, 1) * 10px)
   );
 }
 
