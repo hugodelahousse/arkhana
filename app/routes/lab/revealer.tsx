@@ -88,6 +88,58 @@ function cardNumerologicalTheme(card: CardDefinition): string {
   return card.arcana === "major" ? MAJOR_THEME[card.id] : MINOR_THEME[card.number];
 }
 
+const CARD_BY_NAME = new Map(CARDS.map((c) => [c.name.toLowerCase(), c]));
+
+type AttrResult = "match" | "miss" | "na";
+type RankResult = "match" | "higher" | "lower";
+
+interface GuessResult {
+  text: string;
+  correct: boolean;
+  arcana: AttrResult;
+  suit: AttrResult;
+  element: AttrResult;
+  rank: RankResult;
+}
+
+function compareGuess(guessName: string, target: CardDefinition): GuessResult {
+  const g = CARD_BY_NAME.get(guessName.toLowerCase())!;
+  const correct = g.id === target.id;
+  const arcana: AttrResult = g.arcana === target.arcana ? "match" : "miss";
+  const suit: AttrResult =
+    target.arcana === "major" ? "na" :
+    g.arcana === "major" ? "miss" :
+    g.suit === target.suit ? "match" : "miss";
+  const element: AttrResult = cardElement(g) === cardElement(target) ? "match" : "miss";
+  const rank: RankResult =
+    g.number === target.number ? "match" :
+    g.number < target.number ? "higher" : "lower";
+  return { text: guessName, correct, arcana, suit, element, rank };
+}
+
+function Chip({ label, result }: { label: string; result: AttrResult | RankResult }) {
+  const isMatch = result === "match";
+  const isNa = result === "na";
+  const color = isMatch ? "#5a9e8a" : isNa ? undefined : "#b07878";
+  const icon =
+    result === "higher" ? "↑" :
+    result === "lower"  ? "↓" :
+    result === "match"  ? "✓" :
+    result === "na"     ? "—" : "✗";
+  return (
+    <span
+      className="px-2 py-0.5 text-[0.58rem] tracking-[0.08em] uppercase border"
+      style={{
+        color: color ?? "var(--muted-foreground)",
+        borderColor: color ?? "var(--muted)",
+        opacity: isNa ? 0.4 : 1,
+      }}
+    >
+      {label} {icon}
+    </span>
+  );
+}
+
 export function meta() {
   return [{ title: "Revealer — Arkhana Lab" }];
 }
@@ -129,7 +181,7 @@ export default function Revealer({ loaderData }: { loaderData: { utcDate: string
   ];
 
   const [wrongCount, setWrongCount] = useState(0);
-  const [guesses, setGuesses] = useState<{ text: string; correct: boolean }[]>([]);
+  const [guesses, setGuesses] = useState<GuessResult[]>([]);
   const [status, setStatus] = useState<Status>("playing");
   const [query, setQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -146,10 +198,10 @@ export default function Revealer({ loaderData }: { loaderData: { utcDate: string
     const text = name.trim();
     if (!text || status !== "playing") return;
     if (!CARDS.some((c) => c.name.toLowerCase() === text.toLowerCase())) return;
-    const correct = text.toLowerCase() === card.name.toLowerCase();
-    setGuesses((g) => [...g, { text, correct }]);
+    setGuesses((g) => [...g, compareGuess(text, card)]);
     setQuery("");
     setShowDropdown(false);
+    const correct = text.toLowerCase() === card.name.toLowerCase();
     if (correct) {
       setStatus("won");
     } else if (wrongCount >= MAX_GUESSES - 1) {
@@ -397,21 +449,32 @@ export default function Revealer({ loaderData }: { loaderData: { utcDate: string
             >
               Guesses
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="space-y-2">
               {guesses.map((g, i) => (
-                <span
+                <div
                   key={i}
-                  className="px-3 py-1 text-xs border"
-                  style={{
-                    background: "var(--muted)",
-                    color: g.correct ? "var(--accent)" : "var(--muted-foreground)",
-                    borderColor: "var(--border)",
-                    fontFamily: "var(--font-serif)",
-                    textDecoration: g.correct ? "none" : "line-through",
-                  }}
+                  className="px-4 py-3 border space-y-2"
+                  style={{ background: "var(--card)", borderColor: "var(--border)" }}
                 >
-                  {g.text}
-                </span>
+                  <p
+                    className="text-sm"
+                    style={{
+                      color: g.correct ? "var(--accent)" : "var(--muted-foreground)",
+                      fontFamily: "var(--font-serif)",
+                      textDecoration: g.correct ? "none" : "line-through",
+                    }}
+                  >
+                    {g.text}
+                  </p>
+                  {!g.correct && (
+                    <div className="flex flex-wrap gap-1.5">
+                      <Chip label="Arcana" result={g.arcana} />
+                      <Chip label="Suit"   result={g.suit} />
+                      <Chip label="Element" result={g.element} />
+                      <Chip label="Rank"   result={g.rank} />
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
