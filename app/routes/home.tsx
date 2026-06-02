@@ -538,7 +538,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     );
   }
 
-  const { user, todayPull, recentPulls, totalUnique, streak, lunarMonthInfo } = loaderData;
+  const { user, todayPull, recentPulls, streak, lunarMonthInfo } = loaderData;
   const todayCard = todayPull ? CARD_BY_ID[todayPull.cardId] : null;
   const spreadShareUrl = user.username
     ? `/u/${user.username}/pull/${todayStr}`
@@ -807,18 +807,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           {/* Stats + streak — always visible, not ceremony */}
           {!isCeremonyActive && (
             <section className="border-t border-muted pt-6 space-y-6">
-              {/* Discovered count */}
-              <div className="flex items-center justify-between">
-                <p className="type-label">
-                  Collection
-                </p>
-                <p className="whitespace-nowrap font-serif text-sm">
-                  <span className="text-primary">{totalUnique}</span>
-                  <span className="text-ghost-foreground">/78</span>
-                  <span className="type-ghost ml-2">discovered</span>
-                </p>
-              </div>
-
               {/* History link — only shown once there is at least one pull */}
               {recentPulls.length > 0 && (
                 <Link
