@@ -35,7 +35,7 @@
   position: relative;
   perspective: 1200px;
   --card-radius: 0px;
-  --card-rotate: 0deg;
+  --parallax-sign: 1;
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
@@ -61,7 +61,8 @@
 
 .card-scene:not([data-revealed]) { margin-bottom: 2rem; }
 .card-scene[data-revealed] { cursor: default; }
-.card-scene[data-reversed] { --card-rotate: 180deg; }
+.card-scene[data-reversed] { --parallax-sign: -1; }
+.card-scene[data-reversed] .card-front { rotate: 180deg; }
 
 /* ─── Hold-to-reveal glow ─── */
 /* Soft halo that fades in with --hold-progress (0–1), driven by RAF in useHoldReveal.
@@ -262,7 +263,6 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  rotate: var(--card-rotate);
 }
 
 
@@ -619,7 +619,6 @@
   z-index: 1;
   pointer-events: none;
   filter: drop-shadow(0 2px 8px rgba(0,0,0,.45));
-  rotate: var(--card-rotate);
 }
 
 .card-text-layer {
@@ -632,7 +631,6 @@
   z-index: 1;
   pointer-events: none;
   translate: 0 0 0.001px;
-  rotate: var(--card-rotate);
 }
 
 .card-name-layer {
@@ -645,22 +643,22 @@
 
 .card-scene[data-rarity="5"] .card-text-layer {
   transform: translate(
-    calc((var(--ratio-x, .5) - .5) * 10px),
-    calc((var(--ratio-y, .5) - .5) * 10px)
+    calc((var(--ratio-x, .5) - .5) * var(--parallax-sign, 1) * 10px),
+    calc((var(--ratio-y, .5) - .5) * var(--parallax-sign, 1) * 10px)
   );
 }
 
 .card-scene[data-rarity="4"] .card-subject {
   transform: translate(
-    calc((var(--ratio-x, .5) - .5) * 5px),
-    calc((var(--ratio-y, .5) - .5) * 5px)
+    calc((var(--ratio-x, .5) - .5) * var(--parallax-sign, 1) * 5px),
+    calc((var(--ratio-y, .5) - .5) * var(--parallax-sign, 1) * 5px)
   );
 }
 
 .card-scene[data-rarity="5"] .card-subject {
   transform: translate(
-    calc((var(--ratio-x, .5) - .5) * 10px),
-    calc((var(--ratio-y, .5) - .5) * 10px)
+    calc((var(--ratio-x, .5) - .5) * var(--parallax-sign, 1) * 10px),
+    calc((var(--ratio-y, .5) - .5) * var(--parallax-sign, 1) * 10px)
   );
   filter: drop-shadow(0 4px 14px rgba(0,0,0,.6));
 }
@@ -711,7 +709,6 @@
   pointer-events: none;
   mix-blend-mode: color-dodge;
   opacity: 0;
-  transform: rotate(var(--card-rotate, 0deg));
   background: linear-gradient(
     calc(90deg + (var(--ratio-x, .5) - .5) * 60deg),
     transparent 15%,
@@ -745,9 +742,9 @@
 }
 .card-scene[data-rarity="4"] .card-name-foil,
 .card-scene[data-rarity="4"] .card-top-foil {
-  transform: rotate(var(--card-rotate, 0deg)) translate(
-    calc((var(--ratio-x, .5) - .5) * 5px),
-    calc((var(--ratio-y, .5) - .5) * 5px)
+  transform: translate(
+    calc((var(--ratio-x, .5) - .5) * var(--parallax-sign, 1) * 5px),
+    calc((var(--ratio-y, .5) - .5) * var(--parallax-sign, 1) * 5px)
   );
 }
 
@@ -762,9 +759,9 @@
 }
 .card-scene[data-rarity="5"] .card-name-foil,
 .card-scene[data-rarity="5"] .card-top-foil {
-  transform: rotate(var(--card-rotate, 0deg)) translate(
-    calc((var(--ratio-x, .5) - .5) * 10px),
-    calc((var(--ratio-y, .5) - .5) * 10px)
+  transform: translate(
+    calc((var(--ratio-x, .5) - .5) * var(--parallax-sign, 1) * 10px),
+    calc((var(--ratio-y, .5) - .5) * var(--parallax-sign, 1) * 10px)
   );
 }
 
