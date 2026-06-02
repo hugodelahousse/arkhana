@@ -88,6 +88,80 @@ function cardNumerologicalTheme(card: CardDefinition): string {
   return card.arcana === "major" ? MAJOR_THEME[card.id] : MINOR_THEME[card.number];
 }
 
+// Golden Dawn planetary attributions
+// Majors: direct planet/luminary assignment
+const MAJOR_PLANET: Record<number, string> = {
+  0:  "Uranus",   // The Fool
+  1:  "Mercury",  // The Magician
+  2:  "Moon",     // The High Priestess
+  3:  "Venus",    // The Empress
+  4:  "Mars",     // The Emperor     (Aries)
+  5:  "Venus",    // The Hierophant  (Taurus)
+  6:  "Mercury",  // The Lovers      (Gemini)
+  7:  "Moon",     // The Chariot     (Cancer)
+  8:  "Sun",      // Strength        (Leo)
+  9:  "Mercury",  // The Hermit      (Virgo)
+  10: "Jupiter",  // Wheel of Fortune
+  11: "Venus",    // Justice         (Libra)
+  12: "Neptune",  // The Hanged Man
+  13: "Pluto",    // Death           (Scorpio)
+  14: "Jupiter",  // Temperance      (Sagittarius)
+  15: "Saturn",   // The Devil       (Capricorn)
+  16: "Mars",     // The Tower
+  17: "Uranus",   // The Star        (Aquarius)
+  18: "Neptune",  // The Moon        (Pisces)
+  19: "Sun",      // The Sun
+  20: "Pluto",    // Judgement
+  21: "Saturn",   // The World
+};
+
+// Aces: ruling planet of the elemental sign that opens each suit's decan sequence
+const ACE_PLANET: Record<string, string> = {
+  wands:     "Mars",    // Aries
+  cups:      "Venus",   // Cancer → Moon but Venus opens the Cancer decan sequence
+  swords:    "Moon",    // Libra
+  pentacles: "Jupiter", // Capricorn
+};
+
+// Pip cards (2–10): Chaldean decan ruler by suit + number
+const PIP_PLANET: Record<string, Record<number, string>> = {
+  wands: {                                         // Fire: Aries → Leo → Sagittarius
+    2: "Mars",    3: "Sun",     4: "Venus",        // Aries decans
+    5: "Saturn",  6: "Jupiter", 7: "Mars",         // Leo decans
+    8: "Mercury", 9: "Moon",    10: "Saturn",      // Sagittarius decans
+  },
+  cups: {                                          // Water: Cancer → Scorpio → Pisces
+    2: "Venus",   3: "Mercury", 4: "Moon",         // Cancer decans
+    5: "Mars",    6: "Sun",     7: "Venus",        // Scorpio decans
+    8: "Saturn",  9: "Jupiter", 10: "Mars",        // Pisces decans
+  },
+  swords: {                                        // Air: Libra → Aquarius → Gemini
+    2: "Moon",    3: "Saturn",  4: "Jupiter",      // Libra decans
+    5: "Venus",   6: "Mercury", 7: "Moon",         // Aquarius decans
+    8: "Jupiter", 9: "Mars",    10: "Sun",         // Gemini decans
+  },
+  pentacles: {                                     // Earth: Capricorn → Taurus → Virgo
+    2: "Jupiter", 3: "Mars",    4: "Sun",          // Capricorn decans
+    5: "Mercury", 6: "Moon",    7: "Saturn",       // Taurus decans
+    8: "Sun",     9: "Venus",   10: "Mercury",     // Virgo decans
+  },
+};
+
+// Court cards: rank archetype → planet
+const COURT_PLANET: Record<number, string> = {
+  11: "Mercury", // Pages  — the messenger, curious student
+  12: "Mars",    // Knights — action, pursuit
+  13: "Venus",   // Queens  — mastery, receptive authority
+  14: "Sun",     // Kings   — command, radiant authority
+};
+
+function cardPlanet(card: CardDefinition): string {
+  if (card.arcana === "major") return MAJOR_PLANET[card.id];
+  if (card.number >= 11) return COURT_PLANET[card.number];
+  if (card.number === 1) return ACE_PLANET[card.suit!];
+  return PIP_PLANET[card.suit!][card.number];
+}
+
 const CARD_BY_NAME = new Map(CARDS.map((c) => [c.name.toLowerCase(), c]));
 
 type AttrResult = "match" | "miss" | "na";
@@ -100,21 +174,24 @@ interface GuessResult {
   suit: AttrResult;
   element: AttrResult;
   rank: RankResult;
+  planet: AttrResult;
 }
 
 function compareGuess(guessName: string, target: CardDefinition): GuessResult {
   const g = CARD_BY_NAME.get(guessName.toLowerCase())!;
   const correct = g.id === target.id;
   const arcana: AttrResult = g.arcana === target.arcana ? "match" : "miss";
+  // Both Major → suitless match; one Major one Minor → miss; both Minor → compare suits
   const suit: AttrResult =
-    target.arcana === "major" ? "na" :
-    g.arcana === "major" ? "miss" :
+    g.arcana === "major" && target.arcana === "major" ? "match" :
+    g.arcana !== target.arcana ? "miss" :
     g.suit === target.suit ? "match" : "miss";
   const element: AttrResult = cardElement(g) === cardElement(target) ? "match" : "miss";
   const rank: RankResult =
     g.number === target.number ? "match" :
     g.number < target.number ? "higher" : "lower";
-  return { text: guessName, correct, arcana, suit, element, rank };
+  const planet: AttrResult = cardPlanet(g) === cardPlanet(target) ? "match" : "miss";
+  return { text: guessName, correct, arcana, suit, element, rank, planet };
 }
 
 function Chip({ label, result }: { label: string; result: AttrResult | RankResult }) {
@@ -468,10 +545,11 @@ export default function Revealer({ loaderData }: { loaderData: { utcDate: string
                   </p>
                   {!g.correct && (
                     <div className="flex flex-wrap gap-1.5">
-                      <Chip label="Arcana" result={g.arcana} />
-                      <Chip label="Suit"   result={g.suit} />
+                      <Chip label="Arcana"  result={g.arcana} />
+                      <Chip label="Suit"    result={g.suit} />
                       <Chip label="Element" result={g.element} />
-                      <Chip label="Rank"   result={g.rank} />
+                      <Chip label="Rank"    result={g.rank} />
+                      <Chip label="Planet"  result={g.planet} />
                     </div>
                   )}
                 </div>
