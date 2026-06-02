@@ -798,6 +798,28 @@
   );
 }
 
+/* Reversed foil: rotate mask to match the flipped card image */
+.card-scene[data-reversed] .card-name-foil,
+.card-scene[data-reversed] .card-top-foil {
+  transform: rotate(180deg);
+}
+
+.card-scene[data-rarity="4"][data-reversed] .card-name-foil,
+.card-scene[data-rarity="4"][data-reversed] .card-top-foil {
+  transform: rotate(180deg) translate(
+    calc((var(--ratio-x, .5) - .5) * 5px),
+    calc((var(--ratio-y, .5) - .5) * 5px)
+  );
+}
+
+.card-scene[data-rarity="5"][data-reversed] .card-name-foil,
+.card-scene[data-rarity="5"][data-reversed] .card-top-foil {
+  transform: rotate(180deg) translate(
+    calc((var(--ratio-x, .5) - .5) * 10px),
+    calc((var(--ratio-y, .5) - .5) * 10px)
+  );
+}
+
 
 /* ─── Radiant: slow hue rotation on the whole card ─── */
 @keyframes radiant-hue {
