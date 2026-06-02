@@ -17,7 +17,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "push:generate-keys": "node scripts/generate-vapid-keys.js",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.11",
