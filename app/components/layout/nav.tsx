@@ -96,34 +96,46 @@ export function Nav({ userName: _userName, isAnonymous }: { userName: string; is
           className="sm:hidden fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
         >
-          <div
-            className="pointer-events-auto flex items-center bg-card/90 backdrop-blur-md border border-border rounded-full p-1.5 gap-0.5 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.08)] dark:shadow-[0_8px_40px_-4px_rgba(0,0,0,0.85),0_2px_24px_-4px_rgba(168,85,247,0.12),inset_0_1px_0_rgba(255,255,255,0.05)]"
-            style={{ viewTransitionName: "mobile-nav-pill" } as React.CSSProperties}
-          >
-            {TABS.map(({ to, label, Icon }) => {
-              const active = isActive(to);
-              return (
-                <Link
-                  key={to}
-                  to={to}
-                  aria-label={label}
-                  className={`relative flex items-center justify-center w-14 h-10 rounded-full transition-colors duration-200 ${
-                    active
-                      ? "text-primary bg-muted"
-                      : "text-ghost-foreground hover:text-faint-foreground"
-                  }`}
-                >
-                  <Icon weight={active ? "regular" : "light"} size={22} aria-hidden />
-                  {active && (
-                    <span
-                      className="absolute bottom-[7px] left-1/2 -translate-x-1/2 w-[3px] h-[3px] rounded-full bg-accent opacity-75"
-                      aria-hidden
-                    />
-                  )}
-                </Link>
-              );
-            })}
-          </div>
+          {(() => {
+            const activeIndex = Math.max(0, TABS.findIndex(({ to }) => isActive(to)));
+            return (
+              <div
+                className="relative pointer-events-auto flex items-center bg-card/90 backdrop-blur-md border border-border rounded-full p-1.5 gap-0.5 shadow-[0_4px_24px_-2px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.08)] dark:shadow-[0_8px_40px_-4px_rgba(0,0,0,0.85),0_2px_24px_-4px_rgba(168,85,247,0.12),inset_0_1px_0_rgba(255,255,255,0.05)]"
+                style={{ viewTransitionName: "mobile-nav-pill" } as React.CSSProperties}
+              >
+                {/* Sliding background — translates to the active tab position */}
+                <span
+                  className="absolute top-1.5 left-1.5 bottom-1.5 w-14 rounded-full bg-muted pointer-events-none"
+                  style={{ transform: `translateX(${activeIndex * 58}px)`, transition: "transform 240ms cubic-bezier(0.4, 0, 0.2, 1)" }}
+                  aria-hidden
+                />
+
+                {TABS.map(({ to, label, Icon }) => {
+                  const active = isActive(to);
+                  return (
+                    <Link
+                      key={to}
+                      to={to}
+                      aria-label={label}
+                      className={`relative z-10 flex items-center justify-center w-14 h-10 rounded-full transition-colors duration-200 ${
+                        active
+                          ? "text-primary"
+                          : "text-ghost-foreground hover:text-faint-foreground"
+                      }`}
+                    >
+                      <Icon weight={active ? "regular" : "light"} size={22} aria-hidden />
+                      {active && (
+                        <span
+                          className="absolute bottom-[7px] left-1/2 -translate-x-1/2 w-[3px] h-[3px] rounded-full bg-accent opacity-75"
+                          aria-hidden
+                        />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </nav>
       )}
     </>
