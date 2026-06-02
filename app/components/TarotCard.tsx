@@ -83,11 +83,7 @@ export const TarotCard = memo(function TarotCard({
       data-radiant={isRadiant || undefined}
       style={{
         "--rarity-color": `var(--color-rarity-${rarityLabel})`,
-        ...(hasSubjectMask ? {
-          "--mask-url": `url(${cardMaskUrl(card.id)})`,
-          ...(cardHasNameMask ? { "--name-mask-url": `url(${cardNameMaskUrl(card.id)})` } : {}),
-          ...(cardHasTopMask ? { "--top-mask-url": `url(${cardTopMaskUrl(card.id)})` } : {}),
-        } : {}),
+        ...(hasSubjectMask ? { "--mask-url": `url(${cardMaskUrl(card.id)})` } : {}),
       } as React.CSSProperties}
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={() => { tilt.onMouseLeave(); if (!revealed) hold.cancel(); }}
@@ -163,8 +159,24 @@ export const TarotCard = memo(function TarotCard({
               </>
             )}
             <div className="card-shine" />
-            {hasSubjectMask && cardHasNameMask && <div className="card-name-foil" aria-hidden="true" />}
-            {hasSubjectMask && cardHasTopMask && <div className="card-top-foil" aria-hidden="true" />}
+            {hasSubjectMask && cardHasNameMask && (
+              <div className="card-name-foil" aria-hidden="true" style={{
+                WebkitMaskImage: `url(${cardNameMaskUrl(card.id)})`,
+                maskImage: `url(${cardNameMaskUrl(card.id)})`,
+                WebkitMaskSize: "cover",
+                maskSize: "cover",
+                maskMode: "alpha",
+              } as React.CSSProperties} />
+            )}
+            {hasSubjectMask && cardHasTopMask && (
+              <div className="card-top-foil" aria-hidden="true" style={{
+                WebkitMaskImage: `url(${cardTopMaskUrl(card.id)})`,
+                maskImage: `url(${cardTopMaskUrl(card.id)})`,
+                WebkitMaskSize: "cover",
+                maskSize: "cover",
+                maskMode: "alpha",
+              } as React.CSSProperties} />
+            )}
             <div className="card-glare" />
           </div>
         </div>
