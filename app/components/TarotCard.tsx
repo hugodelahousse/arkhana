@@ -1,4 +1,4 @@
-import { memo, useRef } from "react";
+import { memo, useRef, useEffect, useCallback } from "react";
 import { motion } from "motion/react";
 import { cardImageUrl, cardMaskUrl, cardNameMaskUrl, cardTopMaskUrl, hasTopMask, hasNameMask } from "../lib/cardImages";
 import { RARITY_LABELS } from "../lib/cards";
@@ -38,6 +38,18 @@ export const TarotCard = memo(function TarotCard({
   const config = { ...DEFAULT_MOTION_CONFIG, ...motionConfig, maxRotateYDeg: revealed ? undefined : 89 };
   const hold = useHoldReveal(!revealed ? onReveal : undefined, sceneRef);
   const tilt = useCardMotion(sceneRef, config, !revealed ? hold.cancel : undefined);
+
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    if (!revealed) { e.preventDefault(); hold.start(); }
+    tilt.onTouchStart(e as unknown as React.TouchEvent);
+  }, [revealed, hold, tilt]);
+
+  useEffect(() => {
+    const el = sceneRef.current;
+    if (!el) return;
+    el.addEventListener("touchstart", handleTouchStart, { passive: false });
+    return () => el.removeEventListener("touchstart", handleTouchStart);
+  }, [handleTouchStart]);
 
   const rarityLabel = RARITY_LABELS[rarityScore]?.toLowerCase() ?? "mundane";
   const hasSubjectMask = rarityScore >= 3;
@@ -90,10 +102,6 @@ export const TarotCard = memo(function TarotCard({
       onMouseLeave={() => { tilt.onMouseLeave(); if (!revealed) hold.cancel(); }}
       onMouseDown={(e) => { tilt.onMouseDown(e); if (!revealed) hold.start(); }}
       onMouseUp={!revealed ? hold.cancel : undefined}
-      onTouchStart={(e) => {
-        if (!revealed) { e.preventDefault(); hold.start(); }
-        tilt.onTouchStart(e);
-      }}
       onTouchMove={tilt.onTouchMove}
       onTouchEnd={() => {
         if (!revealed) hold.cancel();

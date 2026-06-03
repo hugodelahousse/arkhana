@@ -849,6 +849,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   todayLunarIndex={lunarMonthInfo.todayLunarIndex}
                   lunarMonthLength={lunarMonthInfo.lunarMonthLength}
                   pulledDayIndices={lunarMonthInfo.pulledDayIndices}
+                  graceDayIndices={lunarMonthInfo.graceDayIndices}
+                  streakDayIndices={lunarMonthInfo.streakDayIndices}
                   size="md"
                 />
               </Link>
