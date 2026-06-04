@@ -6,7 +6,10 @@ import { useAutoReveal } from "../../lib/useAutoReveal";
 import { motion, AnimatePresence } from "motion/react";
 
 export function meta() {
-  return [{ title: "Card Lab — Arkhana" }];
+  return [
+    { title: "Card Lab — Arkhana" },
+    { name: "robots", content: "noindex, nofollow" },
+  ];
 }
 
 type RarityScore = 1 | 2 | 3 | 4 | 5;

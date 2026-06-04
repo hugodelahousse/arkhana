@@ -11,7 +11,10 @@ export async function loader({ context, params }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [{ title: "Arkhana" }];
+  return [
+    { title: "Arkhana" },
+    { name: "robots", content: "noindex, nofollow" },
+  ];
 }
 
 export default function SpreadRedirect() {

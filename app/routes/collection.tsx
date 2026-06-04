@@ -53,9 +53,11 @@ export function meta({ data }: Route.MetaArgs) {
   return [
     { title: "Collection — Arkhana" },
     { name: "description", content: description },
+    { name: "robots", content: "noindex, nofollow" },
     { property: "og:title", content: "My Collection — Arkhana" },
     { property: "og:description", content: description },
     { property: "og:image", content: ogImage },
+    { property: "og:site_name", content: "Arkhana" },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:image", content: ogImage },
   ];

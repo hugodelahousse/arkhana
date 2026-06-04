@@ -1653,6 +1653,10 @@ export function cardSlug(card: CardDefinition): string {
   return card.name.toLowerCase().replace(/ /g, "-");
 }
 
+export function cardAlt(card: CardDefinition): string {
+  return `${card.name} tarot card — ${card.arcana === "major" ? "Major Arcana" : `${card.suit}, Minor Arcana`}`;
+}
+
 export const CARD_BY_SLUG: Record<string, CardDefinition> = Object.fromEntries(
   CARDS.map((c) => [cardSlug(c), c])
 );

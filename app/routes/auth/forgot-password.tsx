@@ -43,7 +43,10 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export function meta() {
-  return [{ title: "Forgot password · Arkhana" }];
+  return [
+    { title: "Forgot password · Arkhana" },
+    { name: "robots", content: "noindex, nofollow" },
+  ];
 }
 
 export default function ForgotPassword({ actionData }: Route.ComponentProps) {

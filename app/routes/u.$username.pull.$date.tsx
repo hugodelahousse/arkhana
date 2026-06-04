@@ -134,9 +134,11 @@ export function meta({ data: loaderData, params: _params }: Route.MetaArgs) {
       `&username=${encodeURIComponent(d.handle)}&date=${d.date}`;
     return [
       { title: `@${d.handle}'s ${d.spreadName} — Arkhana` },
+      { name: "robots", content: "noindex, nofollow" },
       { property: "og:title", content: `@${d.handle}'s ${d.spreadName}` },
       { property: "og:description", content: d.spreadSubtitle },
       { property: "og:image", content: ogImage },
+      { property: "og:site_name", content: "Arkhana" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:image", content: ogImage },
     ];
@@ -154,9 +156,11 @@ export function meta({ data: loaderData, params: _params }: Route.MetaArgs) {
   return [
     { title },
     { name: "description", content: description.slice(0, 200) },
+    { name: "robots", content: "noindex, nofollow" },
     { property: "og:title", content: title },
     { property: "og:description", content: description.slice(0, 200) },
     { property: "og:image", content: ogImage },
+    { property: "og:site_name", content: "Arkhana" },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:image", content: ogImage },
   ];

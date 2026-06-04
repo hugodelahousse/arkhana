@@ -14,6 +14,7 @@ import {
 import { Link, useNavigate } from "react-router";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
+import { JsonLd } from "../components/JsonLd";
 import { getOrigin } from "../lib/utils";
 import { DateTime } from "luxon";
 
@@ -32,12 +33,17 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
   const { card, origin } = loaderData;
   const description = card.descriptions[2];
   const ogImage = `${origin}/api/og.png?type=card&cardId=${card.id}&rarity=3`;
+  const slug = card.name.toLowerCase().replace(/ /g, "-");
+  const canonical = `${origin}/collection/${slug}`;
   return [
-    { title: `${card.name} — Arkhana` },
+    { title: `${card.name} Tarot Card Meaning — Arkhana` },
     { name: "description", content: description },
+    { tagName: "link", rel: "canonical", href: canonical },
     { property: "og:title", content: `${card.name} — Arkhana` },
     { property: "og:description", content: description },
     { property: "og:image", content: ogImage },
+    { property: "og:url", content: canonical },
+    { property: "og:site_name", content: "Arkhana" },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:title", content: `${card.name} — Arkhana` },
     { name: "twitter:description", content: description },
@@ -46,7 +52,7 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
 }
 
 export default function CardDetail({ loaderData }: Route.ComponentProps) {
-  const { user, card, history } = loaderData;
+  const { user, card, history, origin } = loaderData;
   const mostRecent = history.length > 0 ? history[history.length - 1] : null;
   const navigate = useNavigate();
 
@@ -88,6 +94,25 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
           </header>
         )}
         <main className="max-w-2xl mx-auto px-6 py-12 space-y-10">
+          <JsonLd data={{
+            "@context": "https://schema.org",
+            "@type": "Article",
+            name: card.name,
+            headline: `${card.name} Tarot Card Meaning`,
+            description: card.descriptions[2],
+            image: `${origin}/api/og.png?type=card&cardId=${card.id}&rarity=3`,
+            url: `${origin}/collection/${card.name.toLowerCase().replace(/ /g, "-")}`,
+            isPartOf: { "@type": "WebSite", name: "Arkhana", url: `${origin}/` },
+          }} />
+          <JsonLd data={{
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Arkhana", item: `${origin}/` },
+              { "@type": "ListItem", position: 2, name: "Collection", item: `${origin}/collection` },
+              { "@type": "ListItem", position: 3, name: card.name, item: `${origin}/collection/${card.name.toLowerCase().replace(/ /g, "-")}` },
+            ],
+          }} />
           <div className="space-y-2 text-center">
             <a
               href={user ? "/collection" : "/"}

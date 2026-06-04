@@ -25,4 +25,5 @@ export default [
   route("lab/spreads", "routes/lab/spreads.tsx"),
   route("lab/layers", "routes/lab/layers.tsx"),
   route("lab/push", "routes/lab/push.tsx"),
+  route("sitemap.xml", "routes/sitemap.ts"),
 ] satisfies RouteConfig;

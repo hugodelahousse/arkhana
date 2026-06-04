@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import type { Route } from "./+types/push";
 
 export function meta() {
-  return [{ title: "Push Lab — Arkhana" }];
+  return [
+    { title: "Push Lab — Arkhana" },
+    { name: "robots", content: "noindex, nofollow" },
+  ];
 }
 
 export function loader({ context }: Route.LoaderArgs) {

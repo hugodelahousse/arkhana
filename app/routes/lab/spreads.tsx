@@ -8,7 +8,10 @@ import type { SpreadCardResult } from "../../lib/spread-pull";
 import type { Rarity } from "../../lib/cards";
 
 export function meta() {
-  return [{ title: "Spread Lab — Arkhana" }];
+  return [
+    { title: "Spread Lab — Arkhana" },
+    { name: "robots", content: "noindex, nofollow" },
+  ];
 }
 
 type RarityScore = 1 | 2 | 3 | 4 | 5;

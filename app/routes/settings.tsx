@@ -94,7 +94,10 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 export function meta() {
-  return [{ title: "Settings — Arkhana" }];
+  return [
+    { title: "Settings — Arkhana" },
+    { name: "robots", content: "noindex, nofollow" },
+  ];
 }
 
 async function getPasskeyClient() {

@@ -4,7 +4,10 @@ import { cardImageUrl, cardMaskUrl, cardNameMaskUrl, cardTopMaskUrl } from "../.
 import type { CardDefinition } from "../../lib/cards";
 
 export function meta() {
-  return [{ title: "Layer Lab — Arkhana" }];
+  return [
+    { title: "Layer Lab — Arkhana" },
+    { name: "robots", content: "noindex, nofollow" },
+  ];
 }
 
 type Centroids = Record<string, { x: number; y: number }>;

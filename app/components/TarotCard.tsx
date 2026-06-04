@@ -1,7 +1,7 @@
 import { memo, useRef, useEffect, useCallback } from "react";
 import { motion } from "motion/react";
 import { cardImageUrl, cardMaskUrl, cardNameMaskUrl, cardTopMaskUrl, hasTopMask, hasNameMask } from "../lib/cardImages";
-import { RARITY_LABELS } from "../lib/cards";
+import { RARITY_LABELS, cardAlt } from "../lib/cards";
 import type { CardDefinition, Rarity } from "../lib/cards";
 import { useCardMotion, DEFAULT_MOTION_CONFIG } from "../lib/useCardMotion";
 import type { CardMotionConfig } from "../lib/useCardMotion";
@@ -131,7 +131,7 @@ export const TarotCard = memo(function TarotCard({
           <div className="card-face card-front">
             <img
               src={imgSrc}
-              alt={card.name}
+              alt={cardAlt(card)}
               loading="eager"
               draggable={false}
               style={baseImgMask}

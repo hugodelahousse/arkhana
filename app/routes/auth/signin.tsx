@@ -42,7 +42,11 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export function meta() {
-  return [{ title: "Sign in · Arkhana" }];
+  return [
+    { title: "Sign in · Arkhana" },
+    { name: "description", content: "Sign in to Arkhana to continue your daily tarot journey." },
+    { name: "robots", content: "noindex, nofollow" },
+  ];
 }
 
 export default function SignIn({ actionData }: Route.ComponentProps) {

@@ -64,7 +64,10 @@ export async function loader({ context }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [{ title: "Moon Cycle — Arkhana" }];
+  return [
+    { title: "Moon Cycle — Arkhana" },
+    { name: "robots", content: "noindex, nofollow" },
+  ];
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────

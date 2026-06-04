@@ -39,10 +39,12 @@ export function meta({ data: loaderData, params }: Route.MetaArgs) {
   return [
     { title: `@${handle} — Arkhana` },
     { name: "description", content: description },
+    { name: "robots", content: "noindex, nofollow" },
     { property: "og:title", content: `@${handle} on Arkhana` },
     { property: "og:description", content: description },
     { property: "og:image", content: ogImage },
     { property: "og:type", content: "profile" },
+    { property: "og:site_name", content: "Arkhana" },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:title", content: `@${handle} on Arkhana` },
     { name: "twitter:description", content: description },

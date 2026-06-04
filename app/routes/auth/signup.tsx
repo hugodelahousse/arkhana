@@ -53,7 +53,11 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export function meta() {
-  return [{ title: "Create account · Arkhana" }];
+  return [
+    { title: "Create account · Arkhana" },
+    { name: "description", content: "Create your Arkhana account and start building your personal tarot collection." },
+    { name: "robots", content: "noindex, nofollow" },
+  ];
 }
 
 export default function SignUp({ actionData }: Route.ComponentProps) {

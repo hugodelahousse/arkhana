@@ -37,7 +37,10 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export function meta() {
-  return [{ title: "Reset password · Arkhana" }];
+  return [
+    { title: "Reset password · Arkhana" },
+    { name: "robots", content: "noindex, nofollow" },
+  ];
 }
 
 export default function ResetPassword({ actionData, loaderData }: Route.ComponentProps) {

@@ -73,6 +73,27 @@ Tokens live in `app/styles/tokens.css` (primitives + semantics) and `app/app.css
 - Rarity colors in JS: `var(--color-rarity-${rarityLabel.toLowerCase()})` — this pattern works because `@theme inline` registers `--color-rarity-*` CSS vars
 - Dark mode infrastructure: `.dark` class on `<html>` (wired in `tokens.css`); no light-mode values yet but the `.dark {}` block is ready for override
 
+## SEO conventions
+When adding or modifying routes, follow these rules to keep SEO in sync:
+
+**Route registration:** All routes are declared in `app/routes.ts` (manual config, not file-based). New routes must be added there.
+
+**Meta tags checklist for every new route:**
+- Every route MUST export `meta()` with at least `{ title: "Page Name — Arkhana" }`
+- **Public/indexable routes** (currently only `/` and `/collection/:slug`): add `description`, canonical `<link>`, `og:title`, `og:description`, `og:image`, `og:url`, `og:site_name`, `twitter:card`, `twitter:title`, `twitter:description`, `twitter:image`
+- **Private/auth-only routes**: add `{ name: "robots", content: "noindex, nofollow" }`
+- **Social-sharing routes** (user profiles, share pages): add `noindex` BUT keep OG/Twitter tags for social previews + add `og:site_name`
+
+**Sitemap:** `app/routes/sitemap.ts` generates `/sitemap.xml`. Add new public, indexable routes there. Currently lists `/` + all 78 `/collection/:slug` pages.
+
+**robots.txt:** `public/robots.txt` controls crawler access. Update `Disallow` rules when adding new private route prefixes.
+
+**Structured data:** Use `<JsonLd>` component (`app/components/JsonLd.tsx`) for Schema.org markup. Card detail pages have `Article` + `BreadcrumbList` schemas; home has `WebSite`.
+
+**Card alt text:** Use `cardAlt(card)` from `app/lib/cards.ts` — never write card alt text inline. Produces "The Fool tarot card — Major Arcana" format.
+
+**Canonical strategy:** Indexable pages self-canonical. Share/pull pages that reference a card should NOT canonical to the card page (they're noindexed anyway).
+
 ## Future features (see GitHub Issues)
 - Daily pack system (1 Major + 4 Minor per pull)
 - Streak tracking + streak achievements

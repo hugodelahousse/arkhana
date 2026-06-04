@@ -21,6 +21,7 @@ import { todayForUser, nowForUser, getOrigin } from "../lib/utils";
 import { config } from "../../config/index.js";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
+import { JsonLd } from "../components/JsonLd";
 import { ArrowRight } from "@phosphor-icons/react";
 
 // Reflection prompt per arcana/suit — shown in the layered second-reveal
@@ -159,16 +160,20 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 export function meta({ data }: Route.MetaArgs) {
   const origin = data?.origin ?? "";
+  const canonical = `${origin}/`;
   return [
-    { title: "Arkhana" },
-    { name: "description", content: "Daily Tarot · One card. Every day. Uncover your arkhive." },
-    { property: "og:title", content: "Arkhana" },
-    { property: "og:description", content: "Daily Tarot · One card. Every day. Uncover your arkhive." },
+    { title: "Arkhana — Daily Tarot Readings" },
+    { name: "description", content: "Draw one tarot card every day and build your personal arkhive. 78 beautifully illustrated cards with unique readings across five rarity tiers." },
+    { tagName: "link", rel: "canonical", href: canonical },
+    { property: "og:title", content: "Arkhana — Daily Tarot Readings" },
+    { property: "og:description", content: "Draw one tarot card every day and build your personal arkhive." },
     { property: "og:image", content: `${origin}/api/og.png?type=app` },
+    { property: "og:url", content: canonical },
     { property: "og:type", content: "website" },
+    { property: "og:site_name", content: "Arkhana" },
     { name: "twitter:card", content: "summary_large_image" },
-    { name: "twitter:title", content: "Arkhana" },
-    { name: "twitter:description", content: "Daily Tarot · One card. Every day." },
+    { name: "twitter:title", content: "Arkhana — Daily Tarot Readings" },
+    { name: "twitter:description", content: "Draw one tarot card every day and build your personal arkhive." },
     { name: "twitter:image", content: `${origin}/api/og.png?type=app` },
   ];
 }
@@ -575,6 +580,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         )}
 
         <main className="max-w-2xl mx-auto px-6 py-6 sm:py-12 space-y-8 sm:space-y-12">
+          <h1 className="sr-only">Arkhana — Your Daily Tarot Reading</h1>
+          <JsonLd data={{
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "Arkhana",
+            url: "https://arkhana.app",
+            description: "Draw one tarot card every day and build your personal arkhive. 78 beautifully illustrated cards with unique readings across five rarity tiers.",
+          }} />
 
           {isSundayToday && spreadDef ? (
             <section className="space-y-6">

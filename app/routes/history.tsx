@@ -69,7 +69,10 @@ export async function loader({ context }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [{ title: "History — Arkhana" }];
+  return [
+    { title: "History — Arkhana" },
+    { name: "robots", content: "noindex, nofollow" },
+  ];
 }
 
 export default function History({ loaderData }: Route.ComponentProps) {

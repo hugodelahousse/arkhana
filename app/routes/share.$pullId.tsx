@@ -59,9 +59,11 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
   return [
     { title },
     { name: "description", content: description.slice(0, 200) },
+    { name: "robots", content: "noindex, nofollow" },
     { property: "og:title", content: title },
     { property: "og:description", content: description.slice(0, 200) },
     { property: "og:image", content: ogImage },
+    { property: "og:site_name", content: "Arkhana" },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:title", content: title },
     { name: "twitter:description", content: description.slice(0, 200) },

@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Allow: /collection/
+
+Disallow: /api/
+Disallow: /auth/
+Disallow: /settings
+Disallow: /history
+Disallow: /streak
+Disallow: /spread/
+Disallow: /lab/
+Disallow: /u/
+Disallow: /share/
+Disallow: /s/
+
+Sitemap: https://arkhana.app/sitemap.xml

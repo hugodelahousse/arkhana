@@ -57,9 +57,11 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
     usernameParam + `&date=${spreadDate}`;
   return [
     { title: `${name} — Arkhana` },
+    { name: "robots", content: "noindex, nofollow" },
     { property: "og:title", content: `${name} — Arkhana` },
     { property: "og:description", content: subtitle },
     { property: "og:image", content: ogImage },
+    { property: "og:site_name", content: "Arkhana" },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:image", content: ogImage },
   ];
