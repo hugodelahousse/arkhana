@@ -321,6 +321,10 @@ function DailyCardReveal({
     ? `/u/${username}/pull/${todayStr}`
     : `/share/${pullId}`;
 
+  useEffect(() => {
+    if (revealed) window.history.replaceState(null, "", shareUrl);
+  }, [revealed, shareUrl]);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-center">
