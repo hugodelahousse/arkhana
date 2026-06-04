@@ -9,7 +9,6 @@ import {
   CARD_BY_SLUG,
   RARITY_LABELS,
   getCardDescription,
-  cardSlug,
   type Rarity,
 } from "../lib/cards";
 import { Link, useNavigate } from "react-router";
@@ -46,9 +45,8 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
   ];
 }
 
-export default function CardDetail({ loaderData, params }: Route.ComponentProps) {
+export default function CardDetail({ loaderData }: Route.ComponentProps) {
   const { user, card, history } = loaderData;
-  const slug = params.slug ?? cardSlug(card);
   const mostRecent = history.length > 0 ? history[history.length - 1] : null;
   const navigate = useNavigate();
 
@@ -122,14 +120,20 @@ export default function CardDetail({ loaderData, params }: Route.ComponentProps)
             </ViewTransition>
           </div>
 
-          <div className="flex justify-center">
-            <ShareButton
-              title={`${card.name} — Arkhana`}
-              url={`/collection/${slug}`}
-              text={`${card.name} · ${card.arcana === "major" ? "Major Arcana" : card.suit}`}
-              label="Share card"
-            />
-          </div>
+          {displayPull && (
+            <div className="flex justify-center">
+              <ShareButton
+                title={`${card.name} — Arkhana`}
+                url={
+                  user?.username
+                    ? `/u/${user.username}/pull/${displayPull.pullDate}`
+                    : `/share/${displayPull.id}`
+                }
+                text={`${RARITY_LABELS[defaultRarity]} ${card.name}${displayPull.isReversed ? " (Reversed)" : ""}`}
+                label="Share this pull"
+              />
+            </div>
+          )}
 
           {user && history.length > 0 ? (
             <section className="space-y-6">
