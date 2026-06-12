@@ -12,5 +12,7 @@ Disallow: /lab/
 Disallow: /u/
 Disallow: /share/
 Disallow: /s/
+Disallow: /circle
+Disallow: /follow
 
 Sitemap: https://arkhana.app/sitemap.xml

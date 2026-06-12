@@ -8,7 +8,7 @@ import { pushSubscriptions } from "../db/schema/push-subscriptions.js";
 import { eq } from "drizzle-orm";
 import { getVapidPublicKey, testPushToUser, sendDailyReminders, sendCelestialNotification } from "../app/lib/push.js";
 import { getUpcomingCelestialEvents } from "../app/lib/moonphase.js";
-import { todayUTC, parseTzCookie } from "../app/lib/utils.js";
+import { parseTzCookie } from "../app/lib/utils.js";
 import { user as userTable } from "../db/schema/auth.js";
 
 export const app = express();
@@ -144,9 +144,10 @@ app.use(
 );
 
 if (process.env.NODE_ENV !== "test") {
-  // Daily reminder at 8 PM UTC
-  cron.schedule("0 20 * * *", async () => {
-    await sendDailyReminders(todayUTC());
+  // Daily reminder — runs every 30 min and notifies each user near noon in
+  // their own local timezone (getReminderTargets does the per-user windowing).
+  cron.schedule("0,30 * * * *", async () => {
+    await sendDailyReminders();
   });
 
   // Celestial event check at midnight UTC

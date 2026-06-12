@@ -1,9 +1,10 @@
 import webpush from "web-push";
-import { and, eq, notInArray, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import { DateTime } from "luxon";
 import { db } from "../../db/index.js";
 import { pushSubscriptions } from "../../db/schema/push-subscriptions.js";
-import { userCards } from "../../db/schema/user-cards.js";
 import { config } from "../../config/index.js";
+import { getReminderTargets } from "./reminder-targets.js";
 import type { Milestone } from "./streak.js";
 
 let initialized = false;
@@ -21,7 +22,7 @@ function initWebPush(): boolean {
 }
 
 export interface PushPayload {
-  type: "daily-reminder" | "milestone" | "celestial";
+  type: "daily-reminder" | "milestone" | "celestial" | "new-follower";
   title: string;
   body: string;
   url?: string;
@@ -72,35 +73,21 @@ export async function sendMilestoneNotification(userId: string, milestone: Miles
   });
 }
 
-export async function sendDailyReminders(pullDate: string) {
+export async function sendDailyReminders(nowUtc: DateTime = DateTime.utc()) {
   if (!initWebPush()) return;
 
-  // Find users with subscriptions who haven't pulled today
-  const pulledToday = db
-    .selectDistinct({ userId: userCards.userId })
-    .from(userCards)
-    .where(and(eq(userCards.pullDate, pullDate), eq(userCards.pullType, "daily")));
-
-  const targets = await db
-    .selectDistinct({ userId: pushSubscriptions.userId })
-    .from(pushSubscriptions)
-    .where(
-      notInArray(
-        pushSubscriptions.userId,
-        sql`(${pulledToday})`
-      )
-    );
+  const targets = await getReminderTargets(nowUtc);
 
   const REMINDER_BODIES = [
-    "A card is waiting.",
-    "No rush. A card has been holding your name.",
-    "The arkhive stirs. Your card is ready.",
+    "Your circle is drawing. Pull your card to reveal today's board.",
+    "A card waits — draw it to see what your circle drew today.",
+    "The arkhive stirs. Draw to unveil your circle's pulls.",
   ];
   const body = REMINDER_BODIES[Math.floor(Math.random() * REMINDER_BODIES.length)];
 
   await Promise.allSettled(
-    targets.map((t) =>
-      sendPushToUser(t.userId, {
+    targets.map((userId) =>
+      sendPushToUser(userId, {
         type: "daily-reminder",
         title: "Arkhana",
         body,
