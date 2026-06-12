@@ -6,3 +6,14 @@
 /.react-router/
 /build/
 .lockbox/
+
+# Vite local cache
+/.vite/
+
+# Local git worktrees
+/.claude/worktrees/
+
+# Local DB dumps / snapshots
+/prod-dump.sql
+*.dump
+/snapshots/

@@ -1,10 +1,11 @@
 import { Link, Form, useLocation } from "react-router";
-import { Cards, GridFour, Gear, Moon } from "@phosphor-icons/react";
+import { Cards, GridFour, Gear, Moon, UsersThree } from "@phosphor-icons/react";
 import { buttonClass } from "../Button";
 import { KofiButton } from "../KofiButton";
 
 const TABS = [
   { to: "/", label: "Today", Icon: Cards },
+  { to: "/circle", label: "Circle", Icon: UsersThree },
   { to: "/collection", label: "Collection", Icon: GridFour },
   { to: "/streak", label: "Moon Cycle", Icon: Moon },
   { to: "/settings", label: "Settings", Icon: Gear },
@@ -35,6 +36,12 @@ export function Nav({ userName: _userName, isAnonymous }: { userName: string; is
             </Link>
           ) : (
             <>
+              <Link
+                to="/circle"
+                className="hidden sm:inline text-faint-foreground hover:text-foreground transition-colors"
+              >
+                Circle
+              </Link>
               <Link
                 to="/streak"
                 className="hidden sm:inline text-faint-foreground hover:text-foreground transition-colors"

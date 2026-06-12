@@ -94,6 +94,11 @@ export async function migrateAnonymousPulls(
     .set({ userId: newUserId })
     .where(eq(pushSubscriptions.userId, anonymousUserId));
 
+  // Follows: intentionally nothing to migrate. Social features require a real
+  // (non-anonymous) account — the /follow action rejects anonymous users — so an
+  // anonymous user never has `follows` rows in either direction. The follows FKs
+  // are ON DELETE CASCADE, so any future anonymous-user cleanup stays consistent.
+
   // Seed the streak record for the new user from their full daily pull history.
   const allPulls = await db
     .select({ pullDate: userCards.pullDate })
