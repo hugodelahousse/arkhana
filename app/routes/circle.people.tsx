@@ -1,5 +1,7 @@
-import { Link, redirect } from "react-router";
+import { useRef, useState } from "react";
+import { Link, redirect, useFetcher } from "react-router";
 import type { Route } from "./+types/circle.people";
+import type { loader as searchLoader } from "./api.users.search";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { FollowButton } from "../components/FollowButton";
 import { getFollowers, getFollowing, type FollowProfile } from "../lib/follows";
@@ -54,6 +56,51 @@ function PersonRow({
   );
 }
 
+function UserSearch() {
+  const fetcher = useFetcher<typeof searchLoader>();
+  const [query, setQuery] = useState("");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleChange(e: { target: { value: string } }) {
+    const val = e.target.value;
+    setQuery(val);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (!val.trim()) return;
+    timerRef.current = setTimeout(() => {
+      fetcher.load(`/api/users/search?q=${encodeURIComponent(val)}`);
+    }, 300);
+  }
+
+  const results = fetcher.data?.users ?? [];
+  const showResults = query.trim().length > 0;
+
+  return (
+    <section className="space-y-4">
+      <h2 className="type-label">Find readers</h2>
+      <input
+        type="search"
+        placeholder="Search by username…"
+        value={query}
+        onChange={handleChange}
+        className="w-full bg-muted border border-border rounded px-3 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+      />
+      {showResults && (
+        <ul>
+          {fetcher.state === "loading" && results.length === 0 ? (
+            <li className="type-ghost py-3">Searching…</li>
+          ) : results.length === 0 ? (
+            <li className="type-ghost py-3">No readers found for "{query}"</li>
+          ) : (
+            results.map((p) => (
+              <PersonRow key={p.id} person={p} following={p.isFollowing} />
+            ))
+          )}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 export default function CirclePeople({ loaderData }: Route.ComponentProps) {
   const { followers, following } = loaderData;
 
@@ -67,6 +114,8 @@ export default function CirclePeople({ loaderData }: Route.ComponentProps) {
               ← Back to today's board
             </Link>
           </div>
+
+          <UserSearch />
 
           <section className="space-y-4">
             <h2 className="type-label">Following · {following.length}</h2>

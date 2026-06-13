@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, like, ne, or, sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { follows } from "../../db/schema/follows.js";
 import { user } from "../../db/schema/auth.js";
@@ -120,6 +120,30 @@ export async function getFollowing(userId: string): Promise<FollowProfile[]> {
     .where(eq(follows.followerId, userId))
     .orderBy(desc(follows.createdAt));
   return rows.map(({ createdAt: _createdAt, ...p }) => p);
+}
+
+export async function searchUsers(
+  viewerId: string,
+  query: string,
+  limit = 10
+): Promise<(FollowProfile & { isFollowing: boolean })[]> {
+  const q = query.toLowerCase().trim();
+  if (!q) return [];
+
+  const rows = await db
+    .select(profileFields)
+    .from(user)
+    .where(
+      and(
+        like(user.username, `${q}%`),
+        or(eq(user.isAnonymous, false), isNull(user.isAnonymous)),
+        ne(user.id, viewerId)
+      )
+    )
+    .limit(limit);
+
+  const followingIds = new Set(await getFollowingIds(viewerId));
+  return rows.map((p) => ({ ...p, isFollowing: followingIds.has(p.id) }));
 }
 
 export interface CirclePull {

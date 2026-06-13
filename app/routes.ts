@@ -19,6 +19,7 @@ export default [
   route("share/:pullId", "routes/share.$pullId.tsx"),
   route("s/:id", "routes/s.$id.tsx"),
   route("api/og.png", "routes/api.og.tsx"),
+  route("api/users/search", "routes/api.users.search.tsx"),
   route("auth/signin", "routes/auth/signin.tsx"),
   route("auth/signup", "routes/auth/signup.tsx"),
   route("auth/signout", "routes/auth/signout.tsx"),
