@@ -76,6 +76,12 @@ export default function Circle({ loaderData }: Route.ComponentProps) {
                 {drawnCount}/{feed.length} have drawn
               </p>
             )}
+            <Link
+              to="/circle/people"
+              className="type-label hover:text-foreground transition-colors"
+            >
+              Manage circle
+            </Link>
           </div>
 
           {feed.length === 0 ? (
@@ -88,10 +94,10 @@ export default function Circle({ loaderData }: Route.ComponentProps) {
                 </p>
               </div>
               <Link
-                to="/collection"
+                to="/circle/people"
                 className="inline-flex items-center gap-2 px-6 py-3 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80"
               >
-                Explore your collection <ArrowRight weight="light" size={14} aria-hidden />
+                Find readers <ArrowRight weight="light" size={14} aria-hidden />
               </Link>
             </div>
           ) : (
