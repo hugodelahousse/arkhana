@@ -258,6 +258,18 @@ export function moonPhaseOutlineOpacity(phase: number): number {
   return 0.55 + (distanceFromNew / 0.1) * 0.45;
 }
 
+export function isMoonEventOnDate(date: string, event: LunarEvent): boolean {
+  const dt = DateTime.fromISO(date, { zone: "utc" });
+  const events = getUpcomingCelestialEvents(dt, 2);
+  return events.some((e) => e.event === event && e.date.toISODate() === date);
+}
+
+export function nextMoonEventDate(from: DateTime, event: LunarEvent): DateTime {
+  const start = from.startOf("day").plus({ days: 1 });
+  const events = getUpcomingCelestialEvents(start, 35);
+  return events.find((e) => e.event === event)!.date.startOf("day");
+}
+
 export function getUpcomingCelestialEvents(from: DateTime, days: number): CelestialEvent[] {
   const events: CelestialEvent[] = [];
   const to = from.plus({ days });
