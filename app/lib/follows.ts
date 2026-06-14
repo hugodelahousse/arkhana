@@ -3,6 +3,7 @@ import { db } from "../../db/index.js";
 import { follows } from "../../db/schema/follows.js";
 import { user } from "../../db/schema/auth.js";
 import { userCards } from "../../db/schema/user-cards.js";
+import { spreads, spreadCards } from "../../db/schema/spreads.js";
 import { todayForUser } from "./utils.js";
 
 export async function followUser(followerId: string, followingId: string): Promise<void> {
@@ -153,6 +154,8 @@ export interface CirclePull {
   isRadiant: boolean;
   isReversed: boolean;
   pullDate: string;
+  // Non-null when this entry represents a spread card rather than a solo daily draw.
+  spreadType: string | null;
 }
 
 export interface CircleEntry {
@@ -174,7 +177,7 @@ export async function getCircleDailyPulls(viewerId: string): Promise<CircleEntry
   const entries: CircleEntry[] = [];
   for (const { timezone, ...profile } of followed) {
     const localToday = todayForUser(timezone);
-    const [pull] = await db
+    const [dailyPull] = await db
       .select({
         id: userCards.id,
         cardId: userCards.cardId,
@@ -192,7 +195,36 @@ export async function getCircleDailyPulls(viewerId: string): Promise<CircleEntry
         )
       )
       .limit(1);
-    entries.push({ user: profile, pull: pull ?? null });
+
+    if (dailyPull) {
+      entries.push({ user: profile, pull: { ...dailyPull, spreadType: null } });
+      continue;
+    }
+
+    // No daily pull — check if they drew a spread today and use its first card.
+    const [spreadCard] = await db
+      .select({
+        id: userCards.id,
+        cardId: userCards.cardId,
+        rarityScore: userCards.rarityScore,
+        isRadiant: userCards.isRadiant,
+        isReversed: userCards.isReversed,
+        pullDate: userCards.pullDate,
+        spreadType: spreads.spreadType,
+      })
+      .from(spreads)
+      .innerJoin(spreadCards, eq(spreadCards.spreadId, spreads.id))
+      .innerJoin(userCards, eq(userCards.id, spreadCards.userCardId))
+      .where(
+        and(
+          eq(spreads.userId, profile.id),
+          eq(spreads.spreadDate, localToday),
+          eq(spreadCards.position, 0)
+        )
+      )
+      .limit(1);
+
+    entries.push({ user: profile, pull: spreadCard ?? null });
   }
 
   entries.sort((a, b) => {

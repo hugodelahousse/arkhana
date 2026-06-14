@@ -137,8 +137,11 @@ function CircleTile({ entry }: { entry: CircleEntry }) {
 
   const card = CARD_BY_ID[entry.pull.cardId];
   const rarityLabel = RARITY_LABELS[entry.pull.rarityScore as Rarity];
+  const isSpread = !!entry.pull.spreadType;
   const pullHref = entry.user.username
-    ? `/u/${entry.user.username}/pull/${entry.pull.pullDate}`
+    ? isSpread
+      ? `/u/${entry.user.username}`
+      : `/u/${entry.user.username}/pull/${entry.pull.pullDate}`
     : undefined;
 
   const cardEl = (
@@ -158,8 +161,8 @@ function CircleTile({ entry }: { entry: CircleEntry }) {
       <Caption
         handle={handle}
         href={profileHref}
-        sub={rarityLabel}
-        subColor={`var(--color-rarity-${rarityLabel?.toLowerCase()})`}
+        sub={isSpread ? "Weekly spread" : rarityLabel}
+        subColor={isSpread ? undefined : `var(--color-rarity-${rarityLabel?.toLowerCase()})`}
       />
     </div>
   );
