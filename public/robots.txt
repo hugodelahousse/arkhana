@@ -15,4 +15,4 @@ Disallow: /s/
 Disallow: /circle
 Disallow: /follow
 
-Sitemap: https://arkhana.app/sitemap.xml
+Sitemap: https://arkhana.delaho-h.com/sitemap.xml
