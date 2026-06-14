@@ -21,7 +21,7 @@ import { todayForUser, nowForUser, getOrigin } from "../lib/utils";
 import { config } from "../../config/index.js";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
-import { JsonLd } from "../components/JsonLd";
+import { Landing } from "../components/Landing";
 import { ArrowRight } from "@phosphor-icons/react";
 
 // Reflection prompt per arcana/suit — shown in the layered second-reveal
@@ -40,15 +40,9 @@ function reflectionPrompt(card: CardDefinition): string {
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   if (!context.user) {
-    const origin = new URL(config.betterAuthUrl).origin;
-    const anonRes = await fetch(
-      new URL("/api/auth/sign-in/anonymous", config.betterAuthUrl).toString(),
-      { method: "POST", headers: { "content-type": "application/json", origin } }
-    );
-    if (anonRes.ok) {
-      const setCookie = anonRes.headers.get("set-cookie");
-      if (setCookie) throw redirect("/", { headers: { "set-cookie": setCookie } });
-    }
+    // Logged-out GET: render the landing page (Landing component) instead of
+    // creating a session and redirecting. Crawlers get real, indexable HTML
+    // here; the anonymous session is created lazily in the action on first draw.
     return {
       user: null as null,
       todayPull: null as Awaited<ReturnType<typeof getTodayPull>> | null,
@@ -142,7 +136,21 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
-  if (!context.user) return redirect("/");
+  if (!context.user) {
+    // First draw for a logged-out visitor: lazily create an anonymous session,
+    // then reload so the pull flow runs with a real session. Only POSTs reach
+    // here, so crawlers (GET only) never trigger this redirect.
+    const origin = new URL(config.betterAuthUrl).origin;
+    const anonRes = await fetch(
+      new URL("/api/auth/sign-in/anonymous", config.betterAuthUrl).toString(),
+      { method: "POST", headers: { "content-type": "application/json", origin } }
+    );
+    if (anonRes.ok) {
+      const setCookie = anonRes.headers.get("set-cookie");
+      if (setCookie) return redirect("/", { headers: { "set-cookie": setCookie } });
+    }
+    return redirect("/");
+  }
   const formData = await request.formData();
   const actionType = formData.get("_action");
 
@@ -543,11 +551,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   }, []);
 
   if (!loaderData.user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-sm tracking-widest uppercase text-faint-foreground">The arkhive stirs…</p>
-      </div>
-    );
+    return <Landing origin={loaderData.origin} />;
   }
 
   const { user, todayPull, recentPulls, streak, lunarMonthInfo } = loaderData;
@@ -581,13 +585,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
         <main className="max-w-2xl mx-auto px-6 py-6 sm:py-12 space-y-8 sm:space-y-12">
           <h1 className="sr-only">Arkhana — Your Daily Tarot Reading</h1>
-          <JsonLd data={{
-            "@context": "https://schema.org",
-            "@type": "WebSite",
-            name: "Arkhana",
-            url: "https://arkhana.app",
-            description: "Draw one tarot card every day and build your personal arkhive. 78 beautifully illustrated cards with unique readings across five rarity tiers.",
-          }} />
 
           {isSundayToday && spreadDef ? (
             <section className="space-y-6">

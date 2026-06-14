@@ -13,4 +13,4 @@ Disallow: /u/
 Disallow: /share/
 Disallow: /s/
 
-Sitemap: https://arkhana.app/sitemap.xml
+Sitemap: https://arkhana.delaho-h.com/sitemap.xml
