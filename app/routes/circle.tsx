@@ -62,7 +62,7 @@ export default function Circle({ loaderData }: Route.ComponentProps) {
   }
 
   const { feed, todayLabel } = loaderData;
-  const drawnCount = feed.filter((e) => e.pull).length;
+  const drawnCount = feed.filter((e) => e.pull || e.spread).length;
 
   return (
     <DirectionalTransition>
@@ -111,7 +111,7 @@ function CircleTile({ entry }: { entry: CircleEntry }) {
   const handle = entry.user.displayUsername ?? entry.user.username ?? "reader";
   const profileHref = entry.user.username ? `/u/${entry.user.username}` : undefined;
 
-  if (!entry.pull) {
+  if (!entry.pull && !entry.spread) {
     return (
       <div className="flex flex-col items-center gap-3">
         <div
@@ -135,21 +135,45 @@ function CircleTile({ entry }: { entry: CircleEntry }) {
     );
   }
 
-  const card = CARD_BY_ID[entry.pull.cardId];
-  const rarityLabel = RARITY_LABELS[entry.pull.rarityScore as Rarity];
-  const isSpread = !!entry.pull.spreadType;
+  if (entry.spread) {
+    const grid = (
+      <div
+        style={{ aspectRatio: "350 / 600", width: "100%", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3px" }}
+        aria-label={`${handle}'s weekly spread`}
+      >
+        {entry.spread.cards.map((c) => (
+          <TarotCard
+            key={c.positionKey}
+            card={CARD_BY_ID[c.cardId]}
+            rarityScore={c.rarityScore as Rarity}
+            isReversed={c.isReversed}
+            isRadiant={c.isRadiant}
+            revealed={true}
+            size="sm"
+          />
+        ))}
+      </div>
+    );
+    return (
+      <div className="flex flex-col items-center gap-3">
+        {profileHref ? <Link to={profileHref} className="w-full">{grid}</Link> : grid}
+        <Caption handle={handle} href={profileHref} sub="Weekly spread" />
+      </div>
+    );
+  }
+
+  const card = CARD_BY_ID[entry.pull!.cardId];
+  const rarityLabel = RARITY_LABELS[entry.pull!.rarityScore as Rarity];
   const pullHref = entry.user.username
-    ? isSpread
-      ? `/u/${entry.user.username}`
-      : `/u/${entry.user.username}/pull/${entry.pull.pullDate}`
+    ? `/u/${entry.user.username}/pull/${entry.pull!.pullDate}`
     : undefined;
 
   const cardEl = (
     <TarotCard
       card={card}
-      rarityScore={entry.pull.rarityScore as Rarity}
-      isReversed={entry.pull.isReversed}
-      isRadiant={entry.pull.isRadiant}
+      rarityScore={entry.pull!.rarityScore as Rarity}
+      isReversed={entry.pull!.isReversed}
+      isRadiant={entry.pull!.isRadiant}
       revealed={true}
       size="sm"
     />
@@ -161,8 +185,8 @@ function CircleTile({ entry }: { entry: CircleEntry }) {
       <Caption
         handle={handle}
         href={profileHref}
-        sub={isSpread ? "Weekly spread" : rarityLabel}
-        subColor={isSpread ? undefined : `var(--color-rarity-${rarityLabel?.toLowerCase()})`}
+        sub={rarityLabel}
+        subColor={`var(--color-rarity-${rarityLabel?.toLowerCase()})`}
       />
     </div>
   );

@@ -154,13 +154,26 @@ export interface CirclePull {
   isRadiant: boolean;
   isReversed: boolean;
   pullDate: string;
-  // Non-null when this entry represents a spread card rather than a solo daily draw.
-  spreadType: string | null;
+}
+
+export interface CircleSpreadCard {
+  cardId: number;
+  rarityScore: number;
+  isRadiant: boolean;
+  isReversed: boolean;
+  positionKey: string;
+}
+
+export interface CircleSpread {
+  spreadType: string;
+  spreadDate: string;
+  cards: CircleSpreadCard[];
 }
 
 export interface CircleEntry {
   user: FollowProfile;
   pull: CirclePull | null;
+  spread: CircleSpread | null;
 }
 
 // The daily-circle feed: for each user the viewer follows, that user's daily
@@ -177,58 +190,65 @@ export async function getCircleDailyPulls(viewerId: string): Promise<CircleEntry
   const entries: CircleEntry[] = [];
   for (const { timezone, ...profile } of followed) {
     const localToday = todayForUser(timezone);
-    const [dailyPull] = await db
-      .select({
-        id: userCards.id,
-        cardId: userCards.cardId,
-        rarityScore: userCards.rarityScore,
-        isRadiant: userCards.isRadiant,
-        isReversed: userCards.isReversed,
-        pullDate: userCards.pullDate,
-      })
-      .from(userCards)
-      .where(
-        and(
-          eq(userCards.userId, profile.id),
-          eq(userCards.pullType, "daily"),
-          eq(userCards.pullDate, localToday)
-        )
-      )
-      .limit(1);
 
-    if (dailyPull) {
-      entries.push({ user: profile, pull: { ...dailyPull, spreadType: null } });
-      continue;
-    }
-
-    // No daily pull — check if they drew a spread today and use its first card.
-    const [spreadCard] = await db
+    // Fetch all spread cards for today first — spread takes display priority on spread days.
+    const spreadRows = await db
       .select({
-        id: userCards.id,
-        cardId: userCards.cardId,
-        rarityScore: userCards.rarityScore,
-        isRadiant: userCards.isRadiant,
-        isReversed: userCards.isReversed,
-        pullDate: userCards.pullDate,
         spreadType: spreads.spreadType,
+        spreadDate: spreads.spreadDate,
+        cardId: userCards.cardId,
+        rarityScore: userCards.rarityScore,
+        isRadiant: userCards.isRadiant,
+        isReversed: userCards.isReversed,
+        positionKey: spreadCards.positionKey,
       })
       .from(spreads)
       .innerJoin(spreadCards, eq(spreadCards.spreadId, spreads.id))
       .innerJoin(userCards, eq(userCards.id, spreadCards.userCardId))
-      .where(
-        and(
-          eq(spreads.userId, profile.id),
-          eq(spreads.spreadDate, localToday),
-          eq(spreadCards.position, 0)
-        )
-      )
-      .limit(1);
+      .where(and(eq(spreads.userId, profile.id), eq(spreads.spreadDate, localToday)))
+      .orderBy(spreadCards.position);
 
-    entries.push({ user: profile, pull: spreadCard ?? null });
+    const spread: CircleSpread | null = spreadRows.length > 0
+      ? {
+          spreadType: spreadRows[0].spreadType,
+          spreadDate: spreadRows[0].spreadDate,
+          cards: spreadRows.map(({ cardId, rarityScore, isRadiant, isReversed, positionKey }) => ({
+            cardId, rarityScore, isRadiant, isReversed, positionKey,
+          })),
+        }
+      : null;
+
+    // Only query for the daily pull when no spread was drawn today.
+    let pull: CirclePull | null = null;
+    if (!spread) {
+      const [dailyRow] = await db
+        .select({
+          id: userCards.id,
+          cardId: userCards.cardId,
+          rarityScore: userCards.rarityScore,
+          isRadiant: userCards.isRadiant,
+          isReversed: userCards.isReversed,
+          pullDate: userCards.pullDate,
+        })
+        .from(userCards)
+        .where(
+          and(
+            eq(userCards.userId, profile.id),
+            eq(userCards.pullType, "daily"),
+            eq(userCards.pullDate, localToday)
+          )
+        )
+        .limit(1);
+      pull = dailyRow ?? null;
+    }
+
+    entries.push({ user: profile, pull, spread });
   }
 
   entries.sort((a, b) => {
-    if (!!a.pull !== !!b.pull) return a.pull ? -1 : 1;
+    const aDrawn = !!(a.pull || a.spread);
+    const bDrawn = !!(b.pull || b.spread);
+    if (aDrawn !== bDrawn) return aDrawn ? -1 : 1;
     return (a.user.username ?? "").localeCompare(b.user.username ?? "");
   });
   return entries;
