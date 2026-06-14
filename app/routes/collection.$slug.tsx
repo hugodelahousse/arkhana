@@ -15,17 +15,17 @@ import { Link, useNavigate } from "react-router";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
 import { JsonLd } from "../components/JsonLd";
-import { getOrigin } from "../lib/utils";
+import { config } from "../../config/index.js";
 import { DateTime } from "luxon";
 
-export async function loader({ context, params, request }: Route.LoaderArgs) {
+export async function loader({ context, params }: Route.LoaderArgs) {
   const card = CARD_BY_SLUG[params.slug];
   if (!card) throw data("Card not found", { status: 404 });
 
   const history =
     context.user ? await getUserCardHistory(context.user.id, card.id) : [];
 
-  return { user: context.user ?? null, card, history, origin: getOrigin(request) };
+  return { user: context.user ?? null, card, history, origin: config.appOrigin };
 }
 
 export function meta({ data: loaderData }: Route.MetaArgs) {

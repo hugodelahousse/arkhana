@@ -30,4 +30,5 @@ export default [
   route("lab/layers", "routes/lab/layers.tsx"),
   route("lab/push", "routes/lab/push.tsx"),
   route("sitemap.xml", "routes/sitemap.ts"),
+  route("robots.txt", "routes/robots.ts"),
 ] satisfies RouteConfig;

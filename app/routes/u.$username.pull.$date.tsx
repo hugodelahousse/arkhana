@@ -19,13 +19,13 @@ import {
 } from "../lib/cards";
 import { getSpreadType } from "../lib/spreads";
 import type { SpreadCardResult } from "../lib/spread-pull";
-import { getOrigin } from "../lib/utils";
+import { config } from "../../config/index.js";
 
 type LoaderData =
   | { type: "daily"; handle: string; date: string; formattedDate: string; pull: { cardId: number; rarityScore: Rarity; isRadiant: boolean; isReversed: boolean }; origin: string }
   | { type: "spread"; handle: string; date: string; formattedDate: string; spreadName: string; spreadSubtitle: string; positions: { index: number; label: string; contemplationPrompt: string }[]; cards: SpreadCardResult[]; origin: string };
 
-export async function loader({ params, request }: Route.LoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   const username = params.username.toLowerCase();
   const [profile] = await db
     .select({ id: user.id, displayUsername: user.displayUsername, username: user.username })
@@ -40,7 +40,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const pullDate = date.toISODate()!;
   const handle = profile.displayUsername ?? profile.username ?? username;
   const formattedDate = date.toFormat("cccc, LLLL d, yyyy");
-  const origin = getOrigin(request);
+  const origin = config.appOrigin;
 
   const [spreadRow] = await db
     .select({ id: spreads.id, spreadType: spreads.spreadType })

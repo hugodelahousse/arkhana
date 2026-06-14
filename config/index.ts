@@ -19,6 +19,10 @@ export const config = {
   databaseUrl: parsed.DATABASE_URL,
   betterAuthSecret: parsed.BETTER_AUTH_SECRET,
   betterAuthUrl: parsed.BETTER_AUTH_URL,
+  // Public origin (scheme + host) of this deployment, derived from BETTER_AUTH_URL
+  // so production and per-PR deploys produce correct canonical/OG/sitemap URLs from
+  // a single env var. Use this for self-referential URLs — never request headers.
+  appOrigin: new URL(parsed.BETTER_AUTH_URL).origin,
   port: parsed.PORT,
   nodeEnv: parsed.NODE_ENV,
   vapidPublicKey: parsed.VAPID_PUBLIC_KEY,

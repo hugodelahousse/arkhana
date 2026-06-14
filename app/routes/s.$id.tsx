@@ -11,9 +11,9 @@ import { ShareButton } from "../components/ShareButton";
 import { db } from "../../db/index.js";
 import { user } from "../../db/schema/auth.js";
 import { eq } from "drizzle-orm";
-import { getOrigin } from "../lib/utils";
+import { config } from "../../config/index.js";
 
-export async function loader({ params, request }: Route.LoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   const spreadId = parseInt(params.id, 10);
   if (isNaN(spreadId) || spreadId <= 0 || spreadId > 2147483647) throw data("Not found", { status: 404 });
 
@@ -40,7 +40,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     positions: spreadDef.positions,
     cards: spread.cards,
     spreadDate: spread.spreadDate,
-    origin: getOrigin(request),
+    origin: config.appOrigin,
   };
 }
 

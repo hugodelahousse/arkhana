@@ -13,9 +13,9 @@ import { ShareButton } from "../components/ShareButton";
 import { FollowButton } from "../components/FollowButton";
 import { CollectionGrid, type BestPull } from "../components/CollectionGrid";
 import { Nav } from "../components/layout/nav";
-import { getOrigin } from "../lib/utils";
+import { config } from "../../config/index.js";
 
-export async function loader({ params, request, context }: Route.LoaderArgs) {
+export async function loader({ params, context }: Route.LoaderArgs) {
   const username = params.username.toLowerCase();
   const [profile] = await db
     .select({
@@ -64,7 +64,7 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
     canFollow,
     following,
     viewer: viewer ? { name: viewer.name, isAnonymous: viewer.isAnonymous } : null,
-    origin: getOrigin(request),
+    origin: config.appOrigin,
   };
 }
 

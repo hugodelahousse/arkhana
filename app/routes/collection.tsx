@@ -6,9 +6,9 @@ import { getAllPulls } from "../lib/pull";
 import type { Rarity } from "../lib/cards";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { CollectionGrid, type BestPull } from "../components/CollectionGrid";
-import { getOrigin } from "../lib/utils";
+import { config } from "../../config/index.js";
 
-export async function loader({ context, request }: Route.LoaderArgs) {
+export async function loader({ context }: Route.LoaderArgs) {
   if (!context.user) return redirect("/");
   const allPulls = await getAllPulls(context.user.id);
 
@@ -24,7 +24,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     }
   }
 
-  return { user: context.user, bestByCard, origin: getOrigin(request) };
+  return { user: context.user, bestByCard, origin: config.appOrigin };
 }
 
 export function meta({ data }: Route.MetaArgs) {

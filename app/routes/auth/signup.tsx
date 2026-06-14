@@ -23,7 +23,7 @@ export async function action({ request }: Route.ActionArgs) {
     return data({ error: "Username must be 1–30 characters: letters, numbers, hyphens, underscores." }, { status: 400 });
   }
 
-  const origin = new URL(config.betterAuthUrl).origin;
+  const origin = config.appOrigin;
   const headers = {
     "content-type": "application/json",
     origin,
