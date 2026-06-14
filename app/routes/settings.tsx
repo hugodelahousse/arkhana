@@ -5,6 +5,7 @@ import { db } from "../../db/index.js";
 import { user, passkey as passkeyTable } from "../../db/schema/auth.js";
 import { eq, and, ne } from "drizzle-orm";
 import { getThemeFromCookie, setThemeCookie, type Theme } from "../lib/theme";
+import { config } from "../../config/index.js";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   if (!context.user || context.user.isAnonymous) return redirect("/");
@@ -27,6 +28,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     username: profile?.displayUsername ?? profile?.username ?? "",
     passkeys,
     theme: getThemeFromCookie(request),
+    origin: config.appOrigin,
   };
 }
 
@@ -228,7 +230,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
           <p className="type-caption">
             Your username appears on your public profile at{" "}
             <span className="text-primary">
-              arkhana.delaho-h.com/u/{loaderData.username || "username"}
+              {new URL(loaderData.origin).host}/u/{loaderData.username || "username"}
             </span>
             .
           </p>

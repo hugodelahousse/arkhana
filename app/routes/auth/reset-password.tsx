@@ -20,7 +20,7 @@ export async function action({ request }: Route.ActionArgs) {
   if (newPassword.length < 8) return data({ error: "Password must be at least 8 characters." }, { status: 400 });
   if (newPassword !== confirmPassword) return data({ error: "Passwords do not match." }, { status: 400 });
 
-  const origin = new URL(config.betterAuthUrl).origin;
+  const origin = config.appOrigin;
 
   const res = await fetch(
     new URL("/api/auth/reset-password", config.betterAuthUrl).toString(),

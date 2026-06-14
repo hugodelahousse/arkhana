@@ -15,9 +15,9 @@ import { user } from "../../db/schema/auth.js";
 import { eq } from "drizzle-orm";
 import { TarotCard } from "../components/TarotCard";
 import { ShareButton } from "../components/ShareButton";
-import { getOrigin } from "../lib/utils";
+import { config } from "../../config/index.js";
 
-export async function loader({ params, request }: Route.LoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   const pullId = parseInt(params.pullId, 10);
   if (isNaN(pullId) || pullId <= 0 || pullId > 2147483647) throw data("Not found", { status: 404 });
 
@@ -36,7 +36,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const handle = profile?.displayUsername ?? profile?.username ?? null;
   const username = profile?.username ?? null;
 
-  return { pull, card, handle, username, origin: getOrigin(request) };
+  return { pull, card, handle, username, origin: config.appOrigin };
 }
 
 export function meta({ data: loaderData }: Route.MetaArgs) {

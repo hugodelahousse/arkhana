@@ -1,8 +1,8 @@
 import { CARDS, cardSlug } from "../lib/cards";
-import { getOrigin } from "../lib/utils";
+import { config } from "../../config/index.js";
 
-export function loader({ request }: { request: Request }) {
-  const SITE_URL = getOrigin(request);
+export function loader() {
+  const SITE_URL = config.appOrigin;
   const urls = [
     { loc: SITE_URL, priority: "1.0", changefreq: "daily" },
     ...CARDS.map((card) => ({

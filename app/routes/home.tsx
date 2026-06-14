@@ -17,7 +17,7 @@ import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity, t
 import { getSpreadType } from "../lib/spreads";
 import { useAutoReveal } from "../lib/useAutoReveal";
 import { DateTime } from "luxon";
-import { todayForUser, nowForUser, getOrigin } from "../lib/utils";
+import { todayForUser, nowForUser } from "../lib/utils";
 import { config } from "../../config/index.js";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
@@ -38,7 +38,7 @@ function reflectionPrompt(card: CardDefinition): string {
   return prompts[card.suit ?? "wands"] ?? "Where do you notice this energy today?";
 }
 
-export async function loader({ context, request }: Route.LoaderArgs) {
+export async function loader({ context }: Route.LoaderArgs) {
   if (!context.user) {
     // Logged-out GET: render the landing page (Landing component) instead of
     // creating a session and redirecting. Crawlers get real, indexable HTML
@@ -53,7 +53,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       sundaySpreadId: null as number | null,
       spreadDef: null as { name: string; subtitle: string; description: string; positions: { index: number; label: string; contemplationPrompt: string }[] } | null,
       todayStr: todayForUser(null),
-      origin: getOrigin(request),
+      origin: config.appOrigin,
       streak: null as { currentStreak: number; longestStreak: number; cycleStartDate: string | null } | null,
       lunarMonthInfo: getLunarMonthInfo(DateTime.utc(), []),
       previousPullDate: null as string | null,
@@ -109,7 +109,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       recentPulls,
       totalUnique,
       todayStr,
-      origin: getOrigin(request),
+      origin: config.appOrigin,
       streak,
       lunarMonthInfo,
       previousPullDate: null as string | null,
@@ -128,7 +128,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     recentPulls,
     totalUnique,
     todayStr,
-    origin: getOrigin(request),
+    origin: config.appOrigin,
     streak,
     lunarMonthInfo,
     previousPullDate: null as string | null,
@@ -140,7 +140,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     // First draw for a logged-out visitor: lazily create an anonymous session,
     // then reload so the pull flow runs with a real session. Only POSTs reach
     // here, so crawlers (GET only) never trigger this redirect.
-    const origin = new URL(config.betterAuthUrl).origin;
+    const origin = config.appOrigin;
     const anonRes = await fetch(
       new URL("/api/auth/sign-in/anonymous", config.betterAuthUrl).toString(),
       { method: "POST", headers: { "content-type": "application/json", origin } }

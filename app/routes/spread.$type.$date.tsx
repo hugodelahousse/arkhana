@@ -9,9 +9,9 @@ import { SpreadSummaryGrid } from "../components/SpreadSummaryGrid";
 import { ShareButton } from "../components/ShareButton";
 import { getSpreadType } from "../lib/spreads";
 import { getTodaySpread } from "../lib/spread-pull";
-import { getOrigin } from "../lib/utils";
+import { config } from "../../config/index.js";
 
-export async function loader({ context, params, request }: Route.LoaderArgs) {
+export async function loader({ context, params }: Route.LoaderArgs) {
   if (!context.user) return redirect("/");
 
   const spreadDef = getSpreadType(params.type);
@@ -36,7 +36,7 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
     spreadDate,
     formattedDate,
     isToday,
-    origin: getOrigin(request),
+    origin: config.appOrigin,
   };
 }
 

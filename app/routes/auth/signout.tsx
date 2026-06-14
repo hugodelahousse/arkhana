@@ -3,7 +3,7 @@ import type { Route } from "./+types/signout";
 import { config } from "../../../config/index.js";
 
 export async function action({ request }: Route.ActionArgs) {
-  const origin = new URL(config.betterAuthUrl).origin;
+  const origin = config.appOrigin;
   const res = await fetch(
     new URL("/api/auth/sign-out", config.betterAuthUrl).toString(),
     {

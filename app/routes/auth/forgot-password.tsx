@@ -13,7 +13,7 @@ export async function action({ request }: Route.ActionArgs) {
 
   if (!email.includes("@")) return data({ error: "Please enter a valid email address." }, { status: 400 });
 
-  const origin = new URL(config.betterAuthUrl).origin;
+  const origin = config.appOrigin;
 
   const res = await fetch(
     new URL("/api/auth/request-password-reset", config.betterAuthUrl).toString(),
