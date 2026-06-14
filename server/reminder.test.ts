@@ -6,6 +6,7 @@ import { db } from "../db/index.js";
 import { user } from "../db/schema/auth.js";
 import { cards } from "../db/schema/cards.js";
 import { userCards } from "../db/schema/user-cards.js";
+import { spreads } from "../db/schema/spreads.js";
 import { pushSubscriptions } from "../db/schema/push-subscriptions.js";
 import { getReminderTargets } from "../app/lib/reminder-targets.js";
 
@@ -45,9 +46,14 @@ async function createPull(userId: string, pullDate: string) {
     .values({ userId, cardId: CARD_ID, rarityScore: 1, isRadiant: false, isReversed: false, pullDate });
 }
 
+async function createSpread(userId: string, spreadDate: string) {
+  await db.insert(spreads).values({ userId, spreadType: "sunday-weekly", spreadDate });
+}
+
 async function cleanup(...ids: string[]) {
   for (const id of ids) {
     await db.delete(pushSubscriptions).where(eq(pushSubscriptions.userId, id));
+    await db.delete(spreads).where(eq(spreads.userId, id));
     await db.delete(userCards).where(eq(userCards.userId, id));
     await db.delete(user).where(eq(user.id, id));
   }
@@ -57,25 +63,30 @@ describe("getReminderTargets", () => {
   let inWindow: string;
   let outWindow: string;
   let pulled: string;
+  let pulledSpread: string;
   let noSub: string;
 
   beforeEach(async () => {
     inWindow = `test-in-${randomUUID()}`;
     outWindow = `test-out-${randomUUID()}`;
     pulled = `test-pulled-${randomUUID()}`;
+    pulledSpread = `test-spread-${randomUUID()}`;
     noSub = `test-nosub-${randomUUID()}`;
     await createTestUser(inWindow, NY);
     await createTestUser(outWindow, "UTC"); // 16:00 local → not noon
     await createTestUser(pulled, NY);
+    await createTestUser(pulledSpread, NY);
     await createTestUser(noSub, NY);
     await createSub(inWindow);
     await createSub(outWindow);
     await createSub(pulled);
+    await createSub(pulledSpread);
     await createPull(pulled, "2026-06-12"); // NY local today at NOW
+    await createSpread(pulledSpread, "2026-06-12");
   });
 
   afterEach(async () => {
-    await cleanup(inWindow, outWindow, pulled, noSub);
+    await cleanup(inWindow, outWindow, pulled, pulledSpread, noSub);
   });
 
   it("targets a subscribed user whose local time is in the noon window and hasn't pulled", async () => {
@@ -91,6 +102,11 @@ describe("getReminderTargets", () => {
   it("excludes a user who has already pulled their local today", async () => {
     const targets = await getReminderTargets(NOW);
     expect(targets).not.toContain(pulled);
+  });
+
+  it("excludes a user who has already drawn a Sunday spread today", async () => {
+    const targets = await getReminderTargets(NOW);
+    expect(targets).not.toContain(pulledSpread);
   });
 
   it("excludes a user with no push subscription", async () => {

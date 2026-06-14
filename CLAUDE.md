@@ -30,6 +30,21 @@ Production uses `pnpm db:migrate` (not `db:push`). After editing any file in `db
 - Local Postgres: `postgresql://arkhana:arkhana@localhost:5432/arkhana` (start with `pg_ctlcluster 16 main start`)
 - Docker not available in this remote environment
 
+## Daily pull vs. Sunday spread — a recurring pitfall
+
+The app has two **mutually exclusive** pull types. On any given day a user draws one or the other, never both:
+
+| Day | Draw type | Storage |
+|---|---|---|
+| Mon–Sat | Daily card | `user_cards` row with `pullType = "daily"` |
+| Sunday | Weekly spread | `spreads` row + 4 `user_cards` rows with `pullType = "spread"` linked via `spread_cards` |
+
+**Any "has the user drawn today?" check must cover BOTH.** The pattern:
+1. Check `user_cards WHERE pullType = 'daily' AND pullDate = localToday`
+2. Check `spreads WHERE spreadDate = localToday`
+
+Features that previously missed this: the circle feed (`getCircleDailyPulls`) and daily reminder notifications (`getReminderTargets`). When in doubt, search for `pullType.*daily` and check whether the adjacent logic also queries the `spreads` table.
+
 ## Key conventions
 - All DB queries through Drizzle — no raw SQL
 - Card id is 0–77 (canonical index); all rich data (arcana, suit, descriptions) lives in `app/lib/cards.ts` — DB `cards` table only stores `{id, name}`

@@ -162,18 +162,21 @@ function CircleTile({ entry }: { entry: CircleEntry }) {
     );
   }
 
-  const card = CARD_BY_ID[entry.pull!.cardId];
-  const rarityLabel = RARITY_LABELS[entry.pull!.rarityScore as Rarity];
+  const { pull } = entry;
+  if (!pull) return null;
+
+  const card = CARD_BY_ID[pull.cardId];
+  const rarityLabel = RARITY_LABELS[pull.rarityScore as Rarity];
   const pullHref = entry.user.username
-    ? `/u/${entry.user.username}/pull/${entry.pull!.pullDate}`
+    ? `/u/${entry.user.username}/pull/${pull.pullDate}`
     : undefined;
 
   const cardEl = (
     <TarotCard
       card={card}
-      rarityScore={entry.pull!.rarityScore as Rarity}
-      isReversed={entry.pull!.isReversed}
-      isRadiant={entry.pull!.isRadiant}
+      rarityScore={pull.rarityScore as Rarity}
+      isReversed={pull.isReversed}
+      isRadiant={pull.isRadiant}
       revealed={true}
       size="sm"
     />
