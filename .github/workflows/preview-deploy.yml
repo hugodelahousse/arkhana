@@ -26,4 +26,5 @@ jobs:
       image_name: ghcr.io/${{ github.repository }}/preview
       environment: pr-${{ github.event.pull_request.number }}
       run_seed: false
+      use_migrate_deploy: true
     secrets: inherit
