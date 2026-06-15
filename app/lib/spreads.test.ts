@@ -5,6 +5,7 @@ import {
   getSpreadType,
   getTodaySpreadType,
 } from "./spreads";
+import { getUpcomingCelestialEvents } from "./moonphase";
 
 const monday = DateTime.fromISO("2026-05-18", { zone: "utc" }); // weekday 1
 const friday = DateTime.fromISO("2026-05-22", { zone: "utc" }); // weekday 5
@@ -104,5 +105,119 @@ describe("getTodaySpreadType", () => {
     expect(getTodaySpreadType(monday)).toBeNull();
     expect(getTodaySpreadType(friday)).toBeNull();
     expect(getTodaySpreadType(saturday)).toBeNull();
+  });
+});
+
+// Compute real moon event dates from the formula used by the app
+const upcomingEvents = getUpcomingCelestialEvents(DateTime.fromISO("2026-01-01", { zone: "utc" }), 120);
+const newMoonEvent = upcomingEvents.find((e) => e.event === "new-moon")!;
+const fullMoonEvent = upcomingEvents.find((e) => e.event === "full-moon")!;
+const newMoonDate = DateTime.fromISO(newMoonEvent.date.toISODate()!, { zone: "utc" });
+const fullMoonDate = DateTime.fromISO(fullMoonEvent.date.toISODate()!, { zone: "utc" });
+// A date safely between new and full moon (waxing quarter — neither event)
+const waxingDate = newMoonDate.plus({ days: 7 });
+
+describe("new-moon spread", () => {
+  const spread = SPREAD_REGISTRY["new-moon"];
+
+  it("exists in registry", () => {
+    expect(spread).toBeDefined();
+    expect(spread.id).toBe("new-moon");
+  });
+
+  it("has 5 positions", () => {
+    expect(spread.positions).toHaveLength(5);
+  });
+
+  it("position labels are correct", () => {
+    const labels = spread.positions.map((p) => p.label);
+    expect(labels).toEqual(["The Gift", "What to Release", "The Seed", "The Obstacle", "First Steps"]);
+  });
+
+  it("each position has a contemplationPrompt", () => {
+    for (const pos of spread.positions) {
+      expect(pos.contemplationPrompt.length).toBeGreaterThan(10);
+    }
+  });
+
+  it("is available on a new moon date", () => {
+    expect(spread.isAvailable(newMoonDate)).toBe(true);
+  });
+
+  it("is not available on a waxing quarter date", () => {
+    expect(spread.isAvailable(waxingDate)).toBe(false);
+  });
+
+  it("is not available on a full moon date", () => {
+    expect(spread.isAvailable(fullMoonDate)).toBe(false);
+  });
+
+  it("nextAvailable returns a future new moon date", () => {
+    const next = spread.nextAvailable(newMoonDate);
+    expect(next.toMillis()).toBeGreaterThan(newMoonDate.toMillis());
+    expect(spread.isAvailable(next)).toBe(true);
+  });
+
+  it("nextAvailable is at start of day", () => {
+    const next = spread.nextAvailable(waxingDate);
+    expect(next.hour).toBe(0);
+    expect(next.minute).toBe(0);
+    expect(next.second).toBe(0);
+  });
+});
+
+describe("full-moon spread", () => {
+  const spread = SPREAD_REGISTRY["full-moon"];
+
+  it("exists in registry", () => {
+    expect(spread).toBeDefined();
+    expect(spread.id).toBe("full-moon");
+  });
+
+  it("has 6 positions", () => {
+    expect(spread.positions).toHaveLength(6);
+  });
+
+  it("position labels are correct", () => {
+    const labels = spread.positions.map((p) => p.label);
+    expect(labels).toEqual([
+      "What Has Grown",
+      "What Is Illuminated",
+      "What Hides in the Light",
+      "What Must Be Released",
+      "How to Let Go",
+      "What Emerges",
+    ]);
+  });
+
+  it("each position has a contemplationPrompt", () => {
+    for (const pos of spread.positions) {
+      expect(pos.contemplationPrompt.length).toBeGreaterThan(10);
+    }
+  });
+
+  it("is available on a full moon date", () => {
+    expect(spread.isAvailable(fullMoonDate)).toBe(true);
+  });
+
+  it("is not available on a waxing quarter date", () => {
+    expect(spread.isAvailable(waxingDate)).toBe(false);
+  });
+
+  it("is not available on a new moon date", () => {
+    expect(spread.isAvailable(newMoonDate)).toBe(false);
+  });
+
+  it("nextAvailable returns a future full moon date", () => {
+    const next = spread.nextAvailable(fullMoonDate);
+    expect(next.toMillis()).toBeGreaterThan(fullMoonDate.toMillis());
+    expect(spread.isAvailable(next)).toBe(true);
+  });
+
+  it("nextAvailable is at start of day", () => {
+    const next = spread.nextAvailable(waxingDate);
+    expect(next.hour).toBe(0);
+    expect(next.minute).toBe(0);
+    expect(next.second).toBe(0);
   });
 });

@@ -9,5 +9,7 @@ Disallow: /settings
 Disallow: /history
 Disallow: /streak
 Disallow: /lab/
+Disallow: /circle
+Disallow: /follow
 
 Sitemap: https://arkhana.delaho-h.com/sitemap.xml

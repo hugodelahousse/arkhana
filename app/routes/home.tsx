@@ -14,14 +14,14 @@ import { getLunarMonthInfo } from "../lib/moonphase";
 import { getTodaySpread, drawSpread, getSpreadId } from "../lib/spread-pull";
 import type { SpreadCardResult } from "../lib/spread-pull";
 import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity, type CardDefinition } from "../lib/cards";
-import { getSpreadType } from "../lib/spreads";
+import { getTodaySpreadType } from "../lib/spreads";
 import { useAutoReveal } from "../lib/useAutoReveal";
 import { DateTime } from "luxon";
 import { todayForUser, nowForUser, getOrigin } from "../lib/utils";
 import { config } from "../../config/index.js";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { ShareButton } from "../components/ShareButton";
-import { JsonLd } from "../components/JsonLd";
+import { Landing } from "../components/Landing";
 import { ArrowRight } from "@phosphor-icons/react";
 
 // Reflection prompt per arcana/suit — shown in the layered second-reveal
@@ -40,23 +40,17 @@ function reflectionPrompt(card: CardDefinition): string {
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   if (!context.user) {
-    const origin = new URL(config.betterAuthUrl).origin;
-    const anonRes = await fetch(
-      new URL("/api/auth/sign-in/anonymous", config.betterAuthUrl).toString(),
-      { method: "POST", headers: { "content-type": "application/json", origin } }
-    );
-    if (anonRes.ok) {
-      const setCookie = anonRes.headers.get("set-cookie");
-      if (setCookie) throw redirect("/", { headers: { "set-cookie": setCookie } });
-    }
+    // Logged-out GET: render the landing page (Landing component) instead of
+    // creating a session and redirecting. Crawlers get real, indexable HTML
+    // here; the anonymous session is created lazily in the action on first draw.
     return {
       user: null as null,
       todayPull: null as Awaited<ReturnType<typeof getTodayPull>> | null,
       recentPulls: [] as Awaited<ReturnType<typeof getRecentPulls>>,
       totalUnique: 0,
-      isSundayToday: false,
-      sundaySpread: null as SpreadCardResult[] | null,
-      sundaySpreadId: null as number | null,
+      todaySpreadTypeId: null as string | null,
+      todaySpreadCards: null as SpreadCardResult[] | null,
+      todaySpreadId: null as number | null,
       spreadDef: null as { name: string; subtitle: string; description: string; positions: { index: number; label: string; contemplationPrompt: string }[] } | null,
       todayStr: todayForUser(null),
       origin: getOrigin(request),
@@ -70,23 +64,26 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const tz = context.user.timezone;
   const now = nowForUser(tz);
   const todayStr = now.toISODate()!;
-  const isSundayToday = now.weekday === 7;
+  const todaySpreadDef = getTodaySpreadType(now);
+  const todaySpreadTypeId = todaySpreadDef?.id ?? null;
 
-  const [recentPulls, totalUnique, sundaySpread, sundaySpreadId, streakState, pullDates] = await Promise.all([
+  const [recentPulls, totalUnique, todaySpreadCards, todaySpreadId, streakState, pullDates] = await Promise.all([
     getRecentPulls(userId, 5),
     getUniqueCardCount(userId),
-    isSundayToday ? getTodaySpread(userId, "sunday-weekly", todayStr) : Promise.resolve(null),
-    isSundayToday ? getSpreadId(userId, "sunday-weekly", todayStr) : Promise.resolve(null),
+    todaySpreadTypeId ? getTodaySpread(userId, todaySpreadTypeId, todayStr) : Promise.resolve(null),
+    todaySpreadTypeId ? getSpreadId(userId, todaySpreadTypeId, todayStr) : Promise.resolve(null),
     getStreak(userId),
     getPullDates(userId),
   ]);
 
   const lunarMonthInfo = getLunarMonthInfo(DateTime.fromISO(todayStr, { zone: "utc" }).set({ hour: 12 }), pullDates);
 
-  const spreadDef = isSundayToday ? (() => {
-    const d = getSpreadType("sunday-weekly")!;
-    return { name: d.name, subtitle: d.subtitle, description: d.description, positions: d.positions };
-  })() : null;
+  const spreadDef = todaySpreadDef ? {
+    name: todaySpreadDef.name,
+    subtitle: todaySpreadDef.subtitle,
+    description: todaySpreadDef.description,
+    positions: todaySpreadDef.positions,
+  } : null;
 
   let resolvedStreakState = streakState;
   if (!resolvedStreakState && pullDates.length > 0) {
@@ -104,12 +101,12 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     ? { currentStreak: resolvedStreakState.currentStreak, longestStreak: resolvedStreakState.longestStreak, cycleStartDate: resolvedStreakState.cycleStartDate }
     : null;
 
-  if (isSundayToday) {
+  if (todaySpreadTypeId) {
     return {
       user: context.user,
-      isSundayToday: true,
-      sundaySpread,
-      sundaySpreadId,
+      todaySpreadTypeId,
+      todaySpreadCards,
+      todaySpreadId,
       spreadDef,
       todayPull: null as Awaited<ReturnType<typeof getTodayPull>> | null,
       recentPulls,
@@ -126,9 +123,9 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
   return {
     user: context.user,
-    isSundayToday: false,
-    sundaySpread: null as SpreadCardResult[] | null,
-    sundaySpreadId: null as number | null,
+    todaySpreadTypeId: null as string | null,
+    todaySpreadCards: null as SpreadCardResult[] | null,
+    todaySpreadId: null as number | null,
     spreadDef: null as typeof spreadDef,
     todayPull,
     recentPulls,
@@ -142,14 +139,31 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
-  if (!context.user) return redirect("/");
+  if (!context.user) {
+    // First draw for a logged-out visitor: lazily create an anonymous session,
+    // then reload so the pull flow runs with a real session. Only POSTs reach
+    // here, so crawlers (GET only) never trigger this redirect.
+    const origin = new URL(config.betterAuthUrl).origin;
+    const anonRes = await fetch(
+      new URL("/api/auth/sign-in/anonymous", config.betterAuthUrl).toString(),
+      { method: "POST", headers: { "content-type": "application/json", origin } }
+    );
+    if (anonRes.ok) {
+      const setCookie = anonRes.headers.get("set-cookie");
+      if (setCookie) return redirect("/", { headers: { "set-cookie": setCookie } });
+    }
+    return redirect("/");
+  }
   const formData = await request.formData();
   const actionType = formData.get("_action");
 
   const tz = context.user.timezone;
 
   if (actionType === "spread") {
-    const result = await drawSpread(context.user.id, "sunday-weekly", nowForUser(tz));
+    const now = nowForUser(tz);
+    const todayDef = getTodaySpreadType(now);
+    if (!todayDef) return { _type: "spread", status: "unavailable" as const };
+    const result = await drawSpread(context.user.id, todayDef.id, now);
     if (result.status === "unavailable") return { _type: "spread", status: "unavailable" as const };
     return { _type: "spread" as const, status: result.status, spreadId: result.spreadId, cards: result.cards };
   }
@@ -486,13 +500,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const isPulling = fetcher.state === "submitting";
   const dailyResult = fetcher.data && "card" in fetcher.data ? fetcher.data : null;
 
-  const { isSundayToday, sundaySpread, sundaySpreadId, spreadDef, todayStr } = loaderData;
+  const { todaySpreadTypeId, todaySpreadCards, todaySpreadId, spreadDef, todayStr } = loaderData;
 
   const [sundayPhase, setSundayPhase] = useState<SundayPhase>(() =>
-    sundaySpread ? { phase: "done" } : { phase: "intro" }
+    todaySpreadCards ? { phase: "done" } : { phase: "intro" }
   );
-  const [drawnCards, setDrawnCards] = useState<SpreadCardResult[] | null>(sundaySpread ?? null);
-  const [activeSpreadId, setActiveSpreadId] = useState<number | null>(sundaySpreadId);
+  const [drawnCards, setDrawnCards] = useState<SpreadCardResult[] | null>(todaySpreadCards ?? null);
+  const [activeSpreadId, setActiveSpreadId] = useState<number | null>(todaySpreadId);
 
   const spreadActionData = fetcher.data && "_type" in fetcher.data && fetcher.data._type === "spread"
     ? (fetcher.data as { _type: "spread"; status: string; spreadId?: number; cards?: SpreadCardResult[] })
@@ -532,7 +546,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const lastPosition = positions.length - 1;
   const currentCards = drawnCards ?? [];
   const isCeremonyActive =
-    isSundayToday &&
+    !!todaySpreadTypeId &&
     (sundayPhase.phase === "drawing" || sundayPhase.phase === "contemplating");
 
   // Register service worker
@@ -543,11 +557,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   }, []);
 
   if (!loaderData.user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-sm tracking-widest uppercase text-faint-foreground">The arkhive stirs…</p>
-      </div>
-    );
+    return <Landing origin={loaderData.origin} />;
   }
 
   const { user, todayPull, recentPulls, streak, lunarMonthInfo } = loaderData;
@@ -581,15 +591,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
         <main className="max-w-2xl mx-auto px-6 py-6 sm:py-12 space-y-8 sm:space-y-12">
           <h1 className="sr-only">Arkhana — Your Daily Tarot Reading</h1>
-          <JsonLd data={{
-            "@context": "https://schema.org",
-            "@type": "WebSite",
-            name: "Arkhana",
-            url: "https://arkhana.delaho-h.com",
-            description: "Draw one tarot card every day and build your personal arkhive. Each pull comes with its own reading. Collect all 78 cards and follow friends to compare draws.",
-          }} />
 
-          {isSundayToday && spreadDef ? (
+          {todaySpreadTypeId && spreadDef ? (
             <section className="space-y-6">
               <AnimatePresence mode="wait">
 
@@ -720,7 +723,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   >
                     <div className="text-center space-y-3">
                       <h2 className="text-sm tracking-widest uppercase text-faint-foreground">
-                        Sunday Reading
+                        {spreadDef.subtitle}
                       </h2>
                       <p className="text-2xl font-light text-muted-foreground font-serif">
                         {spreadDef.name}

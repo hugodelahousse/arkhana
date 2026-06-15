@@ -3,6 +3,8 @@ import { type RouteConfig, index, route, layout } from "@react-router/dev/routes
 export default [
   layout("routes/_shell.tsx", [
     index("routes/home.tsx"),
+    route("circle", "routes/circle.tsx"),
+    route("circle/people", "routes/circle.people.tsx"),
     route("collection", "routes/collection.tsx"),
     route("collection/:slug", "routes/collection.$slug.tsx"),
     route("settings", "routes/settings.tsx"),
@@ -11,11 +13,13 @@ export default [
     route("spread/:type/:date", "routes/spread.$type.$date.tsx"),
   ]),
   route("spread/:type", "routes/spread.$type.tsx"),
+  route("follow", "routes/follow.tsx"),
   route("u/:username", "routes/u.$username.tsx"),
   route("u/:username/pull/:date", "routes/u.$username.pull.$date.tsx"),
   route("share/:pullId", "routes/share.$pullId.tsx"),
   route("s/:id", "routes/s.$id.tsx"),
   route("api/og.png", "routes/api.og.tsx"),
+  route("api/users/search", "routes/api.users.search.tsx"),
   route("auth/signin", "routes/auth/signin.tsx"),
   route("auth/signup", "routes/auth/signup.tsx"),
   route("auth/signout", "routes/auth/signout.tsx"),

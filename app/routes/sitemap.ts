@@ -1,8 +1,8 @@
 import { CARDS, cardSlug } from "../lib/cards";
+import { getOrigin } from "../lib/utils";
 
-const SITE_URL = "https://arkhana.delaho-h.com";
-
-export function loader() {
+export function loader({ request }: { request: Request }) {
+  const SITE_URL = getOrigin(request);
   const urls = [
     { loc: SITE_URL, priority: "1.0", changefreq: "daily" },
     ...CARDS.map((card) => ({
