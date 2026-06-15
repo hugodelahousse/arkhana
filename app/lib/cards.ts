@@ -22,6 +22,15 @@ export function getCardDescription(
   ];
 }
 
+import { CARD_POSITION_DESCRIPTIONS } from "./card-position-descriptions";
+
+export function getSpreadPositionDescription(
+  card: CardDefinition,
+  positionKey: string
+): string | null {
+  return CARD_POSITION_DESCRIPTIONS[card.id]?.[positionKey] ?? null;
+}
+
 export const CARDS: CardDefinition[] = [
   {
     id: 0,
