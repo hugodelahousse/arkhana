@@ -1,0 +1,9 @@
+import { CARD_POSITION_DESCRIPTIONS_A } from "./card-position-descriptions-a";
+import { CARD_POSITION_DESCRIPTIONS_B } from "./card-position-descriptions-b";
+import { CARD_POSITION_DESCRIPTIONS_C } from "./card-position-descriptions-c";
+
+export const CARD_POSITION_DESCRIPTIONS: Record<number, Partial<Record<string, string>>> = {
+  ...CARD_POSITION_DESCRIPTIONS_A,
+  ...CARD_POSITION_DESCRIPTIONS_B,
+  ...CARD_POSITION_DESCRIPTIONS_C,
+};
