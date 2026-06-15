@@ -585,7 +585,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             "@context": "https://schema.org",
             "@type": "WebSite",
             name: "Arkhana",
-            url: "https://arkhana.app",
+            url: "https://arkhana.delaho-h.com",
             description: "Draw one tarot card every day and build your personal arkhive. Each pull comes with its own reading. Collect all 78 cards and follow friends to compare draws.",
           }} />
 

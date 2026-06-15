@@ -1,6 +1,6 @@
 import { CARDS, cardSlug } from "../lib/cards";
 
-const SITE_URL = "https://arkhana.app";
+const SITE_URL = "https://arkhana.delaho-h.com";
 
 export function loader() {
   const urls = [
