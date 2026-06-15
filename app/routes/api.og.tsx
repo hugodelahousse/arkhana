@@ -659,7 +659,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const svg = await satori(element, { width: 1200, height: 630, fonts });
   const resvg = new Resvg(svg, { fitTo: { mode: "width", value: 1200 } });
-  const png = resvg.render().asPng() as Uint8Array;
+  const png = resvg.render().asPng() as Uint8Array<ArrayBuffer>;
 
   return new Response(png, {
     headers: {

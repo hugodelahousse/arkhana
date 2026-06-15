@@ -8,6 +8,7 @@ import { pushSubscriptions } from "../db/schema/push-subscriptions.js";
 import { eq } from "drizzle-orm";
 import { getVapidPublicKey, testPushToUser, sendDailyReminders, sendCelestialNotification } from "../app/lib/push.js";
 import { getUpcomingCelestialEvents } from "../app/lib/moonphase.js";
+import { DateTime } from "luxon";
 import { parseTzCookie } from "../app/lib/utils.js";
 import { user as userTable } from "../db/schema/auth.js";
 
@@ -152,7 +153,7 @@ if (process.env.NODE_ENV !== "test") {
 
   // Celestial event check at midnight UTC
   cron.schedule("0 0 * * *", async () => {
-    const events = getUpcomingCelestialEvents(new Date(), 1);
+    const events = getUpcomingCelestialEvents(DateTime.utc(), 1);
     for (const event of events) {
       await sendCelestialNotification(event.event);
     }

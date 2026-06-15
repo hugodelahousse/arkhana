@@ -10,7 +10,7 @@ import { MoonCycle } from "../components/MoonCycle";
 import { StreakMilestone } from "../components/StreakMilestone";
 import { getTodayPull, getRecentPulls, getUniqueCardCount, dailyPull, getPullDates } from "../lib/pull";
 import { getStreak, initStreakFromHistory } from "../lib/streak";
-import { getLunarMonthInfo } from "../lib/moonphase";
+import { getLunarMonthsInfo } from "../lib/moonphase";
 import { getTodaySpread, drawSpread, getSpreadId } from "../lib/spread-pull";
 import type { SpreadCardResult } from "../lib/spread-pull";
 import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity, type CardDefinition } from "../lib/cards";
@@ -55,7 +55,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       todayStr: todayForUser(null),
       origin: getOrigin(request),
       streak: null as { currentStreak: number; longestStreak: number; cycleStartDate: string | null } | null,
-      lunarMonthInfo: getLunarMonthInfo(DateTime.utc(), []),
+      lunarMonthInfo: getLunarMonthsInfo(DateTime.utc(), [], 1, 0)[0],
       previousPullDate: null as string | null,
     };
   }
@@ -75,8 +75,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     getStreak(userId),
     getPullDates(userId),
   ]);
-
-  const lunarMonthInfo = getLunarMonthInfo(DateTime.fromISO(todayStr, { zone: "utc" }).set({ hour: 12 }), pullDates);
 
   const spreadDef = todaySpreadDef ? {
     name: todaySpreadDef.name,
@@ -100,6 +98,13 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const streak = resolvedStreakState
     ? { currentStreak: resolvedStreakState.currentStreak, longestStreak: resolvedStreakState.longestStreak, cycleStartDate: resolvedStreakState.cycleStartDate }
     : null;
+
+  const lunarMonthInfo = getLunarMonthsInfo(
+    DateTime.fromISO(todayStr, { zone: "utc" }).set({ hour: 12 }),
+    pullDates,
+    1,
+    streak?.currentStreak ?? 0,
+  )[0];
 
   if (todaySpreadTypeId) {
     return {

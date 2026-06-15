@@ -76,7 +76,7 @@ self.addEventListener("push", (event) => {
       tag: payload.tag,
       renotify: !!payload.tag,
       data: { url: payload.url ?? "/" },
-    })
+    } as NotificationOptions)
   );
 });
 

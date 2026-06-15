@@ -111,7 +111,7 @@ export default function History({ loaderData }: Route.ComponentProps) {
 function HistoryItem({ entry }: { entry: HistoryEntry }) {
   if (entry.kind === "daily") {
     const card = CARD_BY_ID[entry.cardId];
-    const rarityLabel = RARITY_LABELS[entry.rarityScore]?.toLowerCase();
+    const rarityLabel = RARITY_LABELS[entry.rarityScore as Rarity]?.toLowerCase();
     const slug = cardSlug(card);
     const date = DateTime.fromISO(entry.pullDate, { zone: "utc" }).toFormat("LLLL d, yyyy");
 
@@ -141,7 +141,7 @@ function HistoryItem({ entry }: { entry: HistoryEntry }) {
               className="text-xs tracking-widest uppercase"
               style={{ color: `var(--color-rarity-${rarityLabel})` }}
             >
-              {RARITY_LABELS[entry.rarityScore]}
+              {RARITY_LABELS[entry.rarityScore as Rarity]}
               {entry.isRadiant && " ✦"}
               {entry.isReversed && " · Reversed"}
             </p>
