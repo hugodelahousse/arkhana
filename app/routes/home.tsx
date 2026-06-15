@@ -163,7 +163,7 @@ export function meta({ data }: Route.MetaArgs) {
   const canonical = `${origin}/`;
   return [
     { title: "Arkhana — Daily Tarot Readings" },
-    { name: "description", content: "Draw one tarot card every day and build your personal arkhive. 78 beautifully illustrated cards with unique readings across five rarity tiers." },
+    { name: "description", content: "Draw one tarot card every day and build your personal arkhive. Each pull comes with its own reading. Collect all 78 cards and follow friends to compare draws." },
     { tagName: "link", rel: "canonical", href: canonical },
     { property: "og:title", content: "Arkhana — Daily Tarot Readings" },
     { property: "og:description", content: "Draw one tarot card every day and build your personal arkhive." },
@@ -586,7 +586,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             "@type": "WebSite",
             name: "Arkhana",
             url: "https://arkhana.app",
-            description: "Draw one tarot card every day and build your personal arkhive. 78 beautifully illustrated cards with unique readings across five rarity tiers.",
+            description: "Draw one tarot card every day and build your personal arkhive. Each pull comes with its own reading. Collect all 78 cards and follow friends to compare draws.",
           }} />
 
           {isSundayToday && spreadDef ? (
