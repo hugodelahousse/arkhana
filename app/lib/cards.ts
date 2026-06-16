@@ -28,7 +28,7 @@ export function getCardDescription(
 
 export function getSpreadPositionDescription(
   card: CardDefinition,
-  positionKey: SpreadPositionKey | string
+  positionKey: SpreadPositionKey
 ): string | null {
   return CARD_POSITION_DESCRIPTIONS[card.id]?.[positionKey] ?? null;
 }

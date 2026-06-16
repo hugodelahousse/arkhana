@@ -7,6 +7,7 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import type { SpreadPositionKey } from "../../app/lib/spreads.js";
 import { user } from "./auth.js";
 import { userCards } from "./user-cards.js";
 
@@ -38,7 +39,7 @@ export const spreadCards = pgTable(
       .notNull()
       .references(() => userCards.id),
     position: integer("position").notNull(), // 0-indexed, matches registry definition
-    positionKey: text("position_key").notNull(), // "mind" | "body" | "spirit" | "action"
+    positionKey: text("position_key").notNull().$type<SpreadPositionKey>(),
   },
   (t) => [
     uniqueIndex("spread_cards_spread_position_idx").on(t.spreadId, t.position),
