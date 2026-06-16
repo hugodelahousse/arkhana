@@ -28,9 +28,12 @@ export function getCardDescription(
 
 export function getSpreadPositionDescription(
   card: CardDefinition,
-  positionKey: SpreadPositionKey
+  positionKey: SpreadPositionKey,
+  isReversed: boolean
 ): string | null {
-  return CARD_POSITION_DESCRIPTIONS[card.id]?.[positionKey] ?? null;
+  const entry = CARD_POSITION_DESCRIPTIONS[card.id];
+  if (!entry) return null;
+  return (isReversed ? entry.reversed : entry.upright)[positionKey] ?? null;
 }
 
 export const CARDS: CardDefinition[] = [

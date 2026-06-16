@@ -88,7 +88,7 @@ function CardDetailOverlay({
             )}
           </p>
           <p className="type-body-serif max-w-[260px]">
-            {getSpreadPositionDescription(card.card, card.positionKey) ?? getCardDescription(card.card, card.rarityScore, card.isReversed)}
+            {getSpreadPositionDescription(card.card, card.positionKey, card.isReversed) ?? getCardDescription(card.card, card.rarityScore, card.isReversed)}
           </p>
         </motion.div>
 
