@@ -201,7 +201,7 @@ export const CARD_POSITION_DESCRIPTIONS_B: Record<number, Partial<Record<SpreadP
     "what has grown": "A connection you have been tending has matured into something balanced and sustaining — the two cups are no longer circling, they are still.",
     "what is illuminated": "The full moon reveals what you have been contributing to this bond versus what you have been withholding, and what the other has offered in return.",
     "what hides in the light": "Beneath the harmony, a question about whether both parties are truly equal, or whether one cup is always a fraction more full.",
-    "what must be released": "The union that has served its purpose — the partnership, friendship, or creative collaboration whose completion is being honoured here.",
+    "what must be released": "The unequal footing that has been masquerading as partnership. Release the dynamic in which one cup is always fuller than the other.",
     "how to let go": "Part with gratitude, naming what was real. The Two of Cups at its end is still a ceremony — endings deserve the same care as beginnings.",
     "what emerges": "A new capacity for equal partnership — more clear-eyed, more deliberate, no longer willing to settle for connection that only runs in one direction.",
   },
