@@ -1,4 +1,6 @@
-export const CARD_POSITION_DESCRIPTIONS_C: Record<number, Partial<Record<string, string>>> = {
+import type { SpreadPositionKey } from "./spreads";
+
+export const CARD_POSITION_DESCRIPTIONS_C: Record<number, Partial<Record<SpreadPositionKey, string>>> = {
   52: { // Three of Swords
     "mind": "Your thoughts are circling a wound that is real. Name it precisely and it loses some of its power over you.",
     "body": "Grief does not stay in the heart — it settles in the chest, the throat, the shoulders. Give the body permission to feel what the mind has been managing.",

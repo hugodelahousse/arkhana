@@ -1,4 +1,6 @@
-export const CARD_POSITION_DESCRIPTIONS_A: Record<number, Partial<Record<string, string>>> = {
+import type { SpreadPositionKey } from "./spreads";
+
+export const CARD_POSITION_DESCRIPTIONS_A: Record<number, Partial<Record<SpreadPositionKey, string>>> = {
   0: { // The Fool
     "mind": "Your thoughts scatter like seeds on wind — not lost, but seeking soil. Let the mind range freely this week without demanding it arrive anywhere.",
     "body": "The body wants to run before it remembers it can walk. Honor the animal impulse toward movement, but watch for the cliff edge underfoot.",

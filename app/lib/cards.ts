@@ -1,3 +1,7 @@
+import { CARD_POSITION_DESCRIPTIONS, type SpreadPositionKey } from "./card-position-descriptions";
+
+export type { SpreadPositionKey };
+
 export interface CardDefinition {
   id: number;
   name: string;
@@ -22,11 +26,9 @@ export function getCardDescription(
   ];
 }
 
-import { CARD_POSITION_DESCRIPTIONS } from "./card-position-descriptions";
-
 export function getSpreadPositionDescription(
   card: CardDefinition,
-  positionKey: string
+  positionKey: SpreadPositionKey | string
 ): string | null {
   return CARD_POSITION_DESCRIPTIONS[card.id]?.[positionKey] ?? null;
 }

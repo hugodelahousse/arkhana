@@ -4,6 +4,15 @@ export interface SpreadPosition {
   contemplationPrompt: string;
 }
 
+export type SpreadPositionKey =
+  // sunday-weekly
+  | "mind" | "body" | "spirit" | "action"
+  // new-moon
+  | "the gift" | "what to release" | "the seed" | "the obstacle" | "first steps"
+  // full-moon
+  | "what has grown" | "what is illuminated" | "what hides in the light"
+  | "what must be released" | "how to let go" | "what emerges";
+
 import { DateTime } from "luxon";
 import { isMoonEventOnDate, nextMoonEventDate } from "./moonphase";
 

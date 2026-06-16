@@ -1,4 +1,6 @@
-export const CARD_POSITION_DESCRIPTIONS_B: Record<number, Partial<Record<string, string>>> = {
+import type { SpreadPositionKey } from "./spreads";
+
+export const CARD_POSITION_DESCRIPTIONS_B: Record<number, Partial<Record<SpreadPositionKey, string>>> = {
   26: { // Five of Wands
     "mind": "Competing thoughts crowd the stage — every idea argues for precedence, and the noise is exhausting. Identify which voice is yours before acting.",
     "body": "The body is burning off restless energy in all directions; channelled movement will serve you better than scattered exertion.",
