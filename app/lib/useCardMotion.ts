@@ -14,6 +14,9 @@ export interface CardMotionConfig {
   overrideRotateY?: number; // when set, locks rotateY to this value (disables idle/hover/touch Y)
 }
 
+const PARALLAX_SCALE = 12;
+const PARALLAX_CLAMP = 1.25;
+
 export const DEFAULT_MOTION_CONFIG: CardMotionConfig = {
   idleAmplitude: 6,
   idleSpeed: 0.5,
@@ -73,6 +76,15 @@ export function useCardMotion(
     el.style.setProperty("--pointer-from-center", String(Math.min(1, Math.hypot(nx, ny) / Math.SQRT2)));
   }, [ref]);
 
+  const setParallaxVars = useCallback((rotXDeg: number, rotYDeg: number) => {
+    const el = ref.current;
+    if (!el) return;
+    const px = Math.max(-PARALLAX_CLAMP, Math.min(PARALLAX_CLAMP, rotYDeg / PARALLAX_SCALE));
+    const py = Math.max(-PARALLAX_CLAMP, Math.min(PARALLAX_CLAMP, -rotXDeg / PARALLAX_SCALE));
+    el.style.setProperty("--parallax-x", String(px));
+    el.style.setProperty("--parallax-y", String(py));
+  }, [ref]);
+
   const resetCSSVars = useCallback(() => {
     const el = ref.current;
     if (!el) return;
@@ -81,6 +93,8 @@ export function useCardMotion(
     el.style.setProperty("--glow-x",  "0.5");
     el.style.setProperty("--glow-y",  "0.5");
     el.style.setProperty("--pointer-from-center", "0");
+    el.style.setProperty("--parallax-x", "0");
+    el.style.setProperty("--parallax-y", "0");
   }, [ref]);
 
   // Idle: two incommensurate frequencies + a subtle harmonic on each axis
@@ -99,17 +113,19 @@ export function useCardMotion(
         if (overrideRotateY !== undefined) {
           rotateY.set(overrideRotateY);
           setCSSVars(Math.sin(overrideRotateY / 180 * Math.PI), ny / Math.max(0.01, amp));
+          setParallaxVars(-ny, overrideRotateY);
         } else {
           rotateY.set(nx);
           const safeAmp = Math.max(0.01, amp);
           setCSSVars(nx / safeAmp, ny / safeAmp);
+          setParallaxVars(-ny, nx);
         }
       }
       rafId = requestAnimationFrame(loop);
     };
     rafId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafId);
-  }, [rotateX, rotateY, setCSSVars]);
+  }, [rotateX, rotateY, setCSSVars, setParallaxVars]);
 
   // Physics-based spin-down after a swipe: exponential friction until velocity
   // drops to a threshold, then spring-snap to the nearest front-facing angle.
@@ -146,6 +162,7 @@ export function useCardMotion(
       // Update foil/shine: use rotation angle to drive a sweep
       const angle = next / 360; // 0–1
       setCSSVars(Math.sin(angle * Math.PI * 2), 0);
+      setParallaxVars(0, next);
 
       if (Math.abs(omegaRef.current) < 30) {
         // Velocity is low enough — snap to nearest face
@@ -177,7 +194,7 @@ export function useCardMotion(
     };
 
     decelRafRef.current = requestAnimationFrame(tick);
-  }, [rotateY, setCSSVars]);
+  }, [rotateY, setCSSVars, setParallaxVars]);
 
   // ── Touch drag ──────────────────────────────────────────────────────────
 
@@ -234,9 +251,11 @@ export function useCardMotion(
     const degsPerPx = touchHScale / cardWidthRef.current;
 
     // Horizontal: accumulation from gesture base, clamped if maxRotateYDeg is set
+    let rotYDeg = rotateY.get();
     if (overrideRotateY === undefined) {
       const rawY = baseRotYRef.current + dx * degsPerPx;
-      rotateY.set(maxRotateYDeg !== undefined ? Math.max(-maxRotateYDeg, Math.min(maxRotateYDeg, rawY)) : rawY);
+      rotYDeg = maxRotateYDeg !== undefined ? Math.max(-maxRotateYDeg, Math.min(maxRotateYDeg, rawY)) : rawY;
+      rotateY.set(rotYDeg);
     }
 
     // Vertical: clamped give
@@ -246,7 +265,8 @@ export function useCardMotion(
 
     // CSS vars for foil/shine (normalise horizontal to ±1 over 90°)
     setCSSVars(Math.max(-1, Math.min(1, (dx * degsPerPx) / 90)), ny);
-  }, [ref, rotateX, rotateY, setCSSVars]);
+    setParallaxVars(-ny * touchVMax, rotYDeg);
+  }, [ref, rotateX, rotateY, setCSSVars, setParallaxVars]);
 
   const onTouchEnd = useCallback(() => {
     const wasDragging = isDraggingRef.current;
@@ -277,6 +297,7 @@ export function useCardMotion(
       if (cfgRef.current.overrideRotateY === undefined) {
         rotateY.set(nx * 15);
       }
+      setParallaxVars(-ny * 15, cfgRef.current.overrideRotateY ?? nx * 15);
     }
     ref.current.style.setProperty("--ratio-x", String((nx + 1) / 2));
     ref.current.style.setProperty("--ratio-y", String((ny + 1) / 2));
@@ -284,7 +305,7 @@ export function useCardMotion(
     ref.current.style.setProperty("--glow-y",  String((e.clientY - top)  / height));
     ref.current.style.setProperty("--pointer-from-center",
       String(Math.min(1, Math.hypot(nx, ny) / Math.SQRT2)));
-  }, [ref, rotateX, rotateY]);
+  }, [ref, rotateX, rotateY, setParallaxVars]);
 
   const onMouseLeave = useCallback(() => {
     isHoveringRef.current = false;
@@ -344,15 +365,18 @@ export function useCardMotion(
       const { touchHScale, touchVMax, maxRotateYDeg, overrideRotateY } = cfgRef.current;
       const degsPerPx = touchHScale / cardWidthRef.current;
 
+      let rotYDeg = rotateY.get();
       if (overrideRotateY === undefined) {
         const rawY = baseRotYRef.current + dx * degsPerPx;
-        rotateY.set(maxRotateYDeg !== undefined ? Math.max(-maxRotateYDeg, Math.min(maxRotateYDeg, rawY)) : rawY);
+        rotYDeg = maxRotateYDeg !== undefined ? Math.max(-maxRotateYDeg, Math.min(maxRotateYDeg, rawY)) : rawY;
+        rotateY.set(rotYDeg);
       }
 
       const { height } = ref.current.getBoundingClientRect();
       const ny = Math.max(-1, Math.min(1, (dy / height) * 2));
       rotateX.set(-ny * touchVMax);
       setCSSVars(Math.max(-1, Math.min(1, (dx * degsPerPx) / 90)), ny);
+      setParallaxVars(-ny * touchVMax, rotYDeg);
     };
 
     const onWindowUp = () => {
@@ -381,7 +405,7 @@ export function useCardMotion(
       window.removeEventListener("mousemove", onWindowMove);
       window.removeEventListener("mouseup", onWindowUp);
     };
-  }, [ref, rotateX, rotateY, setCSSVars, resetCSSVars, startDeceleration]);
+  }, [ref, rotateX, rotateY, setCSSVars, setParallaxVars, resetCSSVars, startDeceleration]);
 
   useEffect(() => () => { cleanupDragRef.current?.(); }, []);
 
