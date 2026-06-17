@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CARDS, CARD_BY_ID, RARITY_LABELS, getCardDescription } from "../../lib/cards";
+import { CARDS, CARD_BY_ID, RARITY_LABELS, getCardDescription, getSpreadPositionDescription } from "../../lib/cards";
 import { TarotCard } from "../../components/TarotCard";
 import { useAutoReveal } from "../../lib/useAutoReveal";
 import { motion, AnimatePresence } from "motion/react";
@@ -103,7 +103,7 @@ function PositionCardReveal({
               className="text-sm leading-relaxed opacity-80"
               style={{ color: "var(--foreground)", fontFamily: "var(--font-serif)" }}
             >
-              {getCardDescription(card.card, card.rarityScore, card.isReversed)}
+              {getSpreadPositionDescription(card.card, card.positionKey, card.isReversed) ?? getCardDescription(card.card, card.rarityScore, card.isReversed)}
             </p>
             <button
               onClick={onAdvance}
