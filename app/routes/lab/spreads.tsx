@@ -160,7 +160,7 @@ export default function SpreadLab() {
 
   const currentCards: SpreadCardResult[] = configs.slice(0, positions.length).map((cfg, i) => ({
     position: i,
-    positionKey: positions[i]?.label.toLowerCase() ?? String(i),
+    positionKey: positions[i]!.key,
     userCardId: i,
     cardId: cfg.cardId,
     card: CARD_BY_ID[cfg.cardId],
