@@ -29,18 +29,6 @@
   initial-value: 0.5;
 }
 
-/* Parallax offset — proportional to actual rotation angle, not mouse position */
-@property --parallax-x {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 0;
-}
-@property --parallax-y {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 0;
-}
-
 /* ─── Scene (perspective context) ─── */
 .card-scene {
   display: inline-block;
@@ -268,7 +256,16 @@
 .card-scene[data-size="lg"] .card-back-sigil { font-size: 3rem; }
 
 
-.card-front { transform: rotateY(180deg) translateZ(calc(var(--card-thickness, 3px) / 2)); border-radius: 0; }
+.card-front {
+  transform: rotateY(180deg) translateZ(calc(var(--card-thickness, 3px) / 2));
+  transform-style: preserve-3d;
+  border-radius: 0;
+}
+
+.card-front > * {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
 
 .card-front img {
   width: 100%;
@@ -618,7 +615,8 @@
 /* ═══════════════════════════════════════════════════════════
    SUBJECT PARALLAX LAYER (Rarity 4+)
    A second copy of the card image, masked to the subject,
-   that translates with the tilt to create depth.
+   lifted in Z so the 3D perspective creates natural parallax
+   when the card tilts — no manual translate needed.
    ═══════════════════════════════════════════════════════════ */
 
 .card-subject {
@@ -642,7 +640,6 @@
   display: block;
   z-index: 1;
   pointer-events: none;
-  translate: 0 0 0.001px;
 }
 
 .card-name-layer {
@@ -653,26 +650,17 @@
   /* mask applied via inline style to avoid Safari var() resolution bug in preserve-3d */
 }
 
-.card-scene[data-rarity="5"] .card-text-layer {
-  transform: translate(
-    calc(var(--parallax-x, 0) * var(--parallax-sign, 1) * 10px),
-    calc(var(--parallax-y, 0) * var(--parallax-sign, 1) * 10px)
-  );
-}
-
 .card-scene[data-rarity="4"] .card-subject {
-  transform: translate(
-    calc(var(--parallax-x, 0) * var(--parallax-sign, 1) * 5px),
-    calc(var(--parallax-y, 0) * var(--parallax-sign, 1) * 5px)
-  );
+  transform: translateZ(20px);
 }
 
 .card-scene[data-rarity="5"] .card-subject {
-  transform: translate(
-    calc(var(--parallax-x, 0) * var(--parallax-sign, 1) * 10px),
-    calc(var(--parallax-y, 0) * var(--parallax-sign, 1) * 10px)
-  );
+  transform: translateZ(40px);
   filter: drop-shadow(0 4px 14px rgba(0,0,0,.6));
+}
+
+.card-scene[data-rarity="5"] .card-text-layer {
+  transform: translateZ(15px);
 }
 
 
@@ -692,18 +680,14 @@
   mask-mode: alpha;
 }
 
-/* Parallax the shine with the subject for rarity 4+ */
-.card-scene[data-rarity="4"] .card-shine {
-  transform: translate(
-    calc(var(--parallax-x, 0) * 5px),
-    calc(var(--parallax-y, 0) * 5px)
-  );
+/* Lift the shine and glare with the subject for rarity 4+ so they parallax together */
+.card-scene[data-rarity="4"] .card-shine,
+.card-scene[data-rarity="4"] .card-glare {
+  transform: translateZ(20px);
 }
-.card-scene[data-rarity="5"] .card-shine {
-  transform: translate(
-    calc(var(--parallax-x, 0) * 10px),
-    calc(var(--parallax-y, 0) * 10px)
-  );
+.card-scene[data-rarity="5"] .card-shine,
+.card-scene[data-rarity="5"] .card-glare {
+  transform: translateZ(40px);
 }
 
 
@@ -743,7 +727,7 @@
   opacity: .3;
 }
 
-/* Rarity 4 — Arcane: brighter text foil + parallax */
+/* Rarity 4 — Arcane: brighter text foil */
 .card-scene[data-rarity="4"][data-revealed] .card-name-foil,
 .card-scene[data-rarity="4"][data-revealed] .card-top-foil {
   opacity: .25;
@@ -752,15 +736,8 @@
 .card-scene[data-rarity="4"][data-revealed]:hover .card-top-foil {
   opacity: .5;
 }
-.card-scene[data-rarity="4"] .card-name-foil,
-.card-scene[data-rarity="4"] .card-top-foil {
-  transform: translate(
-    calc(var(--parallax-x, 0) * var(--parallax-sign, 1) * 5px),
-    calc(var(--parallax-y, 0) * var(--parallax-sign, 1) * 5px)
-  );
-}
 
-/* Rarity 5 — Primordial: intense text foil + full parallax */
+/* Rarity 5 — Primordial: intense text foil */
 .card-scene[data-rarity="5"][data-revealed] .card-name-foil,
 .card-scene[data-rarity="5"][data-revealed] .card-top-foil {
   opacity: .4;
@@ -768,13 +745,6 @@
 .card-scene[data-rarity="5"][data-revealed]:hover .card-name-foil,
 .card-scene[data-rarity="5"][data-revealed]:hover .card-top-foil {
   opacity: .65;
-}
-.card-scene[data-rarity="5"] .card-name-foil,
-.card-scene[data-rarity="5"] .card-top-foil {
-  transform: translate(
-    calc(var(--parallax-x, 0) * var(--parallax-sign, 1) * 10px),
-    calc(var(--parallax-y, 0) * var(--parallax-sign, 1) * 10px)
-  );
 }
 
 
