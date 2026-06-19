@@ -651,16 +651,16 @@
 }
 
 .card-scene[data-rarity="4"] .card-subject {
-  transform: translateZ(20px);
+  transform: translateZ(4px);
 }
 
 .card-scene[data-rarity="5"] .card-subject {
-  transform: translateZ(40px);
+  transform: translateZ(5px);
   filter: drop-shadow(0 4px 14px rgba(0,0,0,.6));
 }
 
 .card-scene[data-rarity="5"] .card-text-layer {
-  transform: translateZ(15px);
+  transform: translateZ(3px);
 }
 
 
@@ -680,14 +680,12 @@
   mask-mode: alpha;
 }
 
-/* Lift the shine and glare with the subject for rarity 4+ so they parallax together */
-.card-scene[data-rarity="4"] .card-shine,
-.card-scene[data-rarity="4"] .card-glare {
-  transform: translateZ(20px);
+/* Lift the shine with the subject for rarity 4+ so it parallaxes together */
+.card-scene[data-rarity="4"] .card-shine {
+  transform: translateZ(4px);
 }
-.card-scene[data-rarity="5"] .card-shine,
-.card-scene[data-rarity="5"] .card-glare {
-  transform: translateZ(40px);
+.card-scene[data-rarity="5"] .card-shine {
+  transform: translateZ(5px);
 }
 
 
