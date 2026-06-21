@@ -1,7 +1,6 @@
 import { eq, and, desc, ne, sql, inArray } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { userCards } from "../../db/schema/user-cards.js";
-import { spreads } from "../../db/schema/spreads.js";
 import { CARD_BY_ID, type CardDefinition, type Rarity } from "./cards.js";
 import { rollRarity, rollRadiant, rollReversed } from "./rarity.js";
 import { todayForUser } from "./utils.js";
@@ -140,20 +139,12 @@ export async function getTodayPull(userId: string, pullDate: string) {
 }
 
 export async function hasPulledToday(userId: string, pullDate: string): Promise<boolean> {
-  const result = await db.execute(sql`
-    SELECT EXISTS (
-      SELECT 1 FROM ${userCards}
-      WHERE ${userCards.userId} = ${userId}
-        AND ${userCards.pullDate} = ${pullDate}
-        AND ${userCards.pullType} = 'daily'
-      UNION ALL
-      SELECT 1 FROM ${spreads}
-      WHERE ${spreads.userId} = ${userId}
-        AND ${spreads.spreadDate} = ${pullDate}
-      LIMIT 1
-    ) AS pulled
-  `);
-  return Boolean(result[0].pulled);
+  const [row] = await db
+    .select({ id: userCards.id })
+    .from(userCards)
+    .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate)))
+    .limit(1);
+  return !!row;
 }
 
 export async function getRecentPulls(userId: string, limit = 5) {
