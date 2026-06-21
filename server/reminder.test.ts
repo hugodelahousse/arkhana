@@ -48,6 +48,7 @@ async function createPull(userId: string, pullDate: string) {
 
 async function createSpread(userId: string, spreadDate: string) {
   await db.insert(spreads).values({ userId, spreadType: "sunday-weekly", spreadDate });
+  await db.insert(userCards).values({ userId, cardId: CARD_ID, rarityScore: 1, isRadiant: false, isReversed: false, pullDate: spreadDate, pullType: "spread" });
 }
 
 async function cleanup(...ids: string[]) {

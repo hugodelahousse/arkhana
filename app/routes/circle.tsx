@@ -3,7 +3,7 @@ import { ArrowRight, UsersThree } from "@phosphor-icons/react";
 import type { Route } from "./+types/circle";
 import { TarotCard } from "../components/TarotCard";
 import { DirectionalTransition } from "../components/DirectionalTransition";
-import { getTodayPull } from "../lib/pull";
+import { hasPulledToday } from "../lib/pull";
 import { getCircleDailyPulls, type CircleEntry } from "../lib/follows";
 import { CARD_BY_ID, RARITY_LABELS, type Rarity } from "../lib/cards";
 import { nowForUser, todayForUser } from "../lib/utils";
@@ -18,9 +18,9 @@ export async function loader({ context }: Route.LoaderArgs) {
 
   const todayLabel = nowForUser(viewer.timezone).toFormat("cccc, LLLL d");
   const localToday = todayForUser(viewer.timezone);
-  const todayPull = await getTodayPull(viewer.id, localToday);
+  const pulledToday = await hasPulledToday(viewer.id, localToday);
 
-  if (!todayPull) {
+  if (!pulledToday) {
     return { state: "gated" as const, todayLabel };
   }
 

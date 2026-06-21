@@ -138,6 +138,15 @@ export async function getTodayPull(userId: string, pullDate: string) {
   return row ?? null;
 }
 
+export async function hasPulledToday(userId: string, pullDate: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: userCards.id })
+    .from(userCards)
+    .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate)))
+    .limit(1);
+  return !!row;
+}
+
 export async function getRecentPulls(userId: string, limit = 5) {
   return db
     .select(pullFields)
