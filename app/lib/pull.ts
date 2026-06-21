@@ -141,10 +141,10 @@ export async function getTodayPull(userId: string, pullDate: string) {
 
 export async function hasPulledToday(userId: string, pullDate: string): Promise<boolean> {
   const [row] = await unionAll(
-    db.select({ id: userCards.id }).from(userCards)
+    db.select({ _: sql<1>`1` }).from(userCards)
       .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate), eq(userCards.pullType, "daily")))
       .limit(1),
-    db.select({ id: spreads.id }).from(spreads)
+    db.select({ _: sql<1>`1` }).from(spreads)
       .where(and(eq(spreads.userId, userId), eq(spreads.spreadDate, pullDate)))
       .limit(1)
   ).limit(1);
