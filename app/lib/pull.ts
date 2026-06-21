@@ -140,15 +140,20 @@ export async function getTodayPull(userId: string, pullDate: string) {
 }
 
 export async function hasPulledToday(userId: string, pullDate: string): Promise<boolean> {
-  const [dailyRows, spreadRows] = await Promise.all([
-    db.select({ id: userCards.id }).from(userCards)
-      .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate), eq(userCards.pullType, "daily")))
-      .limit(1),
-    db.select({ id: spreads.id }).from(spreads)
-      .where(and(eq(spreads.userId, userId), eq(spreads.spreadDate, pullDate)))
-      .limit(1),
-  ]);
-  return dailyRows.length > 0 || spreadRows.length > 0;
+  const result = await db.execute(sql`
+    SELECT EXISTS (
+      SELECT 1 FROM ${userCards}
+      WHERE ${userCards.userId} = ${userId}
+        AND ${userCards.pullDate} = ${pullDate}
+        AND ${userCards.pullType} = 'daily'
+      UNION ALL
+      SELECT 1 FROM ${spreads}
+      WHERE ${spreads.userId} = ${userId}
+        AND ${spreads.spreadDate} = ${pullDate}
+      LIMIT 1
+    ) AS pulled
+  `);
+  return Boolean(result[0].pulled);
 }
 
 export async function getRecentPulls(userId: string, limit = 5) {
