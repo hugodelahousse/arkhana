@@ -1,4 +1,4 @@
-import { eq, and, desc, ne, sql, inArray } from "drizzle-orm";
+import { eq, and, desc, ne, sql, inArray, unionAll } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { userCards } from "../../db/schema/user-cards.js";
 import { spreads } from "../../db/schema/spreads.js";
@@ -140,19 +140,15 @@ export async function getTodayPull(userId: string, pullDate: string) {
 }
 
 export async function hasPulledToday(userId: string, pullDate: string): Promise<boolean> {
-  const [dailyRow] = await db
-    .select({ id: userCards.id })
-    .from(userCards)
-    .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate), eq(userCards.pullType, "daily")))
-    .limit(1);
-  if (dailyRow) return true;
-
-  const [spreadRow] = await db
-    .select({ id: spreads.id })
-    .from(spreads)
-    .where(and(eq(spreads.userId, userId), eq(spreads.spreadDate, pullDate)))
-    .limit(1);
-  return !!spreadRow;
+  const [row] = await unionAll(
+    db.select({ id: userCards.id }).from(userCards)
+      .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate), eq(userCards.pullType, "daily")))
+      .limit(1),
+    db.select({ id: spreads.id }).from(spreads)
+      .where(and(eq(spreads.userId, userId), eq(spreads.spreadDate, pullDate)))
+      .limit(1)
+  ).limit(1);
+  return !!row;
 }
 
 export async function getRecentPulls(userId: string, limit = 5) {
