@@ -1,8 +1,18 @@
 export interface SpreadPosition {
   index: number;
+  key: SpreadPositionKey;
   label: string;
   contemplationPrompt: string;
 }
+
+export type SpreadPositionKey =
+  // sunday-weekly
+  | "mind" | "body" | "spirit" | "action"
+  // new-moon
+  | "the gift" | "what to release" | "the seed" | "the obstacle" | "first steps"
+  // full-moon
+  | "what has grown" | "what is illuminated" | "what hides in the light"
+  | "what must be released" | "how to let go" | "what emerges";
 
 import { DateTime } from "luxon";
 import { isMoonEventOnDate, nextMoonEventDate } from "./moonphase";
@@ -27,24 +37,28 @@ export const SPREAD_REGISTRY: Record<string, SpreadTypeDefinition> = {
     positions: [
       {
         index: 0,
+        key: "mind",
         label: "Mind",
         contemplationPrompt:
           "Before you draw, sit with your mind. What thoughts have been circling lately? What clarity are you seeking in the days ahead?",
       },
       {
         index: 1,
+        key: "body",
         label: "Body",
         contemplationPrompt:
           "Turn your attention to your body. Where do you carry tension? Where do you feel your energy? What does your body need from this week?",
       },
       {
         index: 2,
+        key: "spirit",
         label: "Spirit",
         contemplationPrompt:
           "What stirs in you — a longing, an intuition, a quiet pull? What does your spirit wish to tend to this week?",
       },
       {
         index: 3,
+        key: "action",
         label: "Action",
         contemplationPrompt:
           "Having sat with mind, body, and spirit — what is the one guiding action the week asks of you? What must you actually do?",
@@ -65,30 +79,35 @@ export const SPREAD_REGISTRY: Record<string, SpreadTypeDefinition> = {
     positions: [
       {
         index: 0,
+        key: "the gift",
         label: "The Gift",
         contemplationPrompt:
           "Breathe into the darkness. What energy does this new moon carry for you? What theme or lesson is pressing itself forward at this threshold?",
       },
       {
         index: 1,
+        key: "what to release",
         label: "What to Release",
         contemplationPrompt:
           "The new moon asks us to compost the old. What from the last cycle — a habit, a thought, a grief — must be surrendered to make room for what comes next?",
       },
       {
         index: 2,
+        key: "the seed",
         label: "The Seed",
         contemplationPrompt:
           "What intention is ready to take root in this fertile darkness? Name it quietly, without forcing it into shape. What do you most wish to grow?",
       },
       {
         index: 3,
+        key: "the obstacle",
         label: "The Obstacle",
         contemplationPrompt:
           "As the seed stirs, what resistance might rise to meet it? What part of you or your circumstances may push back against this intention?",
       },
       {
         index: 4,
+        key: "first steps",
         label: "First Steps",
         contemplationPrompt:
           "Intentions live or die by their first movement. What single, concrete act carries this seed forward into the world? What must you actually do?",
@@ -106,36 +125,42 @@ export const SPREAD_REGISTRY: Record<string, SpreadTypeDefinition> = {
     positions: [
       {
         index: 0,
+        key: "what has grown",
         label: "What Has Grown",
         contemplationPrompt:
           "Since the last new moon, what has come to fruition — expected or not? Look at what has changed in you, not just around you.",
       },
       {
         index: 1,
+        key: "what is illuminated",
         label: "What Is Illuminated",
         contemplationPrompt:
           "The full moon hides nothing. What truth can you now see clearly that was obscured before? What situation or feeling has finally come into full light?",
       },
       {
         index: 2,
+        key: "what hides in the light",
         label: "What Hides in the Light",
         contemplationPrompt:
           "Even under full illumination, something stays in shadow. What truth are you still circling around — present but not yet faced?",
       },
       {
         index: 3,
+        key: "what must be released",
         label: "What Must Be Released",
         contemplationPrompt:
           "What is complete — ready to be laid down so it can become something new? What are you still carrying that has already served its purpose?",
       },
       {
         index: 4,
+        key: "how to let go",
         label: "How to Let Go",
         contemplationPrompt:
           "Release is rarely a single act. What will support you through this surrender — a practice, a perspective, a person, a moment of stillness?",
       },
       {
         index: 5,
+        key: "what emerges",
         label: "What Emerges",
         contemplationPrompt:
           "Once you set down what is finished, what space opens? What begins to stir at the edges of this ending — the first shape of what comes next?",

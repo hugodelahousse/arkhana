@@ -13,7 +13,7 @@ import { getStreak, initStreakFromHistory } from "../lib/streak";
 import { getLunarMonthsInfo } from "../lib/moonphase";
 import { getTodaySpread, drawSpread, getSpreadId } from "../lib/spread-pull";
 import type { SpreadCardResult } from "../lib/spread-pull";
-import { CARD_BY_ID, RARITY_LABELS, getCardDescription, cardSlug, type Rarity, type CardDefinition } from "../lib/cards";
+import { CARD_BY_ID, RARITY_LABELS, getCardDescription, getSpreadPositionDescription, cardSlug, type Rarity, type CardDefinition } from "../lib/cards";
 import { getTodaySpreadType } from "../lib/spreads";
 import { useAutoReveal } from "../lib/useAutoReveal";
 import { DateTime } from "luxon";
@@ -294,7 +294,7 @@ function SpreadContemplateReveal({
             {card.card.name}
           </h3>
           <p className="type-body-serif">
-            {getCardDescription(card.card, card.rarityScore, card.isReversed)}
+            {getSpreadPositionDescription(card.card, card.positionKey, card.isReversed) ?? getCardDescription(card.card, card.rarityScore, card.isReversed)}
           </p>
           <button
             onClick={onAdvance}

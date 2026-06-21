@@ -5,6 +5,7 @@ import { user } from "../../db/schema/auth.js";
 import { userCards } from "../../db/schema/user-cards.js";
 import { spreads, spreadCards } from "../../db/schema/spreads.js";
 import { todayForUser } from "./utils.js";
+import type { SpreadPositionKey } from "./spreads.js";
 
 export async function followUser(followerId: string, followingId: string): Promise<void> {
   if (followerId === followingId) {
@@ -161,7 +162,7 @@ export interface CircleSpreadCard {
   rarityScore: number;
   isRadiant: boolean;
   isReversed: boolean;
-  positionKey: string;
+  positionKey: SpreadPositionKey;
 }
 
 export interface CircleSpread {

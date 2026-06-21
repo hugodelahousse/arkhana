@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, LayoutGroup } from "motion/react";
 import { TarotCard } from "./TarotCard";
-import { RARITY_LABELS, getCardDescription, type Rarity } from "../lib/cards";
+import { RARITY_LABELS, getCardDescription, getSpreadPositionDescription, type Rarity } from "../lib/cards";
 import type { SpreadCardResult } from "../lib/spread-pull";
 
 function CardDetailOverlay({
@@ -88,7 +88,7 @@ function CardDetailOverlay({
             )}
           </p>
           <p className="type-body-serif max-w-[260px]">
-            {getCardDescription(card.card, card.rarityScore, card.isReversed)}
+            {getSpreadPositionDescription(card.card, card.positionKey, card.isReversed) ?? getCardDescription(card.card, card.rarityScore, card.isReversed)}
           </p>
         </motion.div>
 

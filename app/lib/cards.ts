@@ -1,3 +1,7 @@
+import { CARD_POSITION_DESCRIPTIONS, type SpreadPositionKey } from "./card-position-descriptions";
+
+export type { SpreadPositionKey };
+
 export interface CardDefinition {
   id: number;
   name: string;
@@ -20,6 +24,16 @@ export function getCardDescription(
   return (isReversed ? card.reversedDescriptions : card.descriptions)[
     rarityScore - 1
   ];
+}
+
+export function getSpreadPositionDescription(
+  card: CardDefinition,
+  positionKey: SpreadPositionKey,
+  isReversed: boolean
+): string | null {
+  const entry = CARD_POSITION_DESCRIPTIONS[card.id];
+  if (!entry) return null;
+  return (isReversed ? entry.reversed : entry.upright)[positionKey] ?? null;
 }
 
 export const CARDS: CardDefinition[] = [

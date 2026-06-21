@@ -5,12 +5,12 @@ import { spreads, spreadCards } from "../../db/schema/spreads.js";
 import { userCards } from "../../db/schema/user-cards.js";
 import { CARD_BY_ID, type CardDefinition, type Rarity } from "./cards.js";
 import { rollRarity, rollRadiant, rollReversed } from "./rarity.js";
-import { getSpreadType } from "./spreads.js";
+import { getSpreadType, type SpreadPositionKey } from "./spreads.js";
 import { updateStreak } from "./streak.js";
 
 export type SpreadCardResult = {
   position: number;
-  positionKey: string;
+  positionKey: SpreadPositionKey;
   userCardId: number;
   cardId: number;
   card: CardDefinition;
@@ -68,7 +68,7 @@ export async function drawSpread(
     usedCardIds.add(cardId);
     return {
       position: pos.index,
-      positionKey: pos.label.toLowerCase(),
+      positionKey: pos.key,
       cardId,
       rarityScore: rollRarity(),
       isRadiant: rollRadiant(),
