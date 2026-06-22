@@ -360,7 +360,6 @@ function DailyCardReveal({
           revealed={revealed}
           onReveal={revealNow}
           size="lg"
-          showHint={!revealed}
         />
       </div>
 
@@ -810,7 +809,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className={`flex justify-center ${isPulling ? "animate-pulse pointer-events-none" : ""}`}>
+                  <div className={`flex justify-center ${isPulling ? "pointer-events-none" : ""}`}>
                     <TarotCard
                       card={CARD_BY_ID[0]}
                       rarityScore={1}
@@ -819,11 +818,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       revealed={false}
                       onReveal={() => fetcher.submit({ _action: "pull" }, { method: "post" })}
                       size="lg"
-                      showHint={!isPulling}
                     />
                   </div>
                   <p className="text-xl text-muted-foreground font-serif">
-                    {isPulling ? "The fates are turning…" : "The cards await your question."}
+                    {isPulling ? "The fates are turning…" : "Hold to reveal"}
                   </p>
                 </div>
               )}
