@@ -66,8 +66,8 @@
 
 /* ─── Hold-to-reveal glow ─── */
 /* Soft halo that fades in with --hold-progress (0–1), driven by RAF in useHoldReveal.
-   Lives on .card-tilt so it follows the idle/hover transform. */
-.card-tilt::before {
+   Lives on .card-flipper so it follows the flip rotation. */
+.card-flipper::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -82,7 +82,7 @@
 }
 
 /* On reveal, flash the rarity color and fade out */
-.card-scene[data-revealed] .card-tilt::before {
+.card-scene[data-revealed] .card-flipper::before {
   box-shadow:
     0 0 15px 3px var(--rarity-color, var(--accent)),
     0 0 35px 8px color-mix(in srgb, var(--rarity-color, var(--accent)) 45%, transparent),
