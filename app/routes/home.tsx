@@ -15,11 +15,11 @@ import { getTodaySpread, drawSpread, getSpreadId } from "../lib/spread-pull";
 import type { SpreadCardResult } from "../lib/spread-pull";
 import { CARD_BY_ID, RARITY_LABELS, getCardDescription, getSpreadPositionDescription, cardSlug, type Rarity, type CardDefinition } from "../lib/cards";
 import { getTodaySpreadType } from "../lib/spreads";
-import { useAutoReveal } from "../lib/useAutoReveal";
 import { DateTime } from "luxon";
 import { todayForUser, nowForUser, getOrigin } from "../lib/utils";
 import { config } from "../../config/index.js";
 import { DirectionalTransition } from "../components/DirectionalTransition";
+import { cardImageUrl } from "../lib/cardImages";
 import { ShareButton } from "../components/ShareButton";
 import { Landing } from "../components/Landing";
 import { ArrowRight } from "@phosphor-icons/react";
@@ -315,57 +315,80 @@ function SpreadContemplateReveal({
   );
 }
 
-function DailyCardReveal({
-  card,
-  rarityScore,
-  isReversed,
-  isRadiant,
-  pullId,
-  previousPullDate,
+function DailyPullFlow({
+  dailyResult,
+  dailyReady,
+  dailyRevealed,
+  setDailyRevealed,
+  isPulling,
+  isHolding,
+  setIsHolding,
+  onPull,
   username,
   todayStr,
   onNavigateToCard,
 }: {
-  card: CardDefinition;
-  rarityScore: Rarity;
-  isReversed: boolean;
-  isRadiant: boolean;
-  pullId: number;
-  previousPullDate: string | null;
+  dailyResult: { card: CardDefinition; rarityScore: number; isReversed: boolean; isRadiant: boolean; pullId: number; previousPullDate?: string | null } | null;
+  dailyReady: boolean;
+  dailyRevealed: boolean;
+  setDailyRevealed: (v: boolean) => void;
+  isPulling: boolean;
+  isHolding: boolean;
+  setIsHolding: (v: boolean) => void;
+  onPull: () => void;
   username: string | null;
   todayStr: string;
   onNavigateToCard: (slug: string) => void;
 }) {
-  const [revealed, revealNow] = useAutoReveal(true, 600);
-  const rarityLabel = RARITY_LABELS[rarityScore]?.toLowerCase();
-  const meaning = getCardDescription(card, rarityScore, isReversed);
-  const reflection = reflectionPrompt(card);
+  const card = dailyReady && dailyResult ? dailyResult.card : CARD_BY_ID[0];
+  const rarityScore = (dailyReady && dailyResult ? dailyResult.rarityScore : 1) as Rarity;
+  const isReversed = dailyReady && dailyResult ? dailyResult.isReversed : false;
+  const isRadiant = dailyReady && dailyResult ? dailyResult.isRadiant : false;
+  const revealed = dailyRevealed;
 
-  const shareUrl = username
-    ? `/u/${username}/pull/${todayStr}`
-    : `/share/${pullId}`;
+  const rarityLabel = RARITY_LABELS[rarityScore]?.toLowerCase();
+  const meaning = dailyResult ? getCardDescription(dailyResult.card, rarityScore, isReversed) : "";
+  const reflection = dailyResult ? reflectionPrompt(dailyResult.card) : "";
+
+  const shareUrl = dailyResult
+    ? (username ? `/u/${username}/pull/${todayStr}` : `/share/${dailyResult.pullId}`)
+    : null;
 
   useEffect(() => {
-    if (revealed) window.history.replaceState(null, "", shareUrl);
+    if (revealed && shareUrl) window.history.replaceState(null, "", shareUrl);
   }, [revealed, shareUrl]);
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-center">
+      <div
+        className={`flex justify-center ${isPulling || dailyReady ? "pointer-events-none" : ""}`}
+        onPointerDown={() => setIsHolding(true)}
+        onPointerUp={() => setIsHolding(false)}
+        onPointerLeave={() => setIsHolding(false)}
+        onPointerCancel={() => setIsHolding(false)}
+      >
         <TarotCard
           card={card}
           rarityScore={rarityScore}
           isReversed={isReversed}
           isRadiant={isRadiant}
           revealed={revealed}
-          onReveal={revealNow}
+          onReveal={!dailyResult ? onPull : () => setDailyRevealed(true)}
           size="lg"
-          showHint={!revealed}
         />
       </div>
 
-      <AnimatePresence>
-        {revealed && (
+      <AnimatePresence mode="wait">
+        {!dailyRevealed ? (
+          <motion.p
+            key="hint"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="text-xl text-muted-foreground font-serif"
+          >
+            {isHolding || isPulling || dailyReady ? "The fates are turning…" : "Hold to reveal"}
+          </motion.p>
+        ) : dailyResult && (
           <motion.div
             key="meaning"
             initial={{ opacity: 0, y: 8 }}
@@ -385,7 +408,7 @@ function DailyCardReveal({
               </span>
             </p>
             <h2 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
-              {card.name}
+              {dailyResult.card.name}
             </h2>
             <p className="type-body-serif max-w-xs mx-auto">
               {meaning}
@@ -397,27 +420,29 @@ function DailyCardReveal({
               </p>
             </div>
 
-            {previousPullDate && (
+            {dailyResult.previousPullDate && (
               <p className="text-xs text-ghost-foreground font-serif">
                 Previously drawn{" "}
-                {DateTime.fromISO(previousPullDate, { zone: "utc" }).toFormat("LLLL d, yyyy")}
+                {DateTime.fromISO(dailyResult.previousPullDate, { zone: "utc" }).toFormat("LLLL d, yyyy")}
               </p>
             )}
 
             <div className="flex flex-col items-center gap-3 pt-2">
               <a
-                href={`/collection/${cardSlug(card)}`}
-                onClick={(e) => { e.preventDefault(); onNavigateToCard(cardSlug(card)); }}
+                href={`/collection/${cardSlug(dailyResult.card)}`}
+                onClick={(e) => { e.preventDefault(); onNavigateToCard(cardSlug(dailyResult.card)); }}
                 className="inline-flex items-center gap-1.5 text-xs tracking-widest uppercase text-faint-foreground hover:opacity-70 transition-opacity"
               >
                 Card history <ArrowRight weight="light" size={13} aria-hidden />
               </a>
-              <ShareButton
-                title={username ? `@${username} drew ${card.name} — Arkhana` : `${card.name} — Arkhana`}
-                url={shareUrl}
-                text=""
-                label="Share"
-              />
+              {shareUrl && (
+                <ShareButton
+                  title={username ? `@${username} drew ${dailyResult.card.name} — Arkhana` : `${dailyResult.card.name} — Arkhana`}
+                  url={shareUrl}
+                  text=""
+                  label="Share"
+                />
+              )}
             </div>
           </motion.div>
         )}
@@ -504,6 +529,22 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
   const isPulling = fetcher.state === "submitting";
   const dailyResult = fetcher.data && "card" in fetcher.data ? fetcher.data : null;
+  const [isHolding, setIsHolding] = useState(false);
+  const [dailyReady, setDailyReady] = useState(false);
+  const [dailyRevealed, setDailyRevealed] = useState(false);
+
+  useEffect(() => {
+    if (!dailyResult) return;
+    const img = new Image();
+    img.src = cardImageUrl(dailyResult.card.id);
+    const show = () => {
+      setDailyReady(true);
+      setTimeout(() => setDailyRevealed(true), 600);
+    };
+    if (img.complete) { show(); return; }
+    img.onload = show;
+    img.onerror = show;
+  }, [dailyResult]);
 
   const { todaySpreadTypeId, todaySpreadCards, todaySpreadId, spreadDef, todayStr } = loaderData;
 
@@ -756,19 +797,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 Today
               </h2>
 
-              {dailyResult && "card" in dailyResult ? (
-                <DailyCardReveal
-                  card={dailyResult.card}
-                  rarityScore={dailyResult.rarityScore as Rarity}
-                  isReversed={dailyResult.isReversed}
-                  isRadiant={dailyResult.isRadiant}
-                  pullId={dailyResult.pullId}
-                  previousPullDate={dailyResult.previousPullDate ?? null}
-                  username={user.username ?? null}
-                  todayStr={todayStr}
-                  onNavigateToCard={navigateToCard}
-                />
-              ) : todayPull && todayCard ? (
+              {todayPull && todayCard && !dailyResult ? (
                 <div className="space-y-6">
                   <div className="flex justify-center">
                     <TarotCard
@@ -809,23 +838,19 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className={`flex justify-center ${isPulling ? "animate-pulse pointer-events-none" : ""}`}>
-                    <TarotCard
-                      card={CARD_BY_ID[0]}
-                      rarityScore={1}
-                      isReversed={false}
-                      isRadiant={false}
-                      revealed={false}
-                      onReveal={() => fetcher.submit({ _action: "pull" }, { method: "post" })}
-                      size="lg"
-                      showHint={!isPulling}
-                    />
-                  </div>
-                  <p className="text-xl text-muted-foreground font-serif">
-                    {isPulling ? "The fates are turning…" : "The cards await your question."}
-                  </p>
-                </div>
+                <DailyPullFlow
+                  dailyResult={dailyResult}
+                  dailyReady={dailyReady}
+                  dailyRevealed={dailyRevealed}
+                  setDailyRevealed={setDailyRevealed}
+                  isPulling={isPulling}
+                  isHolding={isHolding}
+                  setIsHolding={setIsHolding}
+                  onPull={() => fetcher.submit({ _action: "pull" }, { method: "post" })}
+                  username={user.username ?? null}
+                  todayStr={todayStr}
+                  onNavigateToCard={navigateToCard}
+                />
               )}
             </section>
           )}
