@@ -503,6 +503,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
   const isPulling = fetcher.state === "submitting";
   const dailyResult = fetcher.data && "card" in fetcher.data ? fetcher.data : null;
+  const [isHolding, setIsHolding] = useState(false);
 
   const { todaySpreadTypeId, todaySpreadCards, todaySpreadId, spreadDef, todayStr } = loaderData;
 
@@ -809,7 +810,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className={`flex justify-center ${isPulling ? "pointer-events-none" : ""}`}>
+                  <div
+                    className={`flex justify-center ${isPulling ? "pointer-events-none" : ""}`}
+                    onPointerDown={() => setIsHolding(true)}
+                    onPointerUp={() => setIsHolding(false)}
+                    onPointerLeave={() => setIsHolding(false)}
+                    onPointerCancel={() => setIsHolding(false)}
+                  >
                     <TarotCard
                       card={CARD_BY_ID[0]}
                       rarityScore={1}
@@ -821,7 +828,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     />
                   </div>
                   <p className="text-xl text-muted-foreground font-serif">
-                    {isPulling ? "The fates are turning…" : "Hold to reveal"}
+                    {isHolding || isPulling ? "The fates are turning…" : "Hold to reveal"}
                   </p>
                 </div>
               )}
