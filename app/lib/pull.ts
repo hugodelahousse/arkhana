@@ -111,7 +111,7 @@ async function getPreviousPullDate(
       and(
         eq(userCards.userId, userId),
         eq(userCards.cardId, cardId),
-        eq(userCards.pullType, "daily"),
+        inArray(userCards.pullType, ["daily", "spread"]),
         ne(userCards.pullDate, excludeDate)
       )
     )
@@ -151,7 +151,7 @@ export async function getRecentPulls(userId: string, limit = 5) {
   return db
     .select(pullFields)
     .from(userCards)
-    .where(and(eq(userCards.userId, userId), eq(userCards.pullType, "daily")))
+    .where(and(eq(userCards.userId, userId), inArray(userCards.pullType, ["daily", "spread"])))
     .orderBy(desc(userCards.pullDate))
     .limit(limit);
 }
