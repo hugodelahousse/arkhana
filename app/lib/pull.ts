@@ -111,7 +111,7 @@ async function getPreviousPullDate(
       and(
         eq(userCards.userId, userId),
         eq(userCards.cardId, cardId),
-        eq(userCards.pullType, "daily"),
+        inArray(userCards.pullType, ["daily", "spread"]),
         ne(userCards.pullDate, excludeDate)
       )
     )
@@ -151,7 +151,7 @@ export async function getRecentPulls(userId: string, limit = 5) {
   return db
     .select(pullFields)
     .from(userCards)
-    .where(and(eq(userCards.userId, userId), eq(userCards.pullType, "daily")))
+    .where(and(eq(userCards.userId, userId), inArray(userCards.pullType, ["daily", "spread"])))
     .orderBy(desc(userCards.pullDate))
     .limit(limit);
 }
@@ -228,15 +228,12 @@ export async function getPullById(pullId: number) {
 }
 
 export async function getUserPublicStats(userId: string) {
-  const [uniqueRow] = await db
-    .select({ count: sql<number>`count(distinct ${userCards.cardId})` })
-    .from(userCards)
-    .where(and(eq(userCards.userId, userId), eq(userCards.pullType, "daily")));
+  const uniqueCards = await getUniqueCardCount(userId);
 
   const [totalRow] = await db
     .select({ count: sql<number>`count(*)` })
     .from(userCards)
-    .where(and(eq(userCards.userId, userId), eq(userCards.pullType, "daily")));
+    .where(and(eq(userCards.userId, userId), inArray(userCards.pullType, ["daily", "spread"])));
 
   const recentCards = await db
     .select({
@@ -245,12 +242,12 @@ export async function getUserPublicStats(userId: string) {
       rarityScore: sql<Rarity>`${userCards.rarityScore}`,
     })
     .from(userCards)
-    .where(and(eq(userCards.userId, userId), eq(userCards.pullType, "daily")))
+    .where(and(eq(userCards.userId, userId), inArray(userCards.pullType, ["daily", "spread"])))
     .orderBy(desc(userCards.pullDate))
     .limit(6);
 
   return {
-    uniqueCards: uniqueRow?.count ?? 0,
+    uniqueCards,
     totalPulls: totalRow?.count ?? 0,
     recentCards,
   };
