@@ -361,7 +361,7 @@ function DailyPullFlow({
   return (
     <div className="space-y-6">
       <div
-        className={`flex justify-center ${isPulling || dailyReady ? "pointer-events-none" : ""}`}
+        className={`flex justify-center ${isPulling || (dailyReady && !dailyRevealed) ? "pointer-events-none" : ""}`}
         onPointerDown={() => setIsHolding(true)}
         onPointerUp={() => setIsHolding(false)}
         onPointerLeave={() => setIsHolding(false)}
