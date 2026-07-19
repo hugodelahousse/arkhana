@@ -775,6 +775,72 @@
   animation: reveal-pop 0.25s ease-out both;
 }
 
+/* ─── New-to-collection: halo burst + badge ─── */
+/* A rarity-colored ring that flares on reveal then settles into a soft persistent
+   glow. Lives on its own element so it composes with reveal-glow (card-front) and
+   radiant-hue (card-front) instead of clobbering their animations. */
+.card-new-halo {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--card-radius);
+  pointer-events: none;
+  z-index: 3;
+  animation: new-card-halo 2.4s ease-out 0.35s both;
+}
+
+@keyframes new-card-halo {
+  0% {
+    opacity: 0;
+    box-shadow: 0 0 0 0 var(--rarity-color, rgba(255,255,255,.4));
+  }
+  25% {
+    opacity: 1;
+    box-shadow:
+      0 0 46px 8px var(--rarity-color, rgba(255,255,255,.5)),
+      0 0 0 2px color-mix(in srgb, var(--rarity-color, #fff) 70%, transparent),
+      0 0 80px 20px color-mix(in srgb, var(--rarity-color, #fff) 20%, transparent);
+  }
+  100% {
+    opacity: .7;
+    box-shadow:
+      0 0 20px 3px color-mix(in srgb, var(--rarity-color, #fff) 55%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--rarity-color, #fff) 45%, transparent);
+  }
+}
+
+.card-new-badge {
+  position: absolute;
+  top: -0.75rem;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 4;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--background) 82%, black);
+  border: 1px solid var(--rarity-color, var(--accent));
+  border-radius: 999px;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--rarity-color, var(--accent)) 45%, transparent);
+  pointer-events: none;
+  transform-origin: center;
+  animation: new-badge-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s both;
+}
+
+.card-new-badge-sigil {
+  color: var(--rarity-color, var(--accent));
+}
+
+@keyframes new-badge-pop {
+  0%   { opacity: 0; translate: -50% 0.4rem; scale: 0.7; }
+  100% { opacity: 1; translate: -50% 0; scale: 1; }
+}
+
 /* ─── Reveal hint ─── */
 .card-reveal-hint {
   position: absolute;
@@ -812,4 +878,15 @@
   }
   .card-scene[data-rarity="5"][data-revealed] .card-shine { opacity: .25; }
   .card-scene[data-rarity="3"][data-revealed] .card-shine { opacity: .15; }
+  /* Keep the new-card indicator visible without the flare animation */
+  .card-new-halo,
+  .card-new-badge {
+    animation: none !important;
+  }
+  .card-new-halo {
+    opacity: .7;
+    box-shadow:
+      0 0 20px 3px color-mix(in srgb, var(--rarity-color, #fff) 55%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--rarity-color, #fff) 45%, transparent);
+  }
 }

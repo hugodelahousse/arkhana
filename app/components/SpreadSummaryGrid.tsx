@@ -61,6 +61,7 @@ function CardDetailOverlay({
             rarityScore={card.rarityScore as Rarity}
             isReversed={card.isReversed}
             isRadiant={card.isRadiant}
+            isNew={card.isNew}
             revealed={true}
             size="md"
           />
@@ -80,6 +81,7 @@ function CardDetailOverlay({
           >
             {RARITY_LABELS[card.rarityScore]}
             {card.isRadiant && " ✦"}
+            {card.isNew && " · First draw"}
           </p>
           <p className="text-lg text-primary font-serif">
             {card.card.name}
@@ -136,6 +138,7 @@ function SpreadCardCell({
           rarityScore={card.rarityScore as Rarity}
           isReversed={card.isReversed}
           isRadiant={card.isRadiant}
+          isNew={card.isNew}
           revealed={true}
           size="sm"
         />
@@ -147,6 +150,7 @@ function SpreadCardCell({
         >
           {RARITY_LABELS[card.rarityScore]}
           {card.isRadiant && " ✦"}
+          {card.isNew && " · First draw"}
         </p>
         <p className="type-body-serif font-light">
           {card.card.name}

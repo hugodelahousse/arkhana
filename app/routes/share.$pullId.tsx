@@ -15,9 +15,10 @@ import { user } from "../../db/schema/auth.js";
 import { eq } from "drizzle-orm";
 import { TarotCard } from "../components/TarotCard";
 import { ShareButton } from "../components/ShareButton";
+import { Nav } from "../components/layout/nav";
 import { getOrigin } from "../lib/utils";
 
-export async function loader({ params, request }: Route.LoaderArgs) {
+export async function loader({ params, request, context }: Route.LoaderArgs) {
   const pullId = parseInt(params.pullId, 10);
   if (isNaN(pullId) || pullId <= 0 || pullId > 2147483647) throw data("Not found", { status: 404 });
 
@@ -35,8 +36,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
   const handle = profile?.displayUsername ?? profile?.username ?? null;
   const username = profile?.username ?? null;
+  const viewer = context.user
+    ? { name: context.user.name, isAnonymous: context.user.isAnonymous }
+    : null;
 
-  return { pull, card, handle, username, origin: getOrigin(request) };
+  return { pull, card, handle, username, viewer, origin: getOrigin(request) };
 }
 
 export function meta({ data: loaderData }: Route.MetaArgs) {
@@ -72,26 +76,31 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
 }
 
 export default function SharePull({ loaderData }: Route.ComponentProps) {
-  const { pull, card, handle, username } = loaderData;
+  const { pull, card, handle, username, viewer } = loaderData;
   const rarity = pull.rarityScore as Rarity;
   const rarityLabel = RARITY_LABELS[rarity];
   const description = getCardDescription(card, rarity, pull.isReversed);
+  const isRealAccount = !!viewer && !viewer.isAnonymous;
 
   return (
     <div className="min-h-screen">
-      <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border opacity-80">
-        <Link to="/" className="text-lg sm:text-xl tracking-widest font-serif text-primary">
-          ARKHANA
-        </Link>
-        <div className="flex items-center gap-3 sm:gap-6 text-xs tracking-widest uppercase">
-          <Link
-            to="/auth/signup"
-            className="text-faint-foreground hover:text-foreground transition-colors"
-          >
-            Sign up
+      {isRealAccount && viewer ? (
+        <Nav userName={viewer.name} isAnonymous={false} />
+      ) : (
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border opacity-80">
+          <Link to="/" className="text-lg sm:text-xl tracking-widest font-serif text-primary">
+            ARKHANA
           </Link>
-        </div>
-      </header>
+          <div className="flex items-center gap-3 sm:gap-6 text-xs tracking-widest uppercase">
+            <Link
+              to="/auth/signup"
+              className="text-faint-foreground hover:text-foreground transition-colors"
+            >
+              Sign up
+            </Link>
+          </div>
+        </header>
+      )}
 
       <main className="max-w-2xl mx-auto px-6 py-16 space-y-10 text-center">
         {handle && (

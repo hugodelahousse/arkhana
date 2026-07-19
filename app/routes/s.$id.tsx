@@ -8,12 +8,13 @@ import type { SpreadCardResult } from "../lib/spread-pull";
 import { getSpreadType } from "../lib/spreads";
 import { SpreadSummaryGrid } from "../components/SpreadSummaryGrid";
 import { ShareButton } from "../components/ShareButton";
+import { Nav } from "../components/layout/nav";
 import { db } from "../../db/index.js";
 import { user } from "../../db/schema/auth.js";
 import { eq } from "drizzle-orm";
 import { getOrigin } from "../lib/utils";
 
-export async function loader({ params, request }: Route.LoaderArgs) {
+export async function loader({ params, request, context }: Route.LoaderArgs) {
   const spreadId = parseInt(params.id, 10);
   if (isNaN(spreadId) || spreadId <= 0 || spreadId > 2147483647) throw data("Not found", { status: 404 });
 
@@ -30,6 +31,9 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     .limit(1);
 
   const handle = profile?.displayUsername ?? profile?.username ?? null;
+  const viewer = context.user
+    ? { name: context.user.name, isAnonymous: context.user.isAnonymous }
+    : null;
 
   return {
     spreadId,
@@ -40,6 +44,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     positions: spreadDef.positions,
     cards: spread.cards,
     spreadDate: spread.spreadDate,
+    viewer,
     origin: getOrigin(request),
   };
 }
@@ -74,22 +79,27 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
 }
 
 export default function SpreadByIdRoute({ loaderData }: Route.ComponentProps) {
-  const { spreadId, handle, username, name, subtitle, positions, cards, spreadDate } = loaderData;
+  const { spreadId, handle, username, name, subtitle, positions, cards, spreadDate, viewer } = loaderData;
   const shareUrl = username ? `/u/${username}/pull/${spreadDate}` : `/s/${spreadId}`;
+  const isRealAccount = !!viewer && !viewer.isAnonymous;
 
   return (
     <div className="min-h-screen">
-      <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border opacity-80">
-        <Link to="/" className="text-lg sm:text-xl tracking-widest font-serif text-primary">
-          ARKHANA
-        </Link>
-        <Link
-          to="/"
-          className="text-xs tracking-widest uppercase text-faint-foreground hover:text-foreground transition-colors"
-        >
-          Draw your card
-        </Link>
-      </header>
+      {isRealAccount && viewer ? (
+        <Nav userName={viewer.name} isAnonymous={false} />
+      ) : (
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border opacity-80">
+          <Link to="/" className="text-lg sm:text-xl tracking-widest font-serif text-primary">
+            ARKHANA
+          </Link>
+          <Link
+            to="/"
+            className="text-xs tracking-widest uppercase text-faint-foreground hover:text-foreground transition-colors"
+          >
+            Draw your card
+          </Link>
+        </header>
+      )}
 
       <main className="max-w-lg mx-auto px-6 py-12 space-y-10 text-center">
         <div className="space-y-3">

@@ -228,7 +228,10 @@ export function moonPhaseIconPath(phase: number): "new" | "full" | string {
   const cx = 50;
   const cy = 50;
   const theta = 2 * Math.PI * normalized;
-  const terminatorRadius = Math.abs(radius * Math.cos(theta));
+  // Round to 4 decimals (like polarToCartesian) so the emitted path string is
+  // byte-identical across server/client renders — avoids a hydration mismatch
+  // from trailing float precision differences.
+  const terminatorRadius = Math.round(Math.abs(radius * Math.cos(theta)) * 1e4) / 1e4;
   const terminatorSweep = Math.cos(theta) < 0 ? 1 : 0;
   const top = `${cx} ${cy - radius}`;
   const bottom = `${cx} ${cy + radius}`;
