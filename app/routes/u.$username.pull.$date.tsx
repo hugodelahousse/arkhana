@@ -19,13 +19,16 @@ import {
 } from "../lib/cards";
 import { getSpreadType } from "../lib/spreads";
 import type { SpreadCardResult } from "../lib/spread-pull";
+import { Nav } from "../components/layout/nav";
 import { getOrigin } from "../lib/utils";
 
-type LoaderData =
-  | { type: "daily"; handle: string; date: string; formattedDate: string; pull: { cardId: number; rarityScore: Rarity; isRadiant: boolean; isReversed: boolean }; origin: string }
-  | { type: "spread"; handle: string; date: string; formattedDate: string; spreadName: string; spreadSubtitle: string; positions: { index: number; label: string; contemplationPrompt: string }[]; cards: SpreadCardResult[]; origin: string };
+type Viewer = { name: string; isAnonymous: boolean } | null;
 
-export async function loader({ params, request }: Route.LoaderArgs) {
+type LoaderData =
+  | { type: "daily"; handle: string; date: string; formattedDate: string; pull: { cardId: number; rarityScore: Rarity; isRadiant: boolean; isReversed: boolean }; viewer: Viewer; origin: string }
+  | { type: "spread"; handle: string; date: string; formattedDate: string; spreadName: string; spreadSubtitle: string; positions: { index: number; label: string; contemplationPrompt: string }[]; cards: SpreadCardResult[]; viewer: Viewer; origin: string };
+
+export async function loader({ params, request, context }: Route.LoaderArgs) {
   const username = params.username.toLowerCase();
   const [profile] = await db
     .select({ id: user.id, displayUsername: user.displayUsername, username: user.username })
@@ -41,6 +44,9 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const handle = profile.displayUsername ?? profile.username ?? username;
   const formattedDate = date.toFormat("cccc, LLLL d, yyyy");
   const origin = getOrigin(request);
+  const viewer: Viewer = context.user
+    ? { name: context.user.name, isAnonymous: context.user.isAnonymous }
+    : null;
 
   const [spreadRow] = await db
     .select({ id: spreads.id, spreadType: spreads.spreadType })
@@ -82,6 +88,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       spreadSubtitle: spreadDef.subtitle,
       positions: spreadDef.positions,
       cards,
+      viewer,
       origin,
     };
   }
@@ -111,6 +118,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     date: pullDate,
     formattedDate,
     pull: { ...pull, rarityScore: pull.rarityScore as Rarity },
+    viewer,
     origin,
   };
 }
@@ -168,20 +176,26 @@ export function meta({ data: loaderData, params: _params }: Route.MetaArgs) {
 
 export default function PublicPull({ loaderData }: Route.ComponentProps) {
   const d = loaderData as LoaderData;
+  const { viewer } = d;
+  const isRealAccount = !!viewer && !viewer.isAnonymous;
 
   return (
     <div className="min-h-screen">
-      <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border opacity-80">
-        <Link to="/" className="text-lg sm:text-xl tracking-widest font-serif text-primary">
-          ARKHANA
-        </Link>
-        <Link
-          to="/"
-          className="text-xs tracking-widest uppercase text-faint-foreground hover:text-foreground transition-colors"
-        >
-          Draw your card
-        </Link>
-      </header>
+      {isRealAccount && viewer ? (
+        <Nav userName={viewer.name} isAnonymous={false} />
+      ) : (
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-border opacity-80">
+          <Link to="/" className="text-lg sm:text-xl tracking-widest font-serif text-primary">
+            ARKHANA
+          </Link>
+          <Link
+            to="/"
+            className="text-xs tracking-widest uppercase text-faint-foreground hover:text-foreground transition-colors"
+          >
+            Draw your card
+          </Link>
+        </header>
+      )}
 
       <main className="max-w-lg mx-auto px-6 py-12 space-y-10 text-center">
         <div className="space-y-2">
