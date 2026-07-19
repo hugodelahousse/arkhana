@@ -254,6 +254,7 @@ function SpreadContemplateReveal({
         rarityScore={card.rarityScore as Rarity}
         isReversed={card.isReversed}
         isRadiant={card.isRadiant}
+        isNew={card.isNew}
         revealed={cardRevealed}
         onReveal={() => setCardRevealed(true)}
         size="lg"
@@ -289,6 +290,7 @@ function SpreadContemplateReveal({
             {RARITY_LABELS[card.rarityScore]}
             {card.isRadiant && " ✦"}
             {card.isReversed && " · Reversed"}
+            {card.isNew && " · First draw"}
           </p>
           <h3 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
             {card.card.name}
@@ -328,7 +330,7 @@ function DailyPullFlow({
   todayStr,
   onNavigateToCard,
 }: {
-  dailyResult: { card: CardDefinition; rarityScore: number; isReversed: boolean; isRadiant: boolean; pullId: number; previousPullDate?: string | null } | null;
+  dailyResult: { card: CardDefinition; rarityScore: number; isReversed: boolean; isRadiant: boolean; pullId: number; previousPullDate?: string | null; isNew?: boolean } | null;
   dailyReady: boolean;
   dailyRevealed: boolean;
   setDailyRevealed: (v: boolean) => void;
@@ -344,6 +346,7 @@ function DailyPullFlow({
   const rarityScore = (dailyReady && dailyResult ? dailyResult.rarityScore : 1) as Rarity;
   const isReversed = dailyReady && dailyResult ? dailyResult.isReversed : false;
   const isRadiant = dailyReady && dailyResult ? dailyResult.isRadiant : false;
+  const isNew = dailyReady && dailyResult ? !!dailyResult.isNew : false;
   const revealed = dailyRevealed;
 
   const rarityLabel = RARITY_LABELS[rarityScore]?.toLowerCase();
@@ -372,6 +375,7 @@ function DailyPullFlow({
           rarityScore={rarityScore}
           isReversed={isReversed}
           isRadiant={isRadiant}
+          isNew={isNew}
           revealed={revealed}
           onReveal={!dailyResult ? onPull : () => setDailyRevealed(true)}
           size="lg"
@@ -399,12 +403,13 @@ function DailyPullFlow({
             <p
               className="text-xs tracking-widest uppercase"
               style={{ color: `var(--color-rarity-${rarityLabel})` }}
-              aria-label={[RARITY_LABELS[rarityScore], isRadiant ? "Radiant" : null, isReversed ? "Reversed" : null].filter(Boolean).join(", ")}
+              aria-label={[RARITY_LABELS[rarityScore], isRadiant ? "Radiant" : null, isReversed ? "Reversed" : null, isNew ? "New to your collection" : null].filter(Boolean).join(", ")}
             >
               <span aria-hidden="true">
                 {RARITY_LABELS[rarityScore]}
                 {isRadiant && " ✦"}
                 {isReversed && " · Reversed"}
+                {isNew && " · First draw"}
               </span>
             </p>
             <h2 className="text-2xl font-light tracking-wide text-muted-foreground font-serif">
@@ -805,6 +810,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       rarityScore={todayPull.rarityScore as Rarity}
                       isReversed={todayPull.isReversed}
                       isRadiant={todayPull.isRadiant}
+                      isNew={todayPull.isNew}
                       revealed={true}
                       size="lg"
                     />
@@ -813,12 +819,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     <p
                       className="text-xs tracking-widest uppercase"
                       style={{ color: `var(--color-rarity-${RARITY_LABELS[todayPull.rarityScore]?.toLowerCase()})` }}
-                      aria-label={[RARITY_LABELS[todayPull.rarityScore], todayPull.isRadiant ? "Radiant" : null, todayPull.isReversed ? "Reversed" : null].filter(Boolean).join(", ")}
+                      aria-label={[RARITY_LABELS[todayPull.rarityScore], todayPull.isRadiant ? "Radiant" : null, todayPull.isReversed ? "Reversed" : null, todayPull.isNew ? "New to your collection" : null].filter(Boolean).join(", ")}
                     >
                       <span aria-hidden="true">
                         {RARITY_LABELS[todayPull.rarityScore]}
                         {todayPull.isRadiant && " ✦"}
                         {todayPull.isReversed && " · Reversed"}
+                        {todayPull.isNew && " · First draw"}
                       </span>
                     </p>
                     <p className="text-xl font-light text-muted-foreground font-serif">

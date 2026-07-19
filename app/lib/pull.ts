@@ -16,6 +16,7 @@ export type PullResult =
       isReversed: boolean;
       pullId: number;
       previousPullDate: string | null;
+      isNew: boolean;
     }
   | {
       status: "success";
@@ -25,6 +26,7 @@ export type PullResult =
       isReversed: boolean;
       pullId: number;
       previousPullDate: string | null;
+      isNew: boolean;
       streakDay: number;
       milestone: Milestone | null;
     };
@@ -41,6 +43,7 @@ export async function dailyPull(userId: string, timezone: string | null = null):
   if (existing.length > 0) {
     const row = existing[0];
     const previousPullDate = await getPreviousPullDate(userId, row.cardId, pullDate);
+    const isNew = await isFirstEverPull(userId, row.cardId, row.id);
     return {
       status: "already_pulled",
       card: CARD_BY_ID[row.cardId],
@@ -49,6 +52,7 @@ export async function dailyPull(userId: string, timezone: string | null = null):
       isReversed: row.isReversed,
       pullId: row.id,
       previousPullDate,
+      isNew,
     };
   }
 
@@ -73,6 +77,7 @@ export async function dailyPull(userId: string, timezone: string | null = null):
       .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate), eq(userCards.pullType, "daily")))
       .limit(1);
     const prevDate = await getPreviousPullDate(userId, row.cardId, pullDate);
+    const isNew = await isFirstEverPull(userId, row.cardId, row.id);
     return {
       status: "already_pulled",
       card: CARD_BY_ID[row.cardId],
@@ -81,8 +86,12 @@ export async function dailyPull(userId: string, timezone: string | null = null):
       isReversed: row.isReversed,
       pullId: row.id,
       previousPullDate: prevDate,
+      isNew,
     };
   }
+
+  // First-ever draw of this card if the just-inserted row is its only occurrence
+  const isNew = await isFirstEverPull(userId, cardId, inserted.id);
 
   const { newStreak, milestone } = await updateStreak(userId, pullDate);
 
@@ -94,9 +103,25 @@ export async function dailyPull(userId: string, timezone: string | null = null):
     isReversed,
     pullId: inserted.id,
     previousPullDate,
+    isNew,
     streakDay: newStreak,
     milestone,
   };
+}
+
+/**
+ * True if `pullId` is the earliest `user_cards` row for this user+card — i.e. the
+ * pull that first added the card to their collection. Works for a freshly-inserted
+ * row (its only occurrence) and for re-checking an existing pull on reload.
+ */
+async function isFirstEverPull(userId: string, cardId: number, pullId: number): Promise<boolean> {
+  const [row] = await db
+    .select({ id: userCards.id })
+    .from(userCards)
+    .where(and(eq(userCards.userId, userId), eq(userCards.cardId, cardId)))
+    .orderBy(userCards.id)
+    .limit(1);
+  return row?.id === pullId;
 }
 
 async function getPreviousPullDate(
@@ -135,7 +160,9 @@ export async function getTodayPull(userId: string, pullDate: string) {
     .from(userCards)
     .where(and(eq(userCards.userId, userId), eq(userCards.pullDate, pullDate), eq(userCards.pullType, "daily")))
     .limit(1);
-  return row ?? null;
+  if (!row) return null;
+  const isNew = await isFirstEverPull(userId, row.cardId, row.id);
+  return { ...row, isNew };
 }
 
 export async function hasPulledToday(userId: string, pullDate: string): Promise<boolean> {

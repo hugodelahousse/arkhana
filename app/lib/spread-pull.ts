@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { DateTime } from "luxon";
 import { db } from "../../db/index.js";
 import { spreads, spreadCards } from "../../db/schema/spreads.js";
@@ -17,7 +17,25 @@ export type SpreadCardResult = {
   rarityScore: Rarity;
   isRadiant: boolean;
   isReversed: boolean;
+  // First-ever draw of this card for the user. Only populated for freshly-drawn
+  // spreads and today's spread (the reveal surfaces); undefined in history/share views.
+  isNew?: boolean;
 };
+
+/**
+ * Given a set of card ids, returns the set of `user_cards.id`s that are the
+ * earliest occurrence of their card for this user — i.e. the pull that first
+ * added the card to the collection. Used to flag "new to collection" cards.
+ */
+async function firstOwnedUserCardIds(userId: string, cardIds: number[]): Promise<Set<number>> {
+  if (cardIds.length === 0) return new Set();
+  const rows = await db
+    .select({ minId: sql<number>`min(${userCards.id})` })
+    .from(userCards)
+    .where(and(eq(userCards.userId, userId), inArray(userCards.cardId, cardIds)))
+    .groupBy(userCards.cardId);
+  return new Set(rows.map((r) => r.minId));
+}
 
 export type SpreadPullResult =
   | {
@@ -136,6 +154,10 @@ export async function drawSpread(
     };
   }
 
+  const firstIds = await firstOwnedUserCardIds(
+    userId,
+    result.insertedCards.map((uc) => uc.cardId)
+  );
   const cards: SpreadCardResult[] = result.insertedCards.map((uc, i) => ({
     position: rolls[i].position,
     positionKey: rolls[i].positionKey,
@@ -145,6 +167,7 @@ export async function drawSpread(
     rarityScore: uc.rarityScore as Rarity,
     isRadiant: uc.isRadiant,
     isReversed: uc.isReversed,
+    isNew: firstIds.has(uc.id),
   }));
 
   await updateStreak(userId, spreadDate);
@@ -294,9 +317,11 @@ export async function getTodaySpread(
 
   if (rows.length === 0) return null;
 
+  const firstIds = await firstOwnedUserCardIds(userId, rows.map((r) => r.cardId));
   return rows.map((row) => ({
     ...row,
     rarityScore: row.rarityScore as Rarity,
     card: CARD_BY_ID[row.cardId],
+    isNew: firstIds.has(row.userCardId),
   }));
 }

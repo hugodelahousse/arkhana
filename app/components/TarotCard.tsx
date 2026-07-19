@@ -20,6 +20,8 @@ export interface TarotCardProps {
   onReveal?: () => void;
   size?: "sm" | "md" | "lg";
   showHint?: boolean;
+  /** Card is new to the user's collection — shows a "First draw" badge + glow on reveal */
+  isNew?: boolean;
   motionConfig?: Partial<CardMotionConfig>;
 }
 
@@ -32,6 +34,7 @@ export const TarotCard = memo(function TarotCard({
   onReveal,
   size = "md",
   showHint = false,
+  isNew = false,
   motionConfig,
 }: TarotCardProps) {
   const sceneRef = useRef<HTMLDivElement>(null);
@@ -93,6 +96,7 @@ export const TarotCard = memo(function TarotCard({
       data-revealed={revealed || undefined}
       data-reversed={isReversed || undefined}
       data-radiant={isRadiant || undefined}
+      data-new={isNew || undefined}
       style={{
         "--rarity-color": `var(--color-rarity-${rarityLabel})`,
         touchAction: "none",
@@ -190,6 +194,15 @@ export const TarotCard = memo(function TarotCard({
           </div>
         </div>
       </motion.div>
+
+      {revealed && isNew && (
+        <>
+          <div className="card-new-halo" aria-hidden="true" />
+          <div className="card-new-badge" aria-hidden="true">
+            <span className="card-new-badge-sigil">✦</span> First draw
+          </div>
+        </>
+      )}
 
       {showHint && !revealed && (
         <div className="card-reveal-hint" aria-hidden="true">hold to reveal</div>
