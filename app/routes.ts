@@ -5,6 +5,7 @@ export default [
     index("routes/home.tsx"),
     route("circle", "routes/circle.tsx"),
     route("circle/people", "routes/circle.people.tsx"),
+    route("circle/race", "routes/circle.race.tsx"),
     route("collection", "routes/collection.tsx"),
     route("collection/:slug", "routes/collection.$slug.tsx"),
     route("settings", "routes/settings.tsx"),
