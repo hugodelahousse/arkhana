@@ -1,4 +1,4 @@
-import { asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { DateTime } from "luxon";
 import { db } from "../../db/index.js";
 import { user } from "../../db/schema/auth.js";
@@ -46,19 +46,22 @@ interface MemberRow {
   timezone: string | null;
 }
 
+const memberFields = {
+  id: user.id,
+  username: user.username,
+  displayUsername: user.displayUsername,
+  image: user.image,
+  timezone: user.timezone,
+};
+
+// Cap for the ?users= focus list — bounds the query and the chart's series count.
+export const MAX_FOCUS_USERS = 16;
+
 // Collection progression for the viewer + everyone they follow: for each
 // runner, the cumulative count of DISTINCT cards over calendar days since
 // their first pull. Counts every user_cards row regardless of pullType so
 // Sunday spreads are covered (see CLAUDE.md "recurring pitfall").
 export async function getCircleRace(viewerId: string): Promise<RaceData> {
-  const memberFields = {
-    id: user.id,
-    username: user.username,
-    displayUsername: user.displayUsername,
-    image: user.image,
-    timezone: user.timezone,
-  };
-
   const [viewerRow] = await db
     .select(memberFields)
     .from(user)
@@ -75,6 +78,46 @@ export async function getCircleRace(viewerId: string): Promise<RaceData> {
   // Alphabetical order keeps color-slot assignment stable across visits.
   followedRows.sort((a, b) => (a.username ?? "").localeCompare(b.username ?? ""));
   const members: MemberRow[] = viewerRow ? [viewerRow, ...followedRows] : followedRows;
+  return assembleRace(viewerId, members);
+}
+
+// Progression for an explicit set of usernames (the ?users= focus view) —
+// independent of the viewer's circle. Unknown and anonymous (temp-*) accounts
+// are silently dropped; usernames are stored lowercased so matching is
+// case-insensitive. The viewer only appears if their own username is listed.
+export async function getRaceForUsernames(
+  viewerId: string,
+  usernames: string[]
+): Promise<RaceData> {
+  const wanted = [
+    ...new Set(usernames.map((u) => u.trim().toLowerCase()).filter(Boolean)),
+  ].slice(0, MAX_FOCUS_USERS);
+  if (wanted.length === 0) return assembleRace(viewerId, []);
+
+  const members = await db
+    .select(memberFields)
+    .from(user)
+    .where(
+      and(
+        inArray(user.username, wanted),
+        // Anonymous accounts are ephemeral, not browsable profiles — same rule
+        // as resolveFollowTarget in follows.ts.
+        or(eq(user.isAnonymous, false), isNull(user.isAnonymous))
+      )
+    );
+
+  members.sort((a, b) => {
+    if ((a.id === viewerId) !== (b.id === viewerId)) return a.id === viewerId ? -1 : 1;
+    return (a.username ?? "").localeCompare(b.username ?? "");
+  });
+  return assembleRace(viewerId, members);
+}
+
+async function assembleRace(viewerId: string, members: MemberRow[]): Promise<RaceData> {
+  if (members.length === 0) {
+    const today = todayForUser(null);
+    return { start: today, end: today, days: 1, runners: [] };
+  }
 
   const rows = await db
     .select({
@@ -107,8 +150,9 @@ export async function getCircleRace(viewerId: string): Promise<RaceData> {
     const first = rowsByUser.get(m.id)?.[0]?.pullDate;
     if (first && (!start || first < start)) start = first;
   }
-  const viewerToday = todayForUser(viewerRow?.timezone ?? null);
-  start ??= viewerToday;
+  // end is always set here (members is non-empty); it doubles as the domain
+  // fallback when nobody has pulled yet.
+  start ??= end!;
   end = end && end > start ? end : start;
 
   const startDt = DateTime.fromISO(start, { zone: "utc" });
@@ -142,7 +186,7 @@ export async function getCircleRace(viewerId: string): Promise<RaceData> {
 
     const startIndex = pulls.length > 0 ? pulls[0].i : -1;
     const lastPullIndex = pulls.length > 0 ? pulls[pulls.length - 1].i : 0;
-    const localTodayIndex = dayIndex(localTodayById.get(m.id) ?? viewerToday);
+    const localTodayIndex = dayIndex(localTodayById.get(m.id) ?? end);
     const endIndex = Math.min(days - 1, Math.max(localTodayIndex, lastPullIndex));
 
     return {

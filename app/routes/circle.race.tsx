@@ -3,10 +3,10 @@ import { ArrowRight, UsersThree } from "@phosphor-icons/react";
 import type { Route } from "./+types/circle.race";
 import { DirectionalTransition } from "../components/DirectionalTransition";
 import { RaceChart, raceRunnerColor } from "../components/RaceChart";
-import { getCircleRace } from "../lib/race";
+import { getCircleRace, getRaceForUsernames } from "../lib/race";
 import type { RaceRunner } from "../lib/race";
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ context, request }: Route.LoaderArgs) {
   const viewer = context.user;
   if (!viewer) return redirect("/");
 
@@ -14,8 +14,17 @@ export async function loader({ context }: Route.LoaderArgs) {
     return { state: "anon" as const };
   }
 
-  const race = await getCircleRace(viewer.id);
-  return { state: "ready" as const, race };
+  // ?users=alice,bob focuses the race on exactly those readers, whether or
+  // not they're in the viewer's circle. Unknown names are silently dropped.
+  const usersParam = new URL(request.url).searchParams.get("users");
+  const focusNames = usersParam
+    ? usersParam.split(",").map((u) => u.trim()).filter(Boolean)
+    : null;
+
+  const race = focusNames
+    ? await getRaceForUsernames(viewer.id, focusNames)
+    : await getCircleRace(viewer.id);
+  return { state: "ready" as const, race, focused: focusNames !== null };
 }
 
 export function meta() {
@@ -51,9 +60,10 @@ export default function CircleRace({ loaderData }: Route.ComponentProps) {
     );
   }
 
-  const { race } = loaderData;
+  const { race, focused } = loaderData;
   const anyPulls = race.runners.some((r) => r.pulls.length > 0);
-  const alone = race.runners.length <= 1;
+  const alone = !focused && race.runners.length <= 1;
+  const nobodyFound = focused && race.runners.length === 0;
 
   // Colors must mirror RaceChart's assignment: viewer in ink, then slots in
   // the runners' (alphabetical) order.
@@ -74,15 +84,27 @@ export default function CircleRace({ loaderData }: Route.ComponentProps) {
       <div className="min-h-screen">
         <main className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-10">
           <div className="text-center space-y-3">
-            <p className="type-label">Your Circle</p>
+            <p className="type-label">{focused ? "Chosen Readers" : "Your Circle"}</p>
             <h1 className="type-page-title text-3xl">The Race</h1>
             <p className="type-body-serif text-muted-foreground max-w-md mx-auto">
-              Seventy-eight cards. Every reader walks their own road — this is how
-              far each of you has come.
+              {focused
+                ? "Seventy-eight cards. A chosen field of readers, side by side."
+                : "Seventy-eight cards. Every reader walks their own road — this is how far each of you has come."}
             </p>
           </div>
 
-          {!anyPulls ? (
+          {nobodyFound ? (
+            <div className="text-center py-12 space-y-6 border border-border bg-card max-w-xl mx-auto">
+              <UsersThree weight="light" size={40} className="mx-auto opacity-50" aria-hidden />
+              <p className="type-body-serif">None of those readers were found.</p>
+              <Link
+                to="/circle/race"
+                className="inline-flex items-center gap-2 px-6 py-3 text-xs tracking-widest uppercase border border-primary text-primary transition-opacity hover:opacity-80"
+              >
+                Back to your circle <ArrowRight weight="light" size={14} aria-hidden />
+              </Link>
+            </div>
+          ) : !anyPulls ? (
             <div className="text-center py-12 space-y-6 border border-border bg-card max-w-xl mx-auto">
               <p className="type-body-serif">The race begins with a single card.</p>
               <Link
@@ -104,10 +126,6 @@ export default function CircleRace({ loaderData }: Route.ComponentProps) {
                   }}
                 />
                 <RaceChart race={race} />
-                <p className="type-ghost mt-4">
-                  Dots mark rarity of each day's pull · ◆ weekly spread · grey dots are
-                  missed days · radiant pulls shimmer
-                </p>
               </section>
 
               <section className="max-w-3xl mx-auto space-y-4">
