@@ -104,11 +104,6 @@ export default function CircleRace({ loaderData }: Route.ComponentProps) {
                   }}
                 />
                 <RaceChart race={race} />
-                <p className="type-ghost mt-4">
-                  Dots mark rarity of each day's pull · ◆ weekly spread · grey dots are
-                  missed days · radiant pulls shimmer · drag, pinch, or use the strip
-                  below to zoom
-                </p>
               </section>
 
               <section className="max-w-3xl mx-auto space-y-4">

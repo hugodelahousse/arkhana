@@ -238,9 +238,11 @@ export function RaceChart({ race }: { race: RaceData }) {
     days > 1 ? margin.left + (i - domain.d0) * pxPerDay : margin.left + plotW / 2;
   const y = (c: number) => margin.top + plotH * (1 - c / DECK_SIZE);
 
-  const rPull = Math.min(5, Math.max(2.5, pxPerDay * 0.34));
+  // Dense views (narrow screens, long ranges) shed weight: smaller pull dots and
+  // no missed-day dots until zooming makes room for them (≥4px per day).
+  const rPull = Math.min(5, Math.max(2, pxPerDay * 0.34));
   const rMiss = Math.min(2.25, Math.max(1, pxPerDay * 0.2));
-  const showMissed = pxPerDay >= 2;
+  const showMissed = pxPerDay >= 4;
   const ringW = Math.min(2, Math.max(1, rPull * 0.4));
 
   // Visible integer day range (with one day of bleed; the plot clip crops it).
@@ -513,8 +515,10 @@ export function RaceChart({ race }: { race: RaceData }) {
 
   return (
     <div className="space-y-3">
-      {/* Utility row — visible range + zoom reset on the left, replay on the right */}
-      <div className="flex items-center justify-between min-h-6 gap-3">
+      {/* Utility row — zoom reset + visible range on the left, replay on the right.
+          On narrow screens the range readout drops to its own line (zoomed only —
+          the axis carries the dates at full range). */}
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           {zoomed && (
             <button
@@ -525,7 +529,9 @@ export function RaceChart({ race }: { race: RaceData }) {
               <ArrowsHorizontal size={12} weight="light" aria-hidden /> Full range
             </button>
           )}
-          <span className="type-ghost truncate">{rangeLabel.toUpperCase()}</span>
+          <span className="type-ghost truncate hidden sm:inline">
+            {rangeLabel.toUpperCase()}
+          </span>
         </div>
         {!reducedMotion && (
           <button
@@ -541,6 +547,9 @@ export function RaceChart({ race }: { race: RaceData }) {
           </button>
         )}
       </div>
+      {zoomed && (
+        <p className="type-ghost sm:hidden">{rangeLabel.toUpperCase()}</p>
+      )}
 
       <div ref={wrapRef} className="relative select-none" style={{ minHeight: 300 }}>
         {width > 0 && (
