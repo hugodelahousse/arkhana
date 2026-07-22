@@ -764,8 +764,7 @@ export function RaceChart({ race }: { race: RaceData }) {
               {endLabels.map(({ s, anchor, count, ty }) => {
                 const dimmed = focusedId !== null && focusedId !== s.runner.id;
                 const tx = Math.min(x(anchor), width - margin.right);
-                const swatchX = tx - rPull - 7;
-                const textX = swatchX - 6;
+                const textX = tx - rPull - 6;
                 return (
                   <g
                     key={s.runner.id}
@@ -790,18 +789,10 @@ export function RaceChart({ race }: { race: RaceData }) {
                       <rect
                         x={textX - 86}
                         y={ty - 9}
-                        width={swatchX - (textX - 86) + 5}
+                        width={92}
                         height={18}
                         fill="transparent"
                         pointerEvents="all"
-                      />
-                      <circle
-                        cx={swatchX}
-                        cy={ty}
-                        r="2.5"
-                        fill={s.color}
-                        stroke="var(--card)"
-                        strokeWidth="1.5"
                       />
                       <text
                         x={textX}
