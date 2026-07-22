@@ -76,6 +76,16 @@
   --rarity-mystic:     var(--rarity-3);
   --rarity-arcane:     var(--rarity-4);
   --rarity-primordial: var(--rarity-5);
+
+  /* Chart series (circle race) — order is CVD-validated per mode, don't shuffle */
+  --chart-1: #0d9488;   /* verdigris */
+  --chart-2: #b45309;   /* copper    */
+  --chart-3: #a232ad;   /* plum      */
+  --chart-4: #7d8f0e;   /* moss      */
+  --chart-5: #2168b0;   /* steel     */
+  --chart-6: #cb3556;   /* rose      */
+  --chart-7: #5b52e0;   /* indigo    */
+  --chart-8: #9d7a00;   /* ochre     */
 }
 
 /* ── Dark mode — must be a complete set, identical to the original dark palette ── */
@@ -113,6 +123,16 @@
   --rarity-mystic:     var(--rarity-3);
   --rarity-arcane:     var(--rarity-4);
   --rarity-primordial: var(--rarity-5);
+
+  /* Chart series (circle race) — same hues re-stepped for the dark surface */
+  --chart-1: #10a597;
+  --chart-2: #d0701f;
+  --chart-3: #c23fd1;
+  --chart-4: #819910;
+  --chart-5: #3d95db;
+  --chart-6: #e14e75;
+  --chart-7: #7c74f2;
+  --chart-8: #b78804;
 }
 
 /* ════════════════════════════════════════════════════════

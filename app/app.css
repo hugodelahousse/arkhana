@@ -191,3 +191,31 @@ body::before {
     animation-delay: 0s !important;
   }
 }
+
+/* ─── Circle race chart ─── */
+/* Radiant pull dots cycle through the spectrum, echoing .is-radiant */
+@keyframes race-radiant-hue {
+  from { filter: hue-rotate(0deg)   saturate(1.35) drop-shadow(0 0 2px currentColor); }
+  to   { filter: hue-rotate(360deg) saturate(1.35) drop-shadow(0 0 2px currentColor); }
+}
+.race-dot-radiant {
+  animation: race-radiant-hue 2.6s linear infinite;
+}
+
+@keyframes race-grid-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.race-grid-in {
+  animation: race-grid-in 700ms ease-out both;
+}
+
+.race-crosshair {
+  transition: transform 90ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .race-dot-radiant { animation: none; }
+  .race-grid-in { animation: none; }
+  .race-crosshair { transition: none; }
+}
