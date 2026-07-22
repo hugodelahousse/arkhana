@@ -230,7 +230,9 @@ export function RaceChart({ race }: { race: RaceData }) {
 
   const wide = width >= 560;
   const height = Math.max(300, Math.min(Math.round(width * 0.55), 440));
-  const margin = { top: 24, right: wide ? 118 : 92, bottom: 34, left: 34 };
+  // End labels render INSIDE the plot (right-aligned at each line's end, with a
+  // surface halo), so the right margin stays a sliver instead of a label gutter.
+  const margin = { top: 24, right: wide ? 22 : 14, bottom: 34, left: 34 };
   const plotW = Math.max(40, width - margin.left - margin.right);
   const plotH = height - margin.top - margin.bottom;
   const pxPerDay = days > 1 ? plotW / span : 0;
@@ -269,7 +271,7 @@ export function RaceChart({ race }: { race: RaceData }) {
           s.runner.endIndex
         );
         const count = s.countAt[anchor];
-        return { s, anchor, count, ty: y(count) };
+        return { s, anchor, count, ty: Math.max(margin.top + 8, y(count) - 8) };
       })
       .sort((a, b) => a.ty - b.ty);
     for (let pass = 0; pass < 2; pass++) {
@@ -571,8 +573,9 @@ export function RaceChart({ race }: { race: RaceData }) {
               onPointerLeave={() => setHoverI(null)}
               onDoubleClick={resetDomain}
             >
+              {/* Slight horizontal bleed so edge dots aren't cropped in half */}
               <clipPath id={plotClipId}>
-                <rect x={margin.left} y={0} width={plotW} height={height} />
+                <rect x={margin.left - 7} y={0} width={plotW + 14} height={height} />
               </clipPath>
 
               {/* Grid & axes */}
@@ -649,7 +652,7 @@ export function RaceChart({ race }: { race: RaceData }) {
                       strokeWidth="1"
                     />
                     <text
-                      x={x(t.i)}
+                      x={Math.min(x(t.i), width - 24)}
                       y={y(0) + 16}
                       textAnchor="middle"
                       fontSize="9"
@@ -755,10 +758,14 @@ export function RaceChart({ race }: { race: RaceData }) {
                 })}
               </g>
 
-              {/* End labels — identity lives here (hover/tap to trace, click to hold) */}
+              {/* End labels — inside the plot, right-aligned at each line's end,
+                  haloed in the surface color so they read over dots. Identity
+                  lives here (hover/tap to trace, click to hold). */}
               {endLabels.map(({ s, anchor, count, ty }) => {
                 const dimmed = focusedId !== null && focusedId !== s.runner.id;
                 const tx = Math.min(x(anchor), width - margin.right);
+                const swatchX = tx - rPull - 7;
+                const textX = swatchX - 6;
                 return (
                   <g
                     key={s.runner.id}
@@ -781,19 +788,31 @@ export function RaceChart({ race }: { race: RaceData }) {
                       }
                     >
                       <rect
-                        x={tx + 2}
+                        x={textX - 86}
                         y={ty - 9}
-                        width={margin.right - 4}
+                        width={swatchX - (textX - 86) + 5}
                         height={18}
                         fill="transparent"
                         pointerEvents="all"
                       />
-                      <circle cx={tx + 9} cy={ty} r="2.5" fill={s.color} />
+                      <circle
+                        cx={swatchX}
+                        cy={ty}
+                        r="2.5"
+                        fill={s.color}
+                        stroke="var(--card)"
+                        strokeWidth="1.5"
+                      />
                       <text
-                        x={tx + 15}
+                        x={textX}
                         y={ty + 3}
+                        textAnchor="end"
                         fontSize="10.5"
                         fill="var(--muted-foreground)"
+                        paintOrder="stroke"
+                        stroke="var(--card)"
+                        strokeWidth="3"
+                        strokeLinejoin="round"
                       >
                         {s.runner.isViewer ? "You" : `@${s.runner.handle}`}
                         <tspan fill="var(--foreground)" fontWeight="600">
