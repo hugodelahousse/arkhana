@@ -25,5 +25,6 @@ jobs:
       domain: pr-${{ github.event.pull_request.number }}.preview.arkhana.delaho-h.com
       image_name: ghcr.io/${{ github.repository }}/preview
       environment: pr-${{ github.event.pull_request.number }}
-      run_seed: true
+      run_seed: false
+      use_migrate_deploy: true
     secrets: inherit
