@@ -100,6 +100,21 @@ function buildTicks(
   return ticks.filter((_, idx) => idx % stride === 0);
 }
 
+// Interior Y gridlines for a [y0, y1] card-count window. At the full 0–78 range
+// this yields the classic 20/40/60; zoomed windows get proportionally finer steps.
+function buildYTicks(y0: number, y1: number): number[] {
+  const range = Math.max(y1 - y0, 1);
+  const step = [1, 2, 5, 10, 20].find((s) => range / s <= 4) ?? 20;
+  const ticks: number[] = [];
+  for (let v = Math.ceil(y0 / step) * step; v < y1; v += step) {
+    if (v > y0) ticks.push(v);
+  }
+  return ticks;
+}
+
+// Smallest Y window, in cards — keeps a flat stretch from zooming into noise.
+const MIN_Y_SPAN = 8;
+
 // ─── Derived series ────────────────────────────────────────────────────────────
 
 interface Series {
@@ -238,7 +253,41 @@ export function RaceChart({ race }: { race: RaceData }) {
   const pxPerDay = days > 1 ? plotW / span : 0;
   const x = (i: number) =>
     days > 1 ? margin.left + (i - domain.d0) * pxPerDay : margin.left + plotW / 2;
-  const y = (c: number) => margin.top + plotH * (1 - c / DECK_SIZE);
+
+  // Y window adapts to the visible data: zooming to a stretch of the race
+  // rescales the axis around the counts actually on screen (with padding),
+  // instead of pinning every zoom to the full 0–78 band.
+  const yDomain = useMemo(() => {
+    if (!zoomed) return { y0: 0, y1: DECK_SIZE };
+    const lo = Math.max(0, Math.floor(domain.d0));
+    const hi = Math.min(days - 1, Math.ceil(domain.d1));
+    let min = Infinity;
+    let max = -Infinity;
+    for (const s of lined) {
+      const a = Math.max(s.runner.startIndex, lo);
+      const b = Math.min(s.runner.endIndex, hi);
+      for (let i = a; i <= b; i++) {
+        const c = s.countAt[i];
+        if (c < min) min = c;
+        if (c > max) max = c;
+      }
+    }
+    if (!Number.isFinite(min)) return { y0: 0, y1: DECK_SIZE };
+    const pad = Math.max(2, Math.round((max - min) * 0.12));
+    let y0 = Math.max(0, min - pad);
+    let y1 = Math.min(DECK_SIZE, max + pad);
+    if (y1 - y0 < MIN_Y_SPAN) {
+      const mid = (y0 + y1) / 2;
+      y1 = Math.min(DECK_SIZE, Math.round(mid + MIN_Y_SPAN / 2));
+      y0 = Math.max(0, y1 - MIN_Y_SPAN);
+      y1 = Math.min(DECK_SIZE, y0 + MIN_Y_SPAN);
+    }
+    return { y0, y1 };
+  }, [zoomed, lined, days, domain.d0, domain.d1]);
+
+  const y = (c: number) =>
+    margin.top + plotH * (1 - (c - yDomain.y0) / (yDomain.y1 - yDomain.y0));
+  const plotBottom = margin.top + plotH;
 
   // Dense views (narrow screens, long ranges) shed weight: smaller pull dots and
   // no missed-day dots until zooming makes room for them (≥4px per day).
@@ -512,7 +561,8 @@ export function RaceChart({ race }: { race: RaceData }) {
     return `${fmt(lo)} — ${fmt(hi)} · ${hi - lo + 1} days`;
   }, [race.start, domain.d0, domain.d1, fullD1]);
 
-  const yTicks = [20, 40, 60];
+  const yTicks = buildYTicks(yDomain.y0, yDomain.y1);
+  const showFullDeckLine = yDomain.y1 === DECK_SIZE;
   const plotClipId = `race-${uid}-plot`;
 
   return (
@@ -573,9 +623,11 @@ export function RaceChart({ race }: { race: RaceData }) {
               onPointerLeave={() => setHoverI(null)}
               onDoubleClick={resetDomain}
             >
-              {/* Slight horizontal bleed so edge dots aren't cropped in half */}
+              {/* Slight bleed so edge dots aren't cropped in half; the bottom
+                  edge stops at the baseline so off-window bleed-day segments
+                  never draw over the X-axis labels */}
               <clipPath id={plotClipId}>
-                <rect x={margin.left - 7} y={0} width={plotW + 14} height={height} />
+                <rect x={margin.left - 7} y={0} width={plotW + 14} height={plotBottom + 7} />
               </clipPath>
 
               {/* Grid & axes */}
@@ -602,43 +654,47 @@ export function RaceChart({ race }: { race: RaceData }) {
                     </text>
                   </g>
                 ))}
-                {/* Full deck reference */}
-                <line
-                  x1={margin.left}
-                  x2={width - margin.right}
-                  y1={y(DECK_SIZE)}
-                  y2={y(DECK_SIZE)}
-                  stroke="var(--accent)"
-                  strokeOpacity="0.5"
-                  strokeWidth="1"
-                />
-                <text
-                  x={width - margin.right}
-                  y={y(DECK_SIZE) - 5}
-                  textAnchor="end"
-                  fontSize="9"
-                  letterSpacing="0.14em"
-                  fill="var(--accent-text)"
-                >
-                  ✦ FULL DECK · 78
-                </text>
+                {/* Full deck reference — only when 78 is inside the Y window */}
+                {showFullDeckLine && (
+                  <>
+                    <line
+                      x1={margin.left}
+                      x2={width - margin.right}
+                      y1={y(DECK_SIZE)}
+                      y2={y(DECK_SIZE)}
+                      stroke="var(--accent)"
+                      strokeOpacity="0.5"
+                      strokeWidth="1"
+                    />
+                    <text
+                      x={width - margin.right}
+                      y={y(DECK_SIZE) - 5}
+                      textAnchor="end"
+                      fontSize="9"
+                      letterSpacing="0.14em"
+                      fill="var(--accent-text)"
+                    >
+                      ✦ FULL DECK · 78
+                    </text>
+                  </>
+                )}
                 {/* Baseline */}
                 <line
                   x1={margin.left}
                   x2={width - margin.right}
-                  y1={y(0)}
-                  y2={y(0)}
+                  y1={plotBottom}
+                  y2={plotBottom}
                   stroke="var(--border)"
                   strokeWidth="1"
                 />
                 <text
                   x={margin.left - 7}
-                  y={y(0) + 3}
+                  y={plotBottom + 3}
                   textAnchor="end"
                   fontSize="9.5"
                   fill="var(--ghost-foreground)"
                 >
-                  0
+                  {yDomain.y0}
                 </text>
                 {/* X ticks */}
                 {ticks.map((t) => (
@@ -646,14 +702,14 @@ export function RaceChart({ race }: { race: RaceData }) {
                     <line
                       x1={x(t.i)}
                       x2={x(t.i)}
-                      y1={y(0)}
-                      y2={y(0) + 4}
+                      y1={plotBottom}
+                      y2={plotBottom + 4}
                       stroke="var(--border)"
                       strokeWidth="1"
                     />
                     <text
                       x={Math.min(x(t.i), width - 24)}
-                      y={y(0) + 16}
+                      y={plotBottom + 16}
                       textAnchor="middle"
                       fontSize="9"
                       letterSpacing="0.1em"
@@ -694,7 +750,7 @@ export function RaceChart({ race }: { race: RaceData }) {
                       <g clipPath={`url(#${clipId})`}>
                         {focused && (
                           <path
-                            d={`${path}L${x(s.runner.endIndex)},${y(0)}L${x(s.runner.startIndex)},${y(0)}Z`}
+                            d={`${path}L${x(s.runner.endIndex)},${plotBottom}L${x(s.runner.startIndex)},${plotBottom}Z`}
                             fill={s.color}
                             fillOpacity="0.07"
                           />
