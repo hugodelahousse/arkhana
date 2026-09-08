@@ -102,7 +102,7 @@ jobs:
 
       - name: Create and link postgres
         run: |
-          ssh dokku@${{ secrets.DOKKU_HOST }} postgres:exists ${{ env.APP_NAME }}-db 2>/dev/null || ssh dokku@${{ secrets.DOKKU_HOST }} postgres:create ${{ env.APP_NAME }}-db
+          ssh dokku@${{ secrets.DOKKU_HOST }} postgres:exists ${{ env.APP_NAME }}-db 2>/dev/null || ssh dokku@${{ secrets.DOKKU_HOST }} postgres:clone arkhana-db ${{ env.APP_NAME }}-db
           ssh dokku@${{ secrets.DOKKU_HOST }} postgres:linked ${{ env.APP_NAME }}-db ${{ env.APP_NAME }} 2>/dev/null || ssh dokku@${{ secrets.DOKKU_HOST }} postgres:link ${{ env.APP_NAME }}-db ${{ env.APP_NAME }}
 
       - name: Set config
