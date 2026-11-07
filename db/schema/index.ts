@@ -5,3 +5,4 @@ export * from "./spreads.js";
 export * from "./streaks.js";
 export * from "./push-subscriptions.js";
 export * from "./follows.js";
+export * from "./lab-deck.js";

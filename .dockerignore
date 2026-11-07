@@ -2,3 +2,7 @@
 build
 node_modules
 README.md
+# Local deck lab images and the locally built viewer (rebuilt in the image)
+.data
+public/lab-deck/viewer
+prod-dump.sql

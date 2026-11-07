@@ -11,6 +11,12 @@ const schema = z.object({
   VAPID_SUBJECT: z.string().default("mailto:admin@arkhana.delaho-h.com"),
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("Arkhana <noreply@arkhana.delaho-h.com>"),
+  // Lab: Major Arcana deck builder (BYOK OpenAI). Off unless explicitly enabled.
+  LAB_DECK_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
+  LAB_DECK_DATA_DIR: z.string().default(".data/lab-deck"),
 });
 
 const parsed = schema.parse(process.env);
@@ -26,4 +32,6 @@ export const config = {
   vapidSubject: parsed.VAPID_SUBJECT,
   resendApiKey: parsed.RESEND_API_KEY,
   emailFrom: parsed.EMAIL_FROM,
+  labDeckEnabled: parsed.LAB_DECK_ENABLED,
+  labDeckDataDir: parsed.LAB_DECK_DATA_DIR,
 };

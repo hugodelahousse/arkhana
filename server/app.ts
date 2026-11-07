@@ -11,6 +11,7 @@ import { getUpcomingCelestialEvents } from "../app/lib/moonphase.js";
 import { DateTime } from "luxon";
 import { parseTzCookie } from "../app/lib/utils.js";
 import { user as userTable } from "../db/schema/auth.js";
+import { labDeckRouter } from "./lab-deck/router.js";
 
 export const app = express();
 
@@ -23,6 +24,10 @@ app.use((_req, res, next) => {
 });
 
 app.all("/api/auth/*splat", toNodeHandler(auth));
+
+// Lab deck builder: mounted before the global JSON parser because it accepts
+// larger bodies (image uploads as data URLs). Returns 404 unless enabled.
+app.use("/api/lab-deck", labDeckRouter);
 
 app.use(express.json());
 

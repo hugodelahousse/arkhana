@@ -23,6 +23,8 @@ COPY ./package.json pnpm-lock.yaml /app/
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
 COPY --from=build-env /app/build /app/build
 COPY ./public/fonts /app/public/fonts
+# The deck lab reads its preset style anchors from disk to send to the image API.
+COPY ./public/lab-deck/anchors /app/public/lab-deck/anchors
 COPY ./server.js /app/server.js
 COPY ./db /app/db
 COPY ./config /app/config
