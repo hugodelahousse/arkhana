@@ -130,35 +130,41 @@ export default function DeckPreview({ loaderData }: Route.ComponentProps) {
   return (
     <>
       <div className="min-h-screen overflow-x-hidden bg-background px-4 py-6 text-foreground print:hidden">
-        <header className="mx-auto mb-8 flex max-w-5xl flex-wrap items-center gap-4">
-          <Link to={`/lab/deck/${id}`} className="type-ghost hover:text-foreground">
-            ← Back to the workspace
-          </Link>
-          <h1 className="type-page-title min-w-0 flex-1 text-2xl">{data.deck.title}</h1>
-          <div
-            className="flex border border-border text-xs uppercase tracking-widest"
-            role="radiogroup"
-            aria-label="Art to show"
-          >
-            {(["latest", "approved"] as const).map((s) => (
-              <button
-                key={s}
-                role="radio"
-                aria-checked={source === s}
-                onClick={() => setSource(s)}
-                className={`px-3 py-1.5 ${source === s ? "bg-muted text-foreground" : "text-muted-foreground"}`}
-              >
-                {s === "latest" ? "Latest" : "Approved only"}
-              </button>
-            ))}
-          </div>
-          {exportDeck && (
-            <DownloadMenu
-              deck={exportDeck}
-              sourceLabel={source === "latest" ? "Latest" : "Approved only"}
-              onPrint={setPrinting}
-            />
+        <header className="mx-auto mb-8 max-w-5xl space-y-3">
+          {data.canEdit && (
+            <Link to={`/lab/deck/${id}`} className="type-ghost inline-block hover:text-foreground">
+              ← Back to the workspace
+            </Link>
           )}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+            <h1 className="type-page-title text-2xl text-balance sm:text-3xl">{data.deck.title}</h1>
+            <div className="relative flex flex-wrap items-center gap-2">
+              <div
+                className="flex border border-border text-xs uppercase tracking-widest"
+                role="radiogroup"
+                aria-label="Art to show"
+              >
+                {(["latest", "approved"] as const).map((s) => (
+                  <button
+                    key={s}
+                    role="radio"
+                    aria-checked={source === s}
+                    onClick={() => setSource(s)}
+                    className={`whitespace-nowrap px-3 py-1.5 ${source === s ? "bg-muted text-foreground" : "text-muted-foreground"}`}
+                  >
+                    {s === "latest" ? "Latest" : "Approved only"}
+                  </button>
+                ))}
+              </div>
+              {exportDeck && (
+                <DownloadMenu
+                  deck={exportDeck}
+                  sourceLabel={source === "latest" ? "Latest" : "Approved only"}
+                  onPrint={setPrinting}
+                />
+              )}
+            </div>
+          </div>
         </header>
         <DeckViewer key={source} cards={cards} />
       </div>
