@@ -7,7 +7,7 @@ import prettierConfig from "eslint-config-prettier";
 /** @type {import("eslint").Linter.Config[]} */
 export default [
   {
-    ignores: ["build/**", "node_modules/**", ".react-router/**", ".claude/worktrees/**", "tmp-reference/**"],
+    ignores: ["build/**", "node_modules/**", ".react-router/**", ".claude/worktrees/**", "tmp-reference/**", "public/lab-deck/viewer/**", ".data/**"],
   },
   js.configs.recommended,
   {

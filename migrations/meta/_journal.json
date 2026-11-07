@@ -57,6 +57,13 @@
       "when": 1781271894795,
       "tag": "0007_zippy_moondragon",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794013705422,
+      "tag": "0008_material_korvac",
+      "breakpoints": true
     }
   ]
 }

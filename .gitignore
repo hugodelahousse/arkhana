@@ -17,3 +17,8 @@
 /prod-dump.sql
 *.dump
 /snapshots/
+
+# Lab deck builder local image storage
+/.data/
+# Lab deck offline viewer bundle (pnpm build:lab-viewer)
+/public/lab-deck/viewer/

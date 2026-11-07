@@ -1,0 +1,168 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router";
+import type { Route } from "./+types/deck.$id.preview";
+import { config } from "../../../config/index.js";
+import { useDeck, type DeckData } from "../../lib/deck/client";
+import { romanNumeral } from "../../lib/deck/prompts";
+import { CardFrame } from "../../components/deck/CardFrame";
+import { DeckViewer, type ViewerCard } from "../../components/deck/DeckViewer";
+import { backOf, frameOf } from "../../components/deck/Wizard";
+import {
+  DownloadMenu,
+  PrintSheet,
+  type ExportDeck,
+  type PrintOptions,
+} from "../../components/deck/DeckExport";
+
+export function meta() {
+  return [{ title: "Deck Preview — Arkhana" }, { name: "robots", content: "noindex, nofollow" }];
+}
+
+export function loader({ params }: Route.LoaderArgs) {
+  if (!config.labDeckEnabled) throw new Response("Not found", { status: 404 });
+  return { id: params.id };
+}
+
+type Source = "latest" | "approved";
+
+/** Pick the art to show for a card: approved = accepted final, else approved draft; latest = newest final, else newest draft. */
+function artFor(
+  data: DeckData,
+  cardId: number,
+  source: Source
+): { url: string | null; caption: string } {
+  const card = data.cards.find((c) => c.cardId === cardId)!;
+  const byId = (id: string | null) =>
+    id ? data.images.find((i) => i.id === id && i.status === "done") : undefined;
+  const newest = (kind: string) =>
+    data.images.find((i) => i.kind === kind && i.cardId === cardId && i.status === "done"); // images are newest-first
+  if (source === "approved") {
+    const f = byId(card.finalImageId);
+    if (f) return { url: f.url, caption: "accepted final" };
+    const d = byId(card.approvedDraftId);
+    if (d) return { url: d.url, caption: "approved draft" };
+    return { url: null, caption: "nothing approved yet" };
+  }
+  const f = newest("final");
+  if (f) return { url: f.url, caption: "latest final" };
+  const d = newest("draft");
+  if (d) return { url: d.url, caption: "latest draft" };
+  return { url: null, caption: "no art yet" };
+}
+
+export default function DeckPreview({ loaderData }: Route.ComponentProps) {
+  const { id } = loaderData;
+  const { data, error } = useDeck(id);
+  const [source, setSource] = useState<Source>("latest");
+
+  const cards: ViewerCard[] = useMemo(() => {
+    if (!data) return [];
+    return data.cards.map((card) => {
+      const art = artFor(data, card.cardId, source);
+      return {
+        key: String(card.cardId),
+        label: `${romanNumeral(card.cardId)} · ${card.name}`,
+        caption: art.caption,
+        front: (
+          <CardFrame
+            frameId={frameOf(data)}
+            artUrl={art.url}
+            status={art.url ? undefined : art.caption}
+            numeral={romanNumeral(card.cardId)}
+            title={card.name}
+          />
+        ),
+        back: backOf(data),
+        reason: card.backText.trim() || undefined,
+      };
+    });
+  }, [data, source]);
+
+  const exportDeck: ExportDeck | null = useMemo(() => {
+    if (!data) return null;
+    const backImageId = data.deck.backImageId;
+    return {
+      title: data.deck.title,
+      frameId: frameOf(data),
+      backArtUrl: backImageId
+        ? (data.images.find((i) => i.id === backImageId && i.status === "done")?.url ?? null)
+        : null,
+      cards: data.cards.map((card) => ({
+        cardId: card.cardId,
+        numeral: romanNumeral(card.cardId),
+        name: card.name,
+        artUrl: artFor(data, card.cardId, source).url,
+        reason: card.backText.trim() || undefined,
+      })),
+    };
+  }, [data, source]);
+
+  // Printing: mount the print sheet, wait for its art to load, then open the print dialog.
+  const [printing, setPrinting] = useState<PrintOptions | null>(null);
+  useEffect(() => {
+    if (!printing || !exportDeck) return;
+    let cancelled = false;
+    const urls = [...exportDeck.cards.map((c) => c.artUrl), exportDeck.backArtUrl].filter(
+      (u): u is string => !!u
+    );
+    const done = () => setPrinting(null);
+    window.addEventListener("afterprint", done, { once: true });
+    Promise.all(
+      urls.map((u) => {
+        const img = new Image();
+        img.src = u;
+        return img.decode().catch(() => {});
+      })
+    ).then(() => {
+      if (!cancelled) requestAnimationFrame(() => window.print());
+    });
+    return () => {
+      cancelled = true;
+      window.removeEventListener("afterprint", done);
+    };
+  }, [printing, exportDeck]);
+
+  if (error && !data)
+    return <div className="min-h-screen bg-background p-8 type-body">{error}</div>;
+  if (!data)
+    return <div className="min-h-screen bg-background p-8 type-caption">Loading deck…</div>;
+
+  return (
+    <>
+      <div className="min-h-screen overflow-x-hidden bg-background px-4 py-6 text-foreground print:hidden">
+        <header className="mx-auto mb-8 flex max-w-5xl flex-wrap items-center gap-4">
+          <Link to={`/lab/deck/${id}`} className="type-ghost hover:text-foreground">
+            ← Back to the workspace
+          </Link>
+          <h1 className="type-page-title min-w-0 flex-1 text-2xl">{data.deck.title}</h1>
+          <div
+            className="flex border border-border text-xs uppercase tracking-widest"
+            role="radiogroup"
+            aria-label="Art to show"
+          >
+            {(["latest", "approved"] as const).map((s) => (
+              <button
+                key={s}
+                role="radio"
+                aria-checked={source === s}
+                onClick={() => setSource(s)}
+                className={`px-3 py-1.5 ${source === s ? "bg-muted text-foreground" : "text-muted-foreground"}`}
+              >
+                {s === "latest" ? "Latest" : "Approved only"}
+              </button>
+            ))}
+          </div>
+          {exportDeck && (
+            <DownloadMenu
+              deck={exportDeck}
+              sourceLabel={source === "latest" ? "Latest" : "Approved only"}
+              onPrint={setPrinting}
+            />
+          )}
+        </header>
+        <DeckViewer key={source} cards={cards} />
+      </div>
+      {printing && exportDeck && <PrintSheet deck={exportDeck} options={printing} />}
+    </>
+  );
+}
