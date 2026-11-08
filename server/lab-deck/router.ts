@@ -29,6 +29,7 @@ import {
   isPresetUnmodified,
 } from "../../app/lib/deck/presets.js";
 import { buildBackPrompt, buildCardPrompt, type RefRole } from "../../app/lib/deck/prompts.js";
+import type { PreviewData } from "../../app/lib/deck/client.js";
 import {
   BudgetError,
   createDeck,
@@ -162,6 +163,49 @@ labDeckRouter.get("/decks/:id", async (req, res) => {
     ledger: await ledgerFor(state.deck.id),
     agentRunning: agentRuns.has(state.deck.id),
   });
+});
+
+/**
+ * Just what the preview page shows: card names and texts, and the few images it
+ * can pick between per card (accepted final, approved draft, newest final, newest
+ * draft) plus the back. The full state carries prompts, chat and ledger (~2 MB).
+ */
+labDeckRouter.get("/decks/:id/preview", async (req, res) => {
+  const state = await loadState(req, res);
+  if (!state) return;
+  const user = await signedInUser(req);
+  const { deck } = state;
+  const done = state.images.filter((i) => i.status === "done" && i.file); // newest first
+  const keep = new Set<string>();
+  if (deck.backImageId) keep.add(deck.backImageId);
+  for (const c of state.cards) {
+    for (const id of [c.finalImageId, c.approvedDraftId]) if (id) keep.add(id);
+    for (const kind of ["final", "draft"]) {
+      const newest = done.find((i) => i.kind === kind && i.cardId === c.cardId);
+      if (newest) keep.add(newest.id);
+    }
+  }
+  const preview: PreviewData = {
+    deck: {
+      id: deck.id,
+      title: deck.title,
+      frameId: deck.frameId,
+      presetId: deck.presetId,
+      backImageId: deck.backImageId,
+    },
+    cards: state.cards.map((c) => ({
+      cardId: c.cardId,
+      name: c.name,
+      backText: c.backText,
+      finalImageId: c.finalImageId,
+      approvedDraftId: c.approvedDraftId,
+    })),
+    images: done
+      .filter((i) => keep.has(i.id))
+      .map((i) => ({ id: i.id, kind: i.kind, cardId: i.cardId, status: i.status, url: i.url })),
+    canEdit: !!user && (deck.ownerId === null || deck.ownerId === user.id),
+  };
+  res.json(preview);
 });
 
 /** The whole deck (rows + image files) as a zip, to move it to another environment. Owner only. */

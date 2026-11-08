@@ -162,6 +162,33 @@ export function useDeck(id: string) {
   return { data, error, refresh, busy };
 }
 
+/** What the preview page needs (GET /decks/:id/preview): a small slice of the deck. */
+export type PreviewData = {
+  deck: Pick<DeckState["deck"], "id" | "title" | "frameId" | "presetId" | "backImageId">;
+  cards: Pick<
+    DeckState["cards"][number],
+    "cardId" | "name" | "backText" | "finalImageId" | "approvedDraftId"
+  >[];
+  /** Newest first, only the images the preview can show. */
+  images: Pick<DeckState["images"][number], "id" | "kind" | "cardId" | "status" | "url">[];
+  canEdit: boolean;
+};
+
+export function useDeckPreview(id: string) {
+  const [data, setData] = useState<PreviewData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    api<PreviewData>(`/decks/${id}/preview`)
+      .then((d) => !cancelled && setData(d))
+      .catch((e) => !cancelled && setError((e as Error).message));
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+  return { data, error };
+}
+
 export type GenerateBody = {
   action: "probe" | "drafts" | "finals" | "back";
   cardIds?: number[];
