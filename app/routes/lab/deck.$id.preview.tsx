@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
 import type { Route } from "./+types/deck.$id.preview";
 import { config } from "../../../config/index.js";
 import { useDeck, type DeckData } from "../../lib/deck/client";
 import { romanNumeral } from "../../lib/deck/prompts";
 import { CardFrame } from "../../components/deck/CardFrame";
+import type { FrameId } from "../../lib/deck/presets";
+import { renderCardImage, urlToDataUrl } from "../../lib/deck/export";
 import { DeckViewer, type ViewerCard } from "../../components/deck/DeckViewer";
 import { backOf, frameOf } from "../../components/deck/Wizard";
 import {
@@ -50,20 +52,103 @@ function artFor(
   return { url: null, caption: "no art yet" };
 }
 
+type FlatInput = { frameId: FrameId; artUrl: string; numeral: string; title: string };
+const flatKey = (f: FlatInput) => [f.frameId, f.artUrl, f.numeral, f.title].join("|");
+
+/**
+ * Flatten each card front (frame, art and title) into one JPEG, a card at a time.
+ * The viewer then moves plain images around in 3D instead of live SVG: some frames
+ * carry filters (carved-block's roughened border is a turbulence filter) that phones
+ * redraw on every frame of a swipe. Until a card is ready it shows the live SVG.
+ */
+function useFlatFronts(inputs: FlatInput[]): Record<string, string> {
+  const [flat, setFlat] = useState<Record<string, string>>({});
+  // Mirrors `flat` for the effect, which runs across renders; also everything to revoke.
+  const made = useRef(new Map<string, string>());
+  const wanted = inputs.map(flatKey).join("\n");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      for (const input of inputs) {
+        const key = flatKey(input);
+        if (cancelled) return;
+        if (made.current.has(key)) continue;
+        try {
+          const art = await urlToDataUrl(input.artUrl);
+          if (cancelled) return;
+          const blob = await renderCardImage(
+            <CardFrame frameId={input.frameId} artUrl={art} numeral={input.numeral} title={input.title} />,
+            { type: "image/jpeg", quality: 0.92 }
+          );
+          const url = URL.createObjectURL(blob);
+          made.current.set(key, url);
+          if (!cancelled) setFlat((f) => ({ ...f, [key]: url }));
+        } catch {
+          // Leave this card on the live SVG.
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // `wanted` stands for `inputs`: re-run only when the set of cards changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wanted]);
+
+  useEffect(() => {
+    const urls = made.current;
+    return () => {
+      for (const url of urls.values()) URL.revokeObjectURL(url);
+      urls.clear();
+    };
+  }, []);
+
+  return flat;
+}
+
+const plainImage = (src: string, alt: string, lazy = false) => (
+  <img
+    src={src}
+    alt={alt}
+    draggable={false}
+    loading={lazy ? "lazy" : undefined}
+    decoding="async"
+    className="block aspect-[2/3] w-full select-none object-cover"
+  />
+);
+
 export default function DeckPreview({ loaderData }: Route.ComponentProps) {
   const { id } = loaderData;
   const { data, error } = useDeck(id);
   const [source, setSource] = useState<Source>("latest");
 
+  const flatInputs: FlatInput[] = useMemo(() => {
+    if (!data) return [];
+    return data.cards.flatMap((card) => {
+      const url = artFor(data, card.cardId, source).url;
+      return url
+        ? [{ frameId: frameOf(data), artUrl: url, numeral: romanNumeral(card.cardId), title: card.name }]
+        : [];
+    });
+  }, [data, source]);
+  const flat = useFlatFronts(flatInputs);
+
   const cards: ViewerCard[] = useMemo(() => {
     if (!data) return [];
     return data.cards.map((card) => {
       const art = artFor(data, card.cardId, source);
+      const label = `${romanNumeral(card.cardId)} · ${card.name}`;
+      const flatUrl = art.url
+        ? flat[flatKey({ frameId: frameOf(data), artUrl: art.url, numeral: romanNumeral(card.cardId), title: card.name })]
+        : undefined;
       return {
         key: String(card.cardId),
-        label: `${romanNumeral(card.cardId)} · ${card.name}`,
+        label,
         caption: art.caption,
-        front: (
+        front: flatUrl ? (
+          plainImage(flatUrl, label)
+        ) : (
           <CardFrame
             frameId={frameOf(data)}
             artUrl={art.url}
@@ -72,11 +157,18 @@ export default function DeckPreview({ loaderData }: Route.ComponentProps) {
             title={card.name}
           />
         ),
+        thumb: flatUrl ? (
+          plainImage(flatUrl, label)
+        ) : art.url ? (
+          plainImage(art.url, label, true)
+        ) : (
+          <div className="aspect-[2/3] w-full bg-muted" />
+        ),
         back: backOf(data),
         reason: card.backText.trim() || undefined,
       };
     });
-  }, [data, source]);
+  }, [data, source, flat]);
 
   const exportDeck: ExportDeck | null = useMemo(() => {
     if (!data) return null;
