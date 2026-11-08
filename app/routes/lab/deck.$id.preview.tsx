@@ -25,7 +25,7 @@ export function loader({ params }: Route.LoaderArgs) {
 
 type Source = "latest" | "approved";
 
-/** Pick the art to show for a card: approved = accepted final, else approved draft; latest = newest final, else newest draft. */
+/** Pick the art to show for a card: approved = accepted final, else approved draft; latest = the newest final or draft, whichever is more recent. */
 function artFor(
   data: PreviewData,
   cardId: number,
@@ -43,10 +43,11 @@ function artFor(
     if (d) return { url: d.url, caption: "approved draft" };
     return { url: null, caption: "nothing approved yet" };
   }
+  // The most recent art of either kind: drafts made after a final (a restyle) win over it.
   const f = newest("final");
-  if (f) return { url: f.url, caption: "latest final" };
   const d = newest("draft");
-  if (d) return { url: d.url, caption: "latest draft" };
+  const latest = f && d ? (data.images.indexOf(f) < data.images.indexOf(d) ? f : d) : (f ?? d);
+  if (latest) return { url: latest.url, caption: latest === f ? "latest final" : "latest draft" };
   return { url: null, caption: "no art yet" };
 }
 

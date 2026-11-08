@@ -13,6 +13,13 @@ export type StylePreset = {
   anchorUrl: string;
   /** What the anchor depicts, so card prompts can say not to copy it. Defaults to {@link DEFAULT_ANCHOR_SUBJECT}. */
   anchorSubject?: string;
+  /**
+   * "technique": card prompts take only the anchor's drawing technique, never its colours or
+   * lighting. For anchors with a strong colour cast (a lamplit scene) that would tint every card.
+   */
+  anchorUse?: "technique";
+  /** Replaces the default COLOUR EMPHASIS line of card prompts. */
+  colourLine?: string;
 };
 
 export const FRAME_IDS = [
@@ -133,6 +140,27 @@ export const STYLE_PRESETS: StylePreset[] = [
         "All figures, objects and landforms are solid matte black silhouettes with no interior detail except a few cut-away negative shapes (eyes, windows, a profile). Characters are identified by outline alone: hair, ears, clothing edges, held objects. Printed over one flat field of colour ink that covers the sky or background only; the ground meets bare cream paper. Crisp shapes with very slight ink build-up at the edges and a few tiny pinholes in the solids. No layering, no shadows: just ink on paper.",
       palette: "Matte black, one flat colour field (deep teal by default), cream paper.",
       exclude: `no colour inside the silhouettes, no gradients, no paper texture layers, ${BASE_EXCLUDE}`,
+    },
+  },
+  {
+    id: "game-key-art",
+    name: "Game key art",
+    blurb: "Bold tapered ink over cel shading, painted backdrop",
+    frameId: "foil-rule",
+    anchorUrl: "/lab-deck/anchors/game-key-art.jpg",
+    anchorSubject: "a cobbler at work in his lamplit workshop, not a tarot card",
+    anchorUse: "technique",
+    colourLine:
+      "LIGHT & DEPTH: one clear light source shapes the figures and the space; the setting has depth and atmosphere and can carry rich colour; the figures stay the focus through light and contrast, not by dulling the background.",
+    bible: {
+      artefact:
+        "Hand-drawn key art for a 2D mythological action game: bold inked line art over cel-shaded colour, with a loosely painted, textured background. The picture fills the whole image edge to edge, cropped inside the painted area: no paper margin, no painted border.",
+      process:
+        "Thick, confident black ink outlines that taper to sharp points, heavier on the shadow side; stylised, angular figures with elongated limbs, sharp facial features and strong, dynamic poses; colour in flat cel-shaded areas with hard-edged shadow shapes and large spotted blacks; a bright rim light in a contrasting colour traces one side of every figure; the background is painted more loosely, with visible brush texture and simplified shapes, darker and softer than the figures so they pop.",
+      palette:
+        "Deep night colours (indigo, violet, blue-black) against one or two saturated glowing accents chosen for the card, such as spectral green, molten gold, magenta or ember orange; skin and cloth in rich, warm mid-tones.",
+      exclude:
+        "no text, letters, runes or numerals; no border or frame; no signature or watermark; no 3D rendering; no glossy digital-painting look; no airbrushed gradients; no lens blur; no texture overlay faked on top of a smooth image",
     },
   },
 ];

@@ -22,7 +22,7 @@ const IMAGE_SAFE_NAMES: Record<number, string> = { 12: "The Suspended One" };
 export const imageSafeCardName = (cardId: number) => IMAGE_SAFE_NAMES[cardId] ?? traditionalName(cardId);
 
 export type RefRole =
-  | { kind: "anchor"; presetSubject?: string }
+  | { kind: "anchor"; presetSubject?: string; techniqueOnly?: boolean }
   | { kind: "style-ref" }
   | { kind: "draft" }
   | { kind: "sketch" }
@@ -31,6 +31,8 @@ export type RefRole =
 function refLine(n: number, role: RefRole): string {
   switch (role.kind) {
     case "anchor":
+      if (role.techniqueOnly)
+        return `Image ${n} is a TECHNIQUE SAMPLE only: copy just its drawing technique (the weight and taper of the ink outlines, the shading, the solid blacks and the brush texture). Take nothing else from it: not its colours, palette, lighting, mood, subject, figures or composition. Colours and lighting come only from the text below.`;
       return `Image ${n} is the STYLE ANCHOR for this deck: match its medium, line quality, paper and palette. Do NOT copy its subject, figures, animals, objects, composition or level of detail${role.presetSubject ? ` (it shows ${role.presetSubject}, only as a style sample)` : ""}, and do not take its sky colour, lighting or time of day: those come from the scene. The scene and the characters come from the text below.`;
     case "style-ref":
       return `Image ${n} is a STYLE REFERENCE: use only its medium, marks, texture and palette. Do NOT copy its subject or composition.`;
@@ -86,7 +88,8 @@ export function buildCardPrompt(
   brief: CardBrief,
   roles: RefRole[],
   revision?: string,
-  characters: CharacterBrief[] = []
+  characters: CharacterBrief[] = [],
+  colourLine?: string
 ): string {
   const s = styleBlocks(bible);
   const trump = `${imageSafeCardName(brief.cardId)} (tarot trump ${romanNumeral(brief.cardId)})`;
@@ -94,7 +97,7 @@ export function buildCardPrompt(
 
 SUBJECT: ${trump}${brief.meaning ? ` — meaning: ${brief.meaning.trim().replace(/[.\s]+$/, "")}` : ""}. ${brief.subject}${charactersBlock(characters)}
 COMPOSITION: ${brief.composition} The picture runs to all four edges with no border of its own.
-COLOUR EMPHASIS: the characters carry the strongest, clearest colour in the picture; the background and setting stay a step quieter so the figures stand out.${revisionBlock(revision)}
+${colourLine ?? "COLOUR EMPHASIS: the characters carry the strongest, clearest colour in the picture; the background and setting stay a step quieter so the figures stand out."}${revisionBlock(revision)}
 
 ${s.tail}`;
 }

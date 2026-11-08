@@ -90,13 +90,15 @@ REFERENCES (numbered roles) → MEDIUM (one line) → SUBJECT → CHARACTERS (fu
 - Any text in a character description ("runes", "written signs") becomes abstract marks. The frame owns all lettering.
 
 ## Style presets
-Two-tone linocut, Stained glass, Illuminated manuscript, Marseille stencil woodcut, Pen & flat colour 1909, Gold line on black, Screenprint silhouette.
+Two-tone linocut, Stained glass, Illuminated manuscript, Marseille stencil woodcut, Pen & flat colour 1909, Gold line on black, Screenprint silhouette, Game key art.
 
-Rejected after tests: generic gilded woodcut, etching, baroque oil, art nouveau, ink & wash, ukiyo-e, risograph, collage.
+**Technique-only anchors.** A preset can set `anchorUse: "technique"`: card prompts then take only the anchor's drawing technique (line, shading, texture), never its colours or lighting. Game key art needs it: its lamplit anchor otherwise tinted every card orange. A preset can also replace the default COLOUR EMPHASIS line (`colourLine`); Game key art asks for one named light source and depth instead.
+
+Rejected after tests: generic gilded woodcut, etching, baroque oil, art nouveau, ink & wash, ukiyo-e, risograph, collage; later also golden-age book plate, hand-coloured woodcut, Renaissance gold leaf, mid-century gouache. Shorter briefs (one subject, a named light source and viewpoint, no prop lists) helped every style.
 
 ## Preview page
 
-The preview loads `GET /decks/:id/preview`, a slim payload (card names and texts, and per card only the accepted final, approved draft, newest final and newest draft, plus the back) instead of the full deck state with its prompts, chat and ledger. Card art is drawn as an HTML `<img decoding="async">` under the SVG frame (`htmlArt` on `CardFrame`/`CardBack`), so the browser loads and decodes it off the main thread; the thumbnail strip is lazy and low priority. Image exports keep the art inside the SVG, since they serialize it on its own.
+The preview loads `GET /decks/:id/preview`, a slim payload (card names and texts, and per card only the accepted final, approved draft, newest final and newest draft, plus the back; "Latest" shows whichever of the newest final and newest draft is more recent, so a restyle's drafts replace older finals) instead of the full deck state with its prompts, chat and ledger. Card art is drawn as an HTML `<img decoding="async">` under the SVG frame (`htmlArt` on `CardFrame`/`CardBack`), so the browser loads and decodes it off the main thread; the thumbnail strip is lazy and low priority. Image exports keep the art inside the SVG, since they serialize it on its own.
 
 ## Exports (preview page)
 
