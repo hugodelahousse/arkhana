@@ -1,7 +1,15 @@
 // A physical-feeling deck preview: a stacked deck you page through by flinging
 // the top card, with pointer-driven 3D tilt, a moving glare, and a flip to the
 // card's back. Built on `motion` springs; honours prefers-reduced-motion.
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import {
   AnimatePresence,
   animate,
@@ -20,6 +28,8 @@ export type ViewerCard = {
   label: string;
   front: ReactNode;
   back: ReactNode;
+  /** Small picture for the thumbnail strip (defaults to `front`); keep it cheap, there are many. */
+  thumb?: ReactNode;
   caption?: string;
   /** Why this character or moment embodies the card; shown under the card. */
   reason?: string;
@@ -50,7 +60,7 @@ function topVariants(j: { rot: number; x: number; y: number }) {
       nav === "next"
         ? { ...pose(j, 1), scale: 1, opacity: 1, transition: SETTLE }
         : nav === "prev"
-          ? { x: -260, y: -20, z: 60, rotate: -12, scale: 1, opacity: 0, filter: "brightness(1)" }
+          ? { x: -260, y: -20, z: 60, rotate: -12, scale: 1, opacity: 0 }
           : { ...rest, scale: 0.96, opacity: 0 },
     center: { ...rest, transition: SETTLE },
     exit: ({ nav, flung }: Nav) =>
@@ -69,16 +79,20 @@ function topVariants(j: { rot: number; x: number; y: number }) {
   };
 }
 
-/** Where a card sits at a given depth in the pile (0 = top). */
+/**
+ * Where a card sits at a given depth in the pile (0 = top). Transforms only: a CSS
+ * filter here would repaint the card (and flatten its 3D) on every frame of a page
+ * turn, which is what made swiping stutter on phones. Depth shading is an overlay.
+ */
 function pose(j: { rot: number; x: number; y: number }, depth: number) {
   return {
     x: j.x,
     y: j.y + depth * 2,
     z: -depth * THICKNESS,
     rotate: j.rot,
-    filter: `brightness(${1 - depth * 0.05})`,
   };
 }
+const shade = (depth: number) => depth * 0.05;
 
 /** Deterministic small jitter per card so the stack looks hand-squared, not CSS-perfect. */
 function jitter(seed: string) {
@@ -87,6 +101,14 @@ function jitter(seed: string) {
   const r = (n: number) => (((h >>> n) & 0xff) / 255) * 2 - 1;
   return { rot: r(0) * 2.2, x: r(8) * 5, y: r(16) * 3 };
 }
+
+const HOVER_QUERY = "(hover: hover) and (pointer: fine)";
+function subscribeHover(onChange: () => void) {
+  const mq = window.matchMedia(HOVER_QUERY);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+const hoverSnapshot = () => window.matchMedia(HOVER_QUERY).matches;
 
 function TopCard({
   card,
@@ -101,6 +123,8 @@ function TopCard({
   flipped: boolean;
   setFlipped: (f: boolean) => void;
 }) {
+  // Tilt and glare follow a hovering mouse; on touch they'd only fight the drag.
+  const hover = useSyncExternalStore(subscribeHover, hoverSnapshot, () => false);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotateZ = useTransform(x, [-300, 0, 300], [-14, 0, 14]);
@@ -132,7 +156,7 @@ function TopCard({
   const dragged = useRef(false);
 
   function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
-    if (reduced) return;
+    if (reduced || !hover || e.pointerType !== "mouse") return;
     const r = e.currentTarget.getBoundingClientRect();
     const px = (e.clientX - r.left) / r.width;
     const py = (e.clientY - r.top) / r.height;
@@ -213,10 +237,12 @@ function TopCard({
           style={{ backfaceVisibility: "hidden", transform: `translateZ(${THICKNESS / 2}px)` }}
         >
           {card.front}
-          <motion.div
-            className="pointer-events-none absolute inset-0 mix-blend-overlay"
-            style={{ background: glare, opacity: glareOpacity }}
-          />
+          {hover && (
+            <motion.div
+              className="pointer-events-none absolute inset-0 mix-blend-overlay"
+              style={{ background: glare, opacity: glareOpacity }}
+            />
+          )}
         </div>
         <div
           className="absolute inset-0 overflow-hidden rounded-[2.5%] shadow-2xl"
@@ -226,10 +252,12 @@ function TopCard({
           }}
         >
           {card.back}
-          <motion.div
-            className="pointer-events-none absolute inset-0 mix-blend-overlay"
-            style={{ background: glare, opacity: glareOpacity }}
-          />
+          {hover && (
+            <motion.div
+              className="pointer-events-none absolute inset-0 mix-blend-overlay"
+              style={{ background: glare, opacity: glareOpacity }}
+            />
+          )}
         </div>
       </motion.div>
     </motion.div>
@@ -352,6 +380,12 @@ export function DeckViewer({ cards }: { cards: ViewerCard[] }) {
                     aria-hidden
                   >
                     {cards[index + depth].front}
+                    <motion.div
+                      className="pointer-events-none absolute inset-0 bg-black"
+                      initial={reduced ? false : { opacity: shade(depth + 1) }}
+                      animate={{ opacity: shade(depth) }}
+                      transition={SETTLE}
+                    />
                   </motion.div>
                 );
               })}
@@ -439,7 +473,7 @@ export function DeckViewer({ cards }: { cards: ViewerCard[] }) {
             onClick={() => go(i)}
             className={`w-10 shrink-0 overflow-hidden rounded-sm transition ${i === index ? "ring-2 ring-ring" : "opacity-60 hover:opacity-100"}`}
           >
-            {c.front}
+            {c.thumb ?? c.front}
           </button>
         ))}
       </div>
