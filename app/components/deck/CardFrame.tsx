@@ -252,6 +252,7 @@ export function CardFrame({
   numeral,
   title,
   status,
+  htmlArt = false,
   className = "",
 }: {
   frameId: FrameId;
@@ -260,15 +261,34 @@ export function CardFrame({
   title: string;
   /** Shown over an empty window: e.g. "queued", "drawing…", an error. */
   status?: ReactNode;
+  /**
+   * Draw the art as an HTML <img> under the frame instead of inside the SVG, so the
+   * browser loads and decodes it off the main thread. Image exports serialize the
+   * SVG on its own, so they need the default.
+   */
+  htmlArt?: boolean;
   className?: string;
 }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const { over } = frameLayers(frameId, uid, numeral, title);
+  const win = {
+    left: `${(WIN.x / CARD_W) * 100}%`,
+    top: `${(WIN.y / CARD_H) * 100}%`,
+    width: `${(WIN.w / CARD_W) * 100}%`,
+    height: `${(WIN.h / CARD_H) * 100}%`,
+  };
   return (
     <div className={`relative ${className}`} style={{ aspectRatio: `${CARD_W} / ${CARD_H}` }}>
+      {htmlArt && (
+        <div className="absolute" style={{ ...win, background: "#2a2730" }}>
+          {artUrl && (
+            <img src={artUrl} alt="" draggable={false} decoding="async" className="h-full w-full select-none object-cover" />
+          )}
+        </div>
+      )}
       <svg viewBox={`0 0 ${CARD_W} ${CARD_H}`} className="absolute inset-0 h-full w-full" role="img" aria-label={`${numeral} ${title}`}>
-        <rect x={WIN.x} y={WIN.y} width={WIN.w} height={WIN.h} fill="#2a2730" />
-        {artUrl && <image href={artUrl} x={WIN.x} y={WIN.y} width={WIN.w} height={WIN.h} preserveAspectRatio="xMidYMid slice" />}
+        {!htmlArt && <rect x={WIN.x} y={WIN.y} width={WIN.w} height={WIN.h} fill="#2a2730" />}
+        {!htmlArt && artUrl && <image href={artUrl} x={WIN.x} y={WIN.y} width={WIN.w} height={WIN.h} preserveAspectRatio="xMidYMid slice" />}
         {over}
       </svg>
       {!artUrl && status && (
@@ -300,15 +320,25 @@ const BACK_THEME: Record<FrameId, { paper: string; ink: string; accent: string; 
 export function CardBack({
   frameId,
   artUrl,
+  htmlArt = false,
   className = "",
 }: {
   frameId: FrameId;
   /** Generated back art (optional); otherwise an SVG pattern. */
   artUrl?: string | null;
+  /** Show generated art as an HTML <img> (decoded off the main thread); see CardFrame. */
+  htmlArt?: boolean;
   className?: string;
 }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const t = BACK_THEME[frameId];
+  if (htmlArt && artUrl) {
+    return (
+      <div className={`relative ${className}`} style={{ aspectRatio: `${CARD_W} / ${CARD_H}`, background: BACK_THEME[frameId].paper }}>
+        <img src={artUrl} alt="Card back" draggable={false} decoding="async" className="absolute inset-0 h-full w-full select-none object-cover" />
+      </div>
+    );
+  }
   const rules = (
     <>
       <rect x="24" y="24" width={CARD_W - 48} height={CARD_H - 48} fill="none" stroke={t.ink} strokeWidth="6" />

@@ -36,7 +36,7 @@ type Ctx = {
 
 const field = "w-full border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-ring";
 
-export function frameOf(data: DeckData): FrameId {
+export function frameOf(data: { deck: Pick<DeckData["deck"], "frameId" | "presetId"> }): FrameId {
   return (data.deck.frameId as FrameId | null) ?? PRESET_BY_ID[data.deck.presetId]?.frameId ?? "carved-block";
 }
 function anchorUrl(data: DeckData): string | null {

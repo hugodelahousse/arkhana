@@ -94,6 +94,10 @@ Two-tone linocut, Stained glass, Illuminated manuscript, Marseille stencil woodc
 
 Rejected after tests: generic gilded woodcut, etching, baroque oil, art nouveau, ink & wash, ukiyo-e, risograph, collage.
 
+## Preview page
+
+The preview loads `GET /decks/:id/preview`, a slim payload (card names and texts, and per card only the accepted final, approved draft, newest final and newest draft, plus the back) instead of the full deck state with its prompts, chat and ledger. Card art is drawn as an HTML `<img decoding="async">` under the SVG frame (`htmlArt` on `CardFrame`/`CardBack`), so the browser loads and decodes it off the main thread; the thumbnail strip is lazy and low priority. Image exports keep the art inside the SVG, since they serialize it on its own.
+
 ## Exports (preview page)
 
 The preview page's **Download** menu works on the art currently shown (Latest or Approved only). Everything renders in the browser, so the frames' live titles use the same fonts as on screen.
