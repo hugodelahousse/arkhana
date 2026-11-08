@@ -511,11 +511,15 @@ type GenerateBody = {
 
 class BadRequest extends Error {}
 
-function anchorRef(state: DeckState): { id: string; presetSubject?: string } | null {
+function anchorRef(state: DeckState): { id: string; role: RefRole } | null {
   const { deck } = state;
-  if (deck.anchorImageId) return { id: deck.anchorImageId };
+  const techniqueOnly = PRESET_BY_ID[deck.presetId]?.anchorUse === "technique";
+  if (deck.anchorImageId) return { id: deck.anchorImageId, role: { kind: "anchor", techniqueOnly } };
   if (isPresetUnmodified(deck.presetId, deck.styleBible))
-    return { id: `preset:${deck.presetId}`, presetSubject: anchorSubjectFor(deck.presetId) };
+    return {
+      id: `preset:${deck.presetId}`,
+      role: { kind: "anchor", presetSubject: anchorSubjectFor(deck.presetId), techniqueOnly },
+    };
   return null;
 }
 
@@ -545,6 +549,7 @@ function buildJobs(state: DeckState, body: GenerateBody): ImageJob[] {
   const { deck } = state;
   const bible = effectiveBible(deck.presetId, deck.styleBible);
   const anchor = anchorRef(state);
+  const colourLine = PRESET_BY_ID[deck.presetId]?.colourLine;
 
   if (body.action === "probe") {
     const cardId = body.cardIds?.[0] ?? state.cards.find((c) => c.subject)?.cardId ?? 0;
@@ -558,7 +563,8 @@ function buildJobs(state: DeckState, body: GenerateBody): ImageJob[] {
       card,
       roles,
       undefined,
-      cardCharacters(state, card.castIds)
+      cardCharacters(state, card.castIds),
+      colourLine
     );
     const n = Math.min(Math.max(body.count ?? 4, 1), 4);
     return Array.from({ length: n }, () => ({
@@ -584,7 +590,7 @@ function buildJobs(state: DeckState, body: GenerateBody): ImageJob[] {
     if (body.sketchId && !sketch) throw new BadRequest("That layout sketch doesn't exist.");
     const design = typeof body.backDesign === "string" ? body.backDesign.slice(0, 2000) : undefined;
     const roles: RefRole[] = [
-      { kind: "anchor", presetSubject: anchor.presetSubject },
+      anchor.role,
       ...(sketch ? [{ kind: "sketch" as const }] : []),
     ];
     const quality: ImageQuality =
@@ -616,7 +622,7 @@ function buildJobs(state: DeckState, body: GenerateBody): ImageJob[] {
       .map((card) => {
         // Characters stay consistent through their descriptions (sent with every card), not reference sheets.
         const roles: RefRole[] = [
-          { kind: "anchor", presetSubject: anchor.presetSubject },
+          anchor.role,
           ...(rev.base ? [{ kind: "previous" as const, change: rev.note! }] : []),
         ];
         return {
@@ -630,7 +636,8 @@ function buildJobs(state: DeckState, body: GenerateBody): ImageJob[] {
             card,
             roles,
             rev.base ? undefined : rev.note,
-            cardCharacters(state, card.castIds)
+            cardCharacters(state, card.castIds),
+            colourLine
           ),
           refIds: [anchor.id, ...(rev.base ? [rev.base.id] : [])],
         };
@@ -644,7 +651,7 @@ function buildJobs(state: DeckState, body: GenerateBody): ImageJob[] {
     .filter((c) => c.approvedDraftId)
     .map((card) => {
       const roles: RefRole[] = [
-        { kind: "anchor", presetSubject: anchor.presetSubject },
+        anchor.role,
         { kind: "draft" },
       ];
       return {
@@ -653,7 +660,7 @@ function buildJobs(state: DeckState, body: GenerateBody): ImageJob[] {
         cardId: card.cardId,
         model: IMAGE_MODELS.final,
         quality,
-        prompt: buildCardPrompt(bible, card, roles, undefined, cardCharacters(state, card.castIds)),
+        prompt: buildCardPrompt(bible, card, roles, undefined, cardCharacters(state, card.castIds), colourLine),
         refIds: [anchor.id, card.approvedDraftId!],
       };
     });
