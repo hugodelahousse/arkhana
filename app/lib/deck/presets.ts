@@ -145,22 +145,22 @@ export const STYLE_PRESETS: StylePreset[] = [
   {
     id: "game-key-art",
     name: "Game key art",
-    blurb: "Bold tapered outlines, flat cel colour, simple painted backdrop",
+    blurb: "Flat graphic poster: bold outlines, flat colour shapes",
     frameId: "foil-rule",
-    anchorUrl: "/lab-deck/anchors/game-key-art-flat.jpg",
+    anchorUrl: "/lab-deck/anchors/game-key-art-poster.jpg",
     anchorSubject: "a cobbler at work in his lamplit workshop, not a tarot card",
     anchorUse: "technique",
     colourLine:
       "LIGHT & DEPTH: one clear light source shapes the figures and the space; the setting has depth and atmosphere and can carry rich colour; the figures stay the focus through light and contrast, not by dulling the background.",
     bible: {
       artefact:
-        "Hand-drawn key art for a 2D mythological action game: bold inked outlines over flat cel colour, with a simply painted background. The picture fills the whole image edge to edge, cropped inside the painted area: no paper margin, no painted border.",
+        "A flat graphic poster illustration in the style of 2D game key art: bold black outlines and flat colour shapes, like a cut-paper or vector poster. The picture fills the whole image edge to edge, cropped inside the painted area: no paper margin, no painted border.",
       process:
-        "Thick, confident black outlines that taper to sharp points, used only for the silhouette and a few essential inner lines; almost no interior detail, no hatching, no small folds or texture marks; each shape filled with one flat colour plus a single hard-edged shadow shape; stylised, angular figures with simplified faces and hands and strong poses; a bright rim light in a contrasting colour on one side of each figure; the background reduced to a few big, softly painted shapes, darker than the figures.",
+        "Everything reduced to big, bold, angular shapes with thick black outlines and no interior lines except the face and hands; flat solid colour fills with one hard-edged shadow shape per area and no gradients or texture; figures stylised and graphic, with elongated limbs, a strong silhouette and a simple, characterful face; a bright rim light in a contrasting colour drawn as a flat stripe along one edge of each figure; the background is two or three flat tonal layers with one glowing shape behind the figure.",
       palette:
-        "Deep night colours (indigo, violet, blue-black) against one or two saturated glowing accents chosen for the card; skin and cloth in rich, warm mid-tones; large areas of flat colour.",
+        "A limited palette of five or six flat colours per card: deep indigo and violet darks, one saturated glowing accent chosen for the card, and warm mid-tones for skin and cloth.",
       exclude:
-        "no text, letters, runes or numerals; no border or frame; no signature or watermark; no 3D rendering; no glossy digital-painting look; no airbrushed gradients; no lens blur; no texture overlay faked on top of a smooth image; no fine detail, no hatching, no busy texture, no ornament",
+        "no text, letters, runes or numerals; no border or frame; no signature or watermark; no 3D rendering; no glossy digital-painting look; no airbrushed gradients; no lens blur; no texture overlay faked on top of a smooth image; no fine detail, no hatching, no brush texture, no gradients, no ornament",
     },
   },
 ];
