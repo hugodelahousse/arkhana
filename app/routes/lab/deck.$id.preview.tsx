@@ -4,7 +4,7 @@ import type { Route } from "./+types/deck.$id.preview";
 import { config } from "../../../config/index.js";
 import { useDeckPreview, type PreviewData } from "../../lib/deck/client";
 import { romanNumeral } from "../../lib/deck/prompts";
-import { CardBack, CardFrame } from "../../components/deck/CardFrame";
+import { CardBack, CardFrame, cardEdgeColour } from "../../components/deck/CardFrame";
 import { DeckViewer, type ViewerCard } from "../../components/deck/DeckViewer";
 import { frameOf } from "../../components/deck/Wizard";
 import {
@@ -191,7 +191,7 @@ export default function DeckPreview({ loaderData }: Route.ComponentProps) {
             </div>
           </div>
         </header>
-        <DeckViewer key={source} cards={cards} />
+        <DeckViewer key={source} cards={cards} edge={cardEdgeColour(frameOf(data))} />
       </div>
       {printing && exportDeck && <PrintSheet deck={exportDeck} options={printing} />}
     </>

@@ -38,7 +38,7 @@ export type ViewerCard = {
 const STACK_DEPTH = 6; // cards visible under the top one
 const THICKNESS = 3; // px: a card is a thin slab, not a plane
 const SLICES = 4; // paper layers between front and back that form the visible edge
-const EDGE = "#e4dac4"; // card-stock edge colour
+const EDGE = "#e4dac4"; // default card-stock edge colour (cream stock)
 const THROW_DISTANCE = 120; // px of drag that commits a throw
 const THROW_VELOCITY = 650; // px/s of flick that commits a throw
 
@@ -116,8 +116,10 @@ function TopCard({
   reduced,
   flipped,
   setFlipped,
+  edge,
 }: {
   card: ViewerCard;
+  edge: string;
   onThrow: () => void;
   reduced: boolean;
   flipped: boolean;
@@ -227,7 +229,7 @@ function TopCard({
             aria-hidden
             className="absolute inset-0 rounded-[2.5%]"
             style={{
-              background: EDGE,
+              background: edge,
               transform: `translateZ(${THICKNESS / 2 - ((k + 1) * THICKNESS) / SLICES}px)`,
             }}
           />
@@ -294,7 +296,8 @@ function TopSlot({
   );
 }
 
-export function DeckViewer({ cards }: { cards: ViewerCard[] }) {
+/** `edge` colours the card stock seen at the cards' edges; match it to the frame's paper. */
+export function DeckViewer({ cards, edge = EDGE }: { cards: ViewerCard[]; edge?: string }) {
   const reduced = !!useReducedMotion();
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -375,7 +378,7 @@ export function DeckViewer({ cards }: { cards: ViewerCard[] }) {
                     animate={{ ...pose(j, depth), opacity: 1 }}
                     transition={SETTLE}
                     style={{
-                      boxShadow: `0 ${THICKNESS}px 0 ${EDGE}, 0 ${THICKNESS + 1}px 0 rgba(0,0,0,0.35), 0 10px 24px rgba(0,0,0,0.25)`,
+                      boxShadow: `0 ${THICKNESS}px 0 ${edge}, 0 ${THICKNESS + 1}px 0 rgba(0,0,0,0.35), 0 10px 24px rgba(0,0,0,0.25)`,
                     }}
                     aria-hidden
                   >
@@ -403,6 +406,7 @@ export function DeckViewer({ cards }: { cards: ViewerCard[] }) {
                     reduced={reduced}
                     flipped={flipped}
                     setFlipped={setFlipped}
+                    edge={edge}
                   />
                 </TopSlot>
               </AnimatePresence>
