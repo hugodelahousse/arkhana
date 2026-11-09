@@ -145,22 +145,22 @@ export const STYLE_PRESETS: StylePreset[] = [
   {
     id: "game-key-art",
     name: "Game key art",
-    blurb: "Bold tapered ink over cel shading, painted backdrop",
+    blurb: "Bold tapered outlines, flat cel colour, simple painted backdrop",
     frameId: "foil-rule",
-    anchorUrl: "/lab-deck/anchors/game-key-art.jpg",
+    anchorUrl: "/lab-deck/anchors/game-key-art-flat.jpg",
     anchorSubject: "a cobbler at work in his lamplit workshop, not a tarot card",
     anchorUse: "technique",
     colourLine:
       "LIGHT & DEPTH: one clear light source shapes the figures and the space; the setting has depth and atmosphere and can carry rich colour; the figures stay the focus through light and contrast, not by dulling the background.",
     bible: {
       artefact:
-        "Hand-drawn key art for a 2D mythological action game: bold inked line art over cel-shaded colour, with a loosely painted, textured background. The picture fills the whole image edge to edge, cropped inside the painted area: no paper margin, no painted border.",
+        "Hand-drawn key art for a 2D mythological action game: bold inked outlines over flat cel colour, with a simply painted background. The picture fills the whole image edge to edge, cropped inside the painted area: no paper margin, no painted border.",
       process:
-        "Thick, confident black ink outlines that taper to sharp points, heavier on the shadow side; stylised, angular figures with elongated limbs, sharp facial features and strong, dynamic poses; colour in flat cel-shaded areas with hard-edged shadow shapes and large spotted blacks; a bright rim light in a contrasting colour traces one side of every figure; the background is painted more loosely, with visible brush texture and simplified shapes, darker and softer than the figures so they pop.",
+        "Thick, confident black outlines that taper to sharp points, used only for the silhouette and a few essential inner lines; almost no interior detail, no hatching, no small folds or texture marks; each shape filled with one flat colour plus a single hard-edged shadow shape; stylised, angular figures with simplified faces and hands and strong poses; a bright rim light in a contrasting colour on one side of each figure; the background reduced to a few big, softly painted shapes, darker than the figures.",
       palette:
-        "Deep night colours (indigo, violet, blue-black) against one or two saturated glowing accents chosen for the card, such as spectral green, molten gold, magenta or ember orange; skin and cloth in rich, warm mid-tones.",
+        "Deep night colours (indigo, violet, blue-black) against one or two saturated glowing accents chosen for the card; skin and cloth in rich, warm mid-tones; large areas of flat colour.",
       exclude:
-        "no text, letters, runes or numerals; no border or frame; no signature or watermark; no 3D rendering; no glossy digital-painting look; no airbrushed gradients; no lens blur; no texture overlay faked on top of a smooth image",
+        "no text, letters, runes or numerals; no border or frame; no signature or watermark; no 3D rendering; no glossy digital-painting look; no airbrushed gradients; no lens blur; no texture overlay faked on top of a smooth image; no fine detail, no hatching, no busy texture, no ornament",
     },
   },
 ];
