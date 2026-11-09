@@ -1,6 +1,6 @@
 // Download menu and print sheet for the deck preview.
 import { Fragment, useEffect, useRef, useState } from "react";
-import { CardBack, CardFrame } from "./CardFrame";
+import { CardBack, CardFrame, cardEdgeColour } from "./CardFrame";
 import type { FrameId } from "../../lib/deck/presets";
 import {
   VIEWER_BUNDLE,
@@ -163,7 +163,7 @@ export function DownloadMenu({
           reason: card.reason,
         };
       });
-      files[`${root}/index.html`] = artifactHtml(deck.title, "cards/back.jpg", cards);
+      files[`${root}/index.html`] = artifactHtml(deck.title, "cards/back.jpg", cards, cardEdgeColour(deck.frameId));
       downloadBlob(zipFiles(files), `${root}.zip`);
     });
 

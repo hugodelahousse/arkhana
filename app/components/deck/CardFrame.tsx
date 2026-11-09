@@ -316,6 +316,17 @@ const BACK_THEME: Record<FrameId, { paper: string; ink: string; accent: string; 
   "ink-band": { paper: "#ece4d2", ink: "#111111", accent: "#1f5b5c", title: DMSANS, upper: true },
 };
 
+/**
+ * The colour of a card's edge (the stock between its faces) in the 3D viewer: the frame's
+ * paper, a shade darker on light stock and a shade lighter on black so the edge still reads.
+ */
+export function cardEdgeColour(frameId: FrameId): string {
+  const paper = BACK_THEME[frameId]?.paper ?? BACK_THEME["white-border-1909"].paper;
+  const n = parseInt(paper.slice(1), 16);
+  const luma = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return luma < 0.5 ? `color-mix(in oklab, ${paper}, white 14%)` : `color-mix(in oklab, ${paper}, black 8%)`;
+}
+
 /** The deck's shared card back: an ornamental pattern in the frame's colours, or generated back art. */
 export function CardBack({
   frameId,

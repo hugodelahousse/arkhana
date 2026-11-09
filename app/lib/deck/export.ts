@@ -204,9 +204,9 @@ const escapeHtml = (s: string) =>
   s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
 /** index.html for the offline preview: a classic script (works from file://) reading inline deck data. */
-export function artifactHtml(title: string, back: string, cards: ArtifactCard[]): string {
+export function artifactHtml(title: string, back: string, cards: ArtifactCard[], edge?: string): string {
   // Escape "<" so the JSON can't close the script tag.
-  const data = JSON.stringify({ title, back, cards }).replace(/</g, "\\u003c");
+  const data = JSON.stringify({ title, back, cards, edge }).replace(/</g, "\\u003c");
   return `<!doctype html>
 <html lang="en" class="dark">
 <head>

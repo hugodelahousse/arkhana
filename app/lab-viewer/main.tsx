@@ -9,6 +9,8 @@ import { DeckViewer, type ViewerCard } from "../components/deck/DeckViewer";
 type ExportedDeck = {
   title: string;
   back: string;
+  /** Card edge colour, matching the frame's paper. */
+  edge?: string;
   cards: { key: string; label: string; front: string; reason?: string }[];
 };
 
@@ -31,7 +33,7 @@ function App() {
       <header className="mx-auto mb-8 max-w-5xl">
         <h1 className="type-page-title text-2xl">{deck.title}</h1>
       </header>
-      <DeckViewer cards={cards} />
+      <DeckViewer cards={cards} edge={deck.edge} />
     </div>
   );
 }
