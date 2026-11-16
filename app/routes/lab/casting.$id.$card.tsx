@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { data, Link, useFetcher } from "react-router";
 import { Reorder, useDragControls } from "motion/react";
-import { DotsSixVertical, X } from "@phosphor-icons/react";
+import { ArrowLeft, CaretLeft, CaretRight, DotsSixVertical, X } from "@phosphor-icons/react";
 import type { Route } from "./+types/casting.$id.$card";
 import { buttonClass } from "../../components/Button";
 import { ARCANA_CASTING } from "../../lib/casting/arcana";
@@ -114,6 +114,8 @@ type ActionResult = { ok: boolean; error: string | null };
 
 const FIELD =
   "w-full border border-border bg-card px-3 py-2.5 text-base text-card-foreground placeholder:text-faint-foreground focus:border-ring focus:outline-none";
+const STEP =
+  "flex min-h-11 min-w-14 items-center justify-center gap-1.5 border border-border px-3 font-serif text-base lining-nums text-foreground hover:border-primary hover:text-primary";
 const ROW = "flex items-stretch border border-border bg-card text-card-foreground";
 
 export default function CastingCard({ loaderData }: Route.ComponentProps) {
@@ -132,27 +134,30 @@ function CardView({ deck, cardId, signedIn, proposals, myOrder, standing, voters
   return (
     <div className="min-h-screen bg-background px-4 py-4 text-foreground sm:px-8 sm:py-8">
       <div className="mx-auto max-w-xl space-y-8">
-        <nav className="type-ghost flex items-center justify-between gap-3">
+        <nav className="flex items-center justify-between gap-3 border-b border-border pb-3 text-sm">
           <Link
             to={`/lab/casting/${deck.id}`}
-            className="min-w-0 truncate py-2 hover:text-foreground"
+            className="flex min-w-0 items-center gap-2 py-2 text-foreground hover:text-primary"
           >
-            ← {deck.title}
+            <ArrowLeft size={16} className="shrink-0" aria-hidden />
+            <span className="truncate">{deck.title}</span>
           </Link>
-          <span className="flex shrink-0 gap-5">
+          <span className="flex shrink-0 gap-2">
             <Link
               to={`/lab/casting/${deck.id}/${cardSlug(prev)}`}
-              className="py-2 hover:text-foreground"
+              className={STEP}
               aria-label={`Previous card: ${prev.name}`}
             >
-              ← {romanNumeral(prev.id)}
+              <CaretLeft size={14} aria-hidden />
+              {romanNumeral(prev.id)}
             </Link>
             <Link
               to={`/lab/casting/${deck.id}/${cardSlug(next)}`}
-              className="py-2 hover:text-foreground"
+              className={STEP}
               aria-label={`Next card: ${next.name}`}
             >
-              {romanNumeral(next.id)} →
+              {romanNumeral(next.id)}
+              <CaretRight size={14} aria-hidden />
             </Link>
           </span>
         </nav>
@@ -213,6 +218,20 @@ function CardView({ deck, cardId, signedIn, proposals, myOrder, standing, voters
             </p>
           )}
         </section>
+
+        <nav className="grid grid-cols-2 gap-2 border-t border-border pt-4">
+          <Link
+            to={`/lab/casting/${deck.id}/${cardSlug(prev)}`}
+            className={`${STEP} justify-start`}
+          >
+            <CaretLeft size={14} className="shrink-0" aria-hidden />
+            <span className="truncate">{prev.name}</span>
+          </Link>
+          <Link to={`/lab/casting/${deck.id}/${cardSlug(next)}`} className={`${STEP} justify-end`}>
+            <span className="truncate">{next.name}</span>
+            <CaretRight size={14} className="shrink-0" aria-hidden />
+          </Link>
+        </nav>
       </div>
     </div>
   );
