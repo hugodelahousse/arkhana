@@ -1,13 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { data, Link, useFetcher } from "react-router";
 import { Reorder, useDragControls } from "motion/react";
-import { ArrowLeft, CaretLeft, CaretRight, DotsSixVertical, X } from "@phosphor-icons/react";
+import {
+  ArrowLeft,
+  CaretLeft,
+  CaretRight,
+  DotsSixVertical,
+  PencilSimple,
+  X,
+} from "@phosphor-icons/react";
 import type { Route } from "./+types/casting.$id.$card";
 import { buttonClass } from "../../components/Button";
 import { ARCANA_CASTING } from "../../lib/casting/arcana";
 import {
   addProposal,
   deleteProposal,
+  editProposal,
   getCardVotes,
   getCastingDeck,
   isDeckId,
@@ -49,7 +57,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
       id: p.id,
       name: p.name,
       pitch: p.pitch,
-      canDelete: !!me && (isOwner || p.proposerId === me.id),
+      canEdit: !!me && (isOwner || p.proposerId === me.id),
     })),
     myOrder: me ? (rankings.find((r) => r.userId === me.id)?.order ?? null) : null,
     standing: tally(ids, orders),
@@ -65,7 +73,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   const form = await request.formData();
   const intent = form.get("intent");
 
-  if (intent === "propose") {
+  if (intent === "propose" || intent === "edit") {
     const name = String(form.get("name") ?? "")
       .trim()
       .replace(/\s+/g, " ");
@@ -73,7 +81,17 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     if (!name) return data({ ok: false, error: "Name your pick." }, { status: 400 });
     if (name.length > CASTING_LIMITS.name || pitch.length > CASTING_LIMITS.pitch)
       return data({ ok: false, error: "That name or pitch is too long." }, { status: 400 });
-    const result = await addProposal({ ...where, proposerId: me.id, name, pitch });
+    const result =
+      intent === "propose"
+        ? await addProposal({ ...where, proposerId: me.id, name, pitch })
+        : await editProposal({
+            ...where,
+            proposalId: String(form.get("proposalId") ?? ""),
+            userId: me.id,
+            isOwner: me.id === deck.ownerId,
+            name,
+            pitch,
+          });
     return data(
       { ok: result.ok, error: result.ok ? null : result.error },
       { status: result.ok ? 200 : 400 }
@@ -116,6 +134,8 @@ const FIELD =
   "w-full border border-border bg-card px-3 py-2.5 text-base text-card-foreground placeholder:text-faint-foreground focus:border-ring focus:outline-none";
 const STEP =
   "flex min-h-11 min-w-14 items-center justify-center gap-1.5 border border-border px-3 font-serif text-base lining-nums text-foreground hover:border-primary hover:text-primary";
+const ROW_ACTION =
+  "flex h-11 w-10 items-center justify-center text-faint-foreground hover:text-primary";
 const ROW = "flex items-stretch border border-border bg-card text-card-foreground";
 
 export default function CastingCard({ loaderData }: Route.ComponentProps) {
@@ -373,10 +393,52 @@ function ProposalBody({
   points?: number;
 }) {
   const fetcher = useFetcher<ActionResult>();
+  const [editing, setEditing] = useState(false);
+  const busy = fetcher.state !== "idle";
+
+  if (editing)
+    return (
+      // Closes on submit; if the save is refused, the row shows why.
+      <fetcher.Form
+        method="post"
+        onSubmit={() => setEditing(false)}
+        className="min-w-0 flex-1 space-y-2 py-3 pr-3"
+      >
+        <input type="hidden" name="intent" value="edit" />
+        <input type="hidden" name="proposalId" value={proposal.id} />
+        <input
+          name="name"
+          required
+          autoFocus
+          defaultValue={proposal.name}
+          maxLength={CASTING_LIMITS.name}
+          autoComplete="off"
+          aria-label="Name"
+          className={FIELD}
+        />
+        <input
+          name="pitch"
+          defaultValue={proposal.pitch}
+          maxLength={CASTING_LIMITS.pitch}
+          autoComplete="off"
+          aria-label="Why they fit"
+          placeholder="Why they fit (optional)"
+          className={FIELD}
+        />
+        {fetcher.data?.error && <p className="text-sm text-rarity-arcane">{fetcher.data.error}</p>}
+        <div className="flex gap-2">
+          <button type="submit" className={buttonClass("md", "fill")}>
+            Save
+          </button>
+          <button type="button" onClick={() => setEditing(false)} className={buttonClass("md")}>
+            Cancel
+          </button>
+        </div>
+      </fetcher.Form>
+    );
+
   return (
-    <div
-      className={`flex min-w-0 flex-1 items-start gap-3 py-3 ${fetcher.state !== "idle" ? "opacity-40" : ""}`}
-    >
+    <div className={`flex min-w-0 flex-1 items-start gap-3 py-3 ${busy ? "opacity-40" : ""}`}>
       {position !== null && (
         <span className="w-4 shrink-0 pt-1 text-right text-sm tabular-nums text-faint-foreground">
           {position}
@@ -392,22 +454,32 @@ function ProposalBody({
         {fetcher.data?.error && <p className="text-sm text-rarity-arcane">{fetcher.data.error}</p>}
       </div>
       {points !== undefined && (
-        <span className="type-caption shrink-0 pr-4 pt-1 tabular-nums">
-          {formatPoints(points)} pts
-        </span>
+        <span className="type-caption shrink-0 pt-1 tabular-nums">{formatPoints(points)} pts</span>
       )}
-      {proposal.canDelete && (
-        <button
-          type="button"
-          aria-label={`Remove ${proposal.name}`}
-          className="-my-3 flex size-11 shrink-0 items-center justify-center self-center text-faint-foreground hover:text-primary"
-          onClick={() => {
-            if (confirm(`Remove ${proposal.name}?`))
-              fetcher.submit({ intent: "delete", proposalId: proposal.id }, { method: "post" });
-          }}
-        >
-          <X weight="light" size={16} aria-hidden />
-        </button>
+      {proposal.canEdit ? (
+        <span className="-my-3 flex shrink-0 self-center">
+          <button
+            type="button"
+            aria-label={`Edit ${proposal.name}`}
+            className={ROW_ACTION}
+            onClick={() => setEditing(true)}
+          >
+            <PencilSimple weight="light" size={16} aria-hidden />
+          </button>
+          <button
+            type="button"
+            aria-label={`Remove ${proposal.name}`}
+            className={ROW_ACTION}
+            onClick={() => {
+              if (confirm(`Remove ${proposal.name}?`))
+                fetcher.submit({ intent: "delete", proposalId: proposal.id }, { method: "post" });
+            }}
+          >
+            <X weight="light" size={16} aria-hidden />
+          </button>
+        </span>
+      ) : (
+        <span className="w-1 shrink-0" />
       )}
     </div>
   );

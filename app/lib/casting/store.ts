@@ -141,6 +141,38 @@ export async function addProposal(input: {
   return { ok: true };
 }
 
+/** Renames a proposal or rewrites its pitch, if the user proposed it or owns the deck. */
+export async function editProposal(input: {
+  deckId: string;
+  cardId: number;
+  proposalId: string;
+  userId: string;
+  isOwner: boolean;
+  name: string;
+  pitch: string;
+}): Promise<ProposalResult> {
+  const onCard = and(
+    eq(labCastingProposals.deckId, input.deckId),
+    eq(labCastingProposals.cardId, input.cardId)
+  );
+  const existing = await db
+    .select({ id: labCastingProposals.id, name: labCastingProposals.name })
+    .from(labCastingProposals)
+    .where(onCard);
+  const wanted = input.name.toLocaleLowerCase();
+  if (existing.some((p) => p.id !== input.proposalId && p.name.toLocaleLowerCase() === wanted))
+    return { ok: false, error: `${input.name} is already proposed for this card.` };
+  const mine = input.isOwner ? [] : [eq(labCastingProposals.proposerId, input.userId)];
+  const updated = await db
+    .update(labCastingProposals)
+    .set({ name: input.name, pitch: input.pitch })
+    .where(and(eq(labCastingProposals.id, input.proposalId), onCard, ...mine))
+    .returning({ id: labCastingProposals.id });
+  return updated.length > 0
+    ? { ok: true }
+    : { ok: false, error: "You can only edit your own proposals." };
+}
+
 /** Removes a proposal if the user proposed it or owns the deck. */
 export async function deleteProposal(input: {
   deckId: string;
