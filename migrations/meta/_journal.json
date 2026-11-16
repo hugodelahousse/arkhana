@@ -64,6 +64,13 @@
       "when": 1794013705422,
       "tag": "0008_material_korvac",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794859974500,
+      "tag": "0009_icy_shinko_yamashiro",
+      "breakpoints": true
     }
   ]
 }
