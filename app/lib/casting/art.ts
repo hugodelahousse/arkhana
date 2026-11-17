@@ -226,24 +226,41 @@ async function styleOf(deck: StyledDeck) {
   };
 }
 
+// Drawings run in the web process, so only a few go to OpenAI at once; the rest wait their turn.
+const MAX_DRAWING = 3;
+let drawingNow = 0;
+const waiting: (() => void)[] = [];
+async function drawingSlot<T>(run: () => Promise<T>): Promise<T> {
+  if (drawingNow >= MAX_DRAWING) await new Promise<void>((go) => waiting.push(go));
+  drawingNow++;
+  try {
+    return await run();
+  } finally {
+    drawingNow--;
+    waiting.shift()?.();
+  }
+}
+
 async function drawImage(
   apiKey: string,
   prompt: string,
   size: string,
   ref: Awaited<ReturnType<typeof toFile>>
 ) {
-  const client = new OpenAI({ apiKey, maxRetries: 1, timeout: 240_000 });
-  const res = await client.images.edit({
-    model: IMAGE_MODELS.draft,
-    prompt,
-    size,
-    quality: ART_QUALITY,
-    output_format: "jpeg",
-    image: [ref],
+  return drawingSlot(async () => {
+    const client = new OpenAI({ apiKey, maxRetries: 1, timeout: 240_000 });
+    const res = await client.images.edit({
+      model: IMAGE_MODELS.draft,
+      prompt,
+      size,
+      quality: ART_QUALITY,
+      output_format: "jpeg",
+      image: [ref],
+    });
+    const b64 = res.data?.[0]?.b64_json;
+    if (!b64) throw new Error("OpenAI returned no image");
+    return Buffer.from(b64, "base64");
   });
-  const b64 = res.data?.[0]?.b64_json;
-  if (!b64) throw new Error("OpenAI returned no image");
-  return Buffer.from(b64, "base64");
 }
 
 /** The scene with its cast named up front, if the scene does not already say who it shows. */
@@ -283,8 +300,17 @@ async function drawArt({ apiKey, deck, proposal }: ArtJob) {
     // No scene yet: write one first, so "draw" works from a bare name.
     let scene = proposal.scene.trim();
     if (!scene) {
-      scene = await writeScene({ apiKey, ...proposal, theme: deck.theme });
-      await db.update(labCastingProposals).set({ scene }).where(byId);
+      const written = await writeScene({ apiKey, ...proposal, theme: deck.theme });
+      // Someone may have typed a scene while this one was being written: theirs wins.
+      await db
+        .update(labCastingProposals)
+        .set({ scene: written })
+        .where(and(byId, eq(labCastingProposals.scene, "")));
+      const [now] = await db
+        .select({ scene: labCastingProposals.scene })
+        .from(labCastingProposals)
+        .where(byId);
+      scene = now?.scene.trim() || written;
     }
 
     const style = await styleOf(deck);

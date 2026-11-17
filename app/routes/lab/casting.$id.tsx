@@ -59,7 +59,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     const orders = ballots.map((b) => b.order);
     const voters = countVoters(ids, orders);
     // Oldest first until someone votes, then by points.
-    const top = mine.find((p) => p.id === tally(ids, orders)[0]?.id);
+    const topId = tally(ids, orders)[0]?.id;
+    const top = mine.find((p) => p.id === topId);
     const myBallot = me ? (ballots.find((b) => b.userId === me.id)?.order ?? null) : null;
     return {
       cardId: card.id,
@@ -99,6 +100,9 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   if (!me || me.id !== deck.ownerId)
     return data({ error: "Only this deck's owner can change it." }, { status: 403 });
 
+  // Refuse an oversized body before reading it: uploads are capped at 12 MB.
+  if (Number(request.headers.get("content-length") ?? 0) > 13 * 1024 * 1024)
+    return data({ error: "That image is over 12 MB." }, { status: 413 });
   const form = await request.formData();
   if (form.get("intent") === "delete") {
     await deleteCastingDeck(deck.id);
@@ -113,14 +117,22 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       return data({ error: "Unknown style." }, { status: 400 });
     // The preset's own frame is stored as "no override", so it follows the preset.
     const override = frameId && frameId !== preset.frameId ? frameId : null;
-    await patchCastingDeck(deck.id, { presetId: preset.id, frameId: override });
     // Choosing a preset (not just a frame) drops an uploaded style image.
-    if (form.get("dropAnchor") && deck.anchorFile) {
-      await patchCastingDeck(deck.id, { anchorFile: null });
-      await removeArt(deck.id, deck.anchorFile);
-    }
+    const dropAnchor = !!form.get("dropAnchor") && !!deck.anchorFile;
+    await patchCastingDeck(deck.id, {
+      presetId: preset.id,
+      frameId: override,
+      ...(dropAnchor ? { anchorFile: null } : {}),
+    });
+    if (dropAnchor) await removeArt(deck.id, deck.anchorFile);
     return data({ error: null });
   }
+  // A back being drawn would overwrite whatever is chosen meanwhile, so it has to land first.
+  if ((intent === "back" || intent === "back-pattern") && deck.backStatus === "running")
+    return data(
+      { error: "The back is still being drawn. Try again once it lands." },
+      { status: 409 }
+    );
   if (intent === "anchor" || intent === "back") {
     const saved = await saveUpload(deck.id, intent, form.get("image"));
     if ("error" in saved) return data({ error: saved.error }, { status: 400 });
@@ -129,7 +141,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       deck.id,
       intent === "anchor"
         ? { anchorFile: saved.file }
-        : { backFile: saved.file, backStatus: "none", backError: null }
+        : { backFile: saved.file, backError: null, backStatus: "none" }
     );
     await removeArt(deck.id, old);
     return data({ error: null });

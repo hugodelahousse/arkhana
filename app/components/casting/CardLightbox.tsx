@@ -36,6 +36,13 @@ export function CardLightbox({
   );
   const glare = useMotionTemplate`radial-gradient(circle at ${shineX}% ${shineY}%, rgba(255,255,255,0.55), rgba(255,255,255,0) 50%)`;
   const press = useRef<{ x: number; y: number; baseY: number; moved: boolean } | null>(null);
+  // Where the turn is heading, in degrees. The springs lag behind it, so resting faces are
+  // worked out from this, never from the spring's current value.
+  const target = useRef(0);
+  const turnTo = (degrees: number) => {
+    target.current = degrees;
+    rotateY.set(degrees);
+  };
 
   // Escape closes; the page behind stays put while the card is up.
   useEffect(() => {
@@ -51,8 +58,7 @@ export function CardLightbox({
 
   const settle = (flip: boolean) => {
     // Come to rest on whichever face is nearest, or the other one after a tap.
-    const face = Math.round(rotateY.get() / 180) + (flip ? 1 : 0);
-    rotateY.set(face * 180);
+    turnTo((Math.round(target.current / 180) + (flip ? 1 : 0)) * 180);
     rotateX.set(0);
   };
 
@@ -99,7 +105,9 @@ export function CardLightbox({
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => {
             e.currentTarget.setPointerCapture(e.pointerId);
-            press.current = { x: e.clientX, y: e.clientY, baseY: rotateY.get(), moved: false };
+            // Start from the resting face, so a press mid-flip does not freeze the card askew.
+            const baseY = Math.round(target.current / 180) * 180;
+            press.current = { x: e.clientX, y: e.clientY, baseY, moved: false };
           }}
           onPointerMove={(e) => {
             const p = press.current;
@@ -107,12 +115,12 @@ export function CardLightbox({
               const dx = e.clientX - p.x;
               const dy = e.clientY - p.y;
               if (Math.hypot(dx, dy) > TAP_SLOP) p.moved = true;
-              rotateY.set(p.baseY + dx * 0.6);
+              if (p.moved) turnTo(p.baseY + dx * 0.6);
               rotateX.set(Math.max(-40, Math.min(40, -dy * 0.35)));
             } else if (e.pointerType === "mouse" && !reduced) {
               // No button held: lean towards the cursor around the resting face.
               const r = e.currentTarget.getBoundingClientRect();
-              const rest = Math.round(rotateY.get() / 180) * 180;
+              const rest = Math.round(target.current / 180) * 180;
               rotateY.set(rest + ((e.clientX - r.left) / r.width - 0.5) * 24);
               rotateX.set(-((e.clientY - r.top) / r.height - 0.5) * 20);
             }
