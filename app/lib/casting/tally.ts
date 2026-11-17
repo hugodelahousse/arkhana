@@ -5,6 +5,7 @@ export const CASTING_LIMITS = {
   theme: 200,
   name: 60,
   pitch: 280,
+  scene: 700,
   proposalsPerCard: 30,
 };
 

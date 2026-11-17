@@ -1,29 +1,47 @@
-import { useEffect, useRef, useState } from "react";
-import { data, Link, useFetcher } from "react-router";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { data, Link, useFetcher, useRevalidator } from "react-router";
 import { Reorder, useDragControls } from "motion/react";
 import {
   ArrowLeft,
   CaretLeft,
   CaretRight,
   DotsSixVertical,
+  ImageSquare,
   PencilSimple,
+  Sparkle,
   X,
 } from "@phosphor-icons/react";
 import type { Route } from "./+types/casting.$id.$card";
 import { buttonClass } from "../../components/Button";
+import { OpenAIKey } from "../../components/casting/OpenAIKey";
+import { CardLightbox } from "../../components/casting/CardLightbox";
+import { CardBack, CardFrame, cardEdgeColour } from "../../components/deck/CardFrame";
 import { ARCANA_CASTING } from "../../lib/casting/arcana";
+import {
+  artUrl,
+  frameOf,
+  friendlyAIError,
+  isOpenAIKey,
+  removeArt,
+  startArt,
+  writeScene,
+} from "../../lib/casting/art";
 import {
   addProposal,
   deleteProposal,
   editProposal,
   getCardVotes,
   getCastingDeck,
+  getProposal,
   isDeckId,
   saveRanking,
+  saveScene,
   voter,
 } from "../../lib/casting/store";
 import { CASTING_LIMITS, countVoters, resolveOrder, tally } from "../../lib/casting/tally";
 import { CARD_BY_ID, CARD_BY_SLUG, MAJOR_ARCANA, cardSlug } from "../../lib/cards";
+import { useApiKey } from "../../lib/deck/client";
+import type { FrameId } from "../../lib/deck/presets";
 import { romanNumeral } from "../../lib/deck/prompts";
 
 export function meta({ data: d }: Route.MetaArgs) {
@@ -50,7 +68,13 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const orders = rankings.map((r) => r.order);
 
   return {
-    deck: { id: deck.id, title: deck.title, theme: deck.theme },
+    deck: {
+      id: deck.id,
+      title: deck.title,
+      theme: deck.theme,
+      frameId: frameOf(deck),
+      back: artUrl(deck.id, deck.backFile),
+    },
     cardId: card.id,
     signedIn: !!me,
     proposals: proposals.map((p) => ({
@@ -58,6 +82,10 @@ export async function loader({ params, context }: Route.LoaderArgs) {
       name: p.name,
       pitch: p.pitch,
       canEdit: !!me && (isOwner || p.proposerId === me.id),
+      scene: p.scene,
+      art: artUrl(deck.id, p.artFile),
+      drawing: p.artStatus === "running",
+      artError: p.artStatus === "error" ? p.artError : null,
     })),
     myOrder: me ? (rankings.find((r) => r.userId === me.id)?.order ?? null) : null,
     standing: tally(ids, orders),
@@ -118,9 +146,46 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       userId: me.id,
       isOwner: me.id === deck.ownerId,
     });
-    return removed
+    if (!removed)
+      return data({ ok: false, error: "You can only remove your own proposals." }, { status: 403 });
+    await removeArt(deck.id, removed.artFile);
+    return data({ ok: true, error: null });
+  }
+
+  // Scene and card art: open to any signed-in member, on their own OpenAI key.
+  if (intent === "scene" || intent === "scene-ai" || intent === "art") {
+    const proposal = await getProposal({
+      ...where,
+      proposalId: String(form.get("proposalId") ?? ""),
+    });
+    if (!proposal) return data({ ok: false, error: "That proposal is gone." }, { status: 404 });
+    const scene = String(form.get("scene") ?? "")
+      .trim()
+      .replace(/\s+/g, " ");
+    if (scene.length > CASTING_LIMITS.scene)
+      return data({ ok: false, error: "Keep the scene shorter." }, { status: 400 });
+    if (intent === "scene") {
+      await saveScene(proposal.id, scene);
+      return data({ ok: true, error: null });
+    }
+
+    const apiKey = form.get("key");
+    if (!isOpenAIKey(apiKey))
+      return data({ ok: false, error: "Add your OpenAI API key first." }, { status: 400 });
+    if (intent === "scene-ai") {
+      try {
+        await saveScene(proposal.id, await writeScene({ apiKey, ...proposal, theme: deck.theme }));
+        return data({ ok: true, error: null });
+      } catch (err) {
+        return data({ ok: false, error: friendlyAIError(err) }, { status: 502 });
+      }
+    }
+    // Draw from the scene as typed, saved first so the card and its text match.
+    if (scene !== proposal.scene) await saveScene(proposal.id, scene);
+    const started = await startArt({ apiKey, deck, proposal: { ...proposal, scene } });
+    return started
       ? data({ ok: true, error: null })
-      : data({ ok: false, error: "You can only remove your own proposals." }, { status: 403 });
+      : data({ ok: false, error: "This card is already being drawn." }, { status: 409 });
   }
 
   return data({ ok: false, error: "Unknown action." }, { status: 400 });
@@ -138,6 +203,14 @@ const ROW_ACTION =
   "flex h-11 w-10 items-center justify-center text-faint-foreground hover:text-primary";
 const ROW = "flex items-stretch border border-border bg-card text-card-foreground";
 
+/** What every proposal row needs to show or draw its card. */
+const CardCtx = createContext<{
+  frameId: FrameId;
+  back: string | null;
+  cardId: number;
+  signedIn: boolean;
+}>({ frameId: "carved-block", back: null, cardId: 0, signedIn: false });
+
 export default function CastingCard({ loaderData }: Route.ComponentProps) {
   // Keyed so ranking state resets when moving to the previous or next card.
   return <CardView key={loaderData.cardId} {...loaderData} />;
@@ -149,6 +222,15 @@ function CardView({ deck, cardId, signedIn, proposals, myOrder, standing, voters
   const prev = MAJOR_ARCANA[(cardId + 21) % 22];
   const next = MAJOR_ARCANA[(cardId + 1) % 22];
   const [view, setView] = useState<"mine" | "group">(signedIn ? "mine" : "group");
+
+  // A card being drawn finishes on the server; look again until it lands.
+  const { revalidate } = useRevalidator();
+  const drawing = proposals.some((p) => p.drawing);
+  useEffect(() => {
+    if (!drawing) return;
+    const timer = setInterval(() => void revalidate(), 3000);
+    return () => clearInterval(timer);
+  }, [drawing, revalidate]);
   const canRank = signedIn && proposals.length > 1;
 
   return (
@@ -198,46 +280,48 @@ function CardView({ deck, cardId, signedIn, proposals, myOrder, standing, voters
           <p className="font-serif text-xl italic leading-snug text-primary">{info.ask}</p>
         </header>
 
-        <section className="space-y-3">
-          {canRank && (
-            <div
-              className="flex gap-5 border-b border-border text-xs uppercase tracking-widest"
-              role="tablist"
-            >
-              {(["mine", "group"] as const).map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  role="tab"
-                  aria-selected={view === v}
-                  onClick={() => setView(v)}
-                  className={`-mb-px border-b py-2 outline-none focus-visible:text-primary focus-visible:underline ${view === v ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}
-                >
-                  {v === "mine" ? "My ranking" : `Group${voters > 0 ? ` · ${voters}` : ""}`}
-                </button>
-              ))}
-            </div>
-          )}
+        <CardCtx.Provider value={{ frameId: deck.frameId, back: deck.back, cardId, signedIn }}>
+          <section className="space-y-3">
+            {canRank && (
+              <div
+                className="flex gap-5 border-b border-border text-xs uppercase tracking-widest"
+                role="tablist"
+              >
+                {(["mine", "group"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    role="tab"
+                    aria-selected={view === v}
+                    onClick={() => setView(v)}
+                    className={`-mb-px border-b py-2 outline-none focus-visible:text-primary focus-visible:underline ${view === v ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}
+                  >
+                    {v === "mine" ? "My ranking" : `Group${voters > 0 ? ` · ${voters}` : ""}`}
+                  </button>
+                ))}
+              </div>
+            )}
 
-          {proposals.length === 0 ? (
-            <p className="type-caption">No proposals yet.</p>
-          ) : view === "mine" && canRank ? (
-            <MyRanking proposals={proposals} myOrder={myOrder} />
-          ) : (
-            <GroupStanding proposals={proposals} standing={standing} voters={voters} />
-          )}
+            {proposals.length === 0 ? (
+              <p className="type-caption">No proposals yet.</p>
+            ) : view === "mine" && canRank ? (
+              <MyRanking proposals={proposals} myOrder={myOrder} />
+            ) : (
+              <GroupStanding proposals={proposals} standing={standing} voters={voters} />
+            )}
 
-          {signedIn ? (
-            proposals.length < CASTING_LIMITS.proposalsPerCard && <ProposeForm />
-          ) : (
-            <p className="type-caption">
-              <Link to="/auth/signin" className="underline underline-offset-2">
-                Sign in
-              </Link>{" "}
-              to propose and rank.
-            </p>
-          )}
-        </section>
+            {signedIn ? (
+              proposals.length < CASTING_LIMITS.proposalsPerCard && <ProposeForm />
+            ) : (
+              <p className="type-caption">
+                <Link to="/auth/signin" className="underline underline-offset-2">
+                  Sign in
+                </Link>{" "}
+                to propose and rank.
+              </p>
+            )}
+          </section>
+        </CardCtx.Provider>
 
         <nav className="grid grid-cols-2 gap-2 border-t border-border pt-4">
           <Link
@@ -394,6 +478,8 @@ function ProposalBody({
 }) {
   const fetcher = useFetcher<ActionResult>();
   const [editing, setEditing] = useState(false);
+  const [artOpen, setArtOpen] = useState(false);
+  const { signedIn } = useContext(CardCtx);
   const busy = fetcher.state !== "idle";
 
   if (editing)
@@ -438,48 +524,194 @@ function ProposalBody({
     );
 
   return (
-    <div className={`flex min-w-0 flex-1 items-start gap-3 py-3 ${busy ? "opacity-40" : ""}`}>
-      {position !== null && (
-        <span className="w-4 shrink-0 pt-1 text-right text-sm tabular-nums text-faint-foreground">
-          {position}
-        </span>
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="break-words font-serif text-xl leading-tight text-primary">{proposal.name}</p>
-        {proposal.pitch && (
-          <p className="mt-0.5 break-words text-[0.9375rem] leading-snug text-muted-foreground">
-            {proposal.pitch}
-          </p>
+    <div className="min-w-0 flex-1">
+      <div className={`flex items-start gap-3 py-3 ${busy ? "opacity-40" : ""}`}>
+        {position !== null && (
+          <span className="w-4 shrink-0 pt-1 text-right text-sm tabular-nums text-faint-foreground">
+            {position}
+          </span>
         )}
-        {fetcher.data?.error && <p className="text-sm text-rarity-arcane">{fetcher.data.error}</p>}
-      </div>
-      {points !== undefined && (
-        <span className="type-caption shrink-0 pt-1 tabular-nums">{formatPoints(points)} pts</span>
-      )}
-      {proposal.canEdit ? (
-        <span className="-my-3 flex shrink-0 self-center">
-          <button
-            type="button"
-            aria-label={`Edit ${proposal.name}`}
-            className={ROW_ACTION}
-            onClick={() => setEditing(true)}
-          >
-            <PencilSimple weight="light" size={16} aria-hidden />
-          </button>
-          <button
-            type="button"
-            aria-label={`Remove ${proposal.name}`}
-            className={ROW_ACTION}
-            onClick={() => {
-              if (confirm(`Remove ${proposal.name}?`))
-                fetcher.submit({ intent: "delete", proposalId: proposal.id }, { method: "post" });
-            }}
-          >
-            <X weight="light" size={16} aria-hidden />
-          </button>
+        <div className="min-w-0 flex-1">
+          <p className="break-words font-serif text-xl leading-tight text-primary">
+            {proposal.name}
+          </p>
+          {proposal.pitch && (
+            <p className="mt-0.5 break-words text-[0.9375rem] leading-snug text-muted-foreground">
+              {proposal.pitch}
+            </p>
+          )}
+          {fetcher.data?.error && (
+            <p className="text-sm text-rarity-arcane">{fetcher.data.error}</p>
+          )}
+        </div>
+        {points !== undefined && (
+          <span className="type-caption shrink-0 pt-1 tabular-nums">
+            {formatPoints(points)} pts
+          </span>
+        )}
+        <span className="-my-3 flex shrink-0 self-center pr-1">
+          {(signedIn || proposal.art) && (
+            <button
+              type="button"
+              aria-label={`Card art for ${proposal.name}`}
+              aria-expanded={artOpen}
+              className={`${ROW_ACTION} ${artOpen ? "text-primary" : ""}`}
+              onClick={() => setArtOpen((open) => !open)}
+            >
+              {proposal.art ? (
+                <img
+                  src={proposal.art}
+                  alt=""
+                  className={`h-9 w-6 object-cover ${proposal.drawing ? "animate-pulse" : ""}`}
+                />
+              ) : (
+                <ImageSquare
+                  weight="light"
+                  size={16}
+                  className={proposal.drawing ? "animate-pulse" : ""}
+                  aria-hidden
+                />
+              )}
+            </button>
+          )}
+          {proposal.canEdit && (
+            <>
+              <button
+                type="button"
+                aria-label={`Edit ${proposal.name}`}
+                className={ROW_ACTION}
+                onClick={() => setEditing(true)}
+              >
+                <PencilSimple weight="light" size={16} aria-hidden />
+              </button>
+              <button
+                type="button"
+                aria-label={`Remove ${proposal.name}`}
+                className={ROW_ACTION}
+                onClick={() => {
+                  if (confirm(`Remove ${proposal.name}?`))
+                    fetcher.submit(
+                      { intent: "delete", proposalId: proposal.id },
+                      { method: "post" }
+                    );
+                }}
+              >
+                <X weight="light" size={16} aria-hidden />
+              </button>
+            </>
+          )}
         </span>
+      </div>
+      {artOpen && <ArtPanel proposal={proposal} />}
+    </div>
+  );
+}
+
+/** A proposal's card: the scene it shows, and the art drawn from it. Closed by default. */
+function ArtPanel({ proposal }: { proposal: Proposal }) {
+  const { frameId, back, cardId, signedIn } = useContext(CardCtx);
+  const [fullScreen, setFullScreen] = useState(false);
+  const fetcher = useFetcher<ActionResult>();
+  const [apiKey, setApiKey] = useApiKey();
+  const intent = fetcher.state !== "idle" ? fetcher.formData?.get("intent") : null;
+  const drawing = proposal.drawing || intent === "art";
+  const error = fetcher.data?.error ?? proposal.artError;
+  const small = buttonClass(
+    "sm",
+    "outline",
+    "inline-flex items-center gap-1.5 disabled:opacity-40"
+  );
+
+  return (
+    <div className="space-y-3 border-t border-border py-3 pr-3">
+      {drawing ? (
+        <CardFrame
+          frameId={frameId}
+          numeral={romanNumeral(cardId)}
+          title={CARD_BY_ID[cardId].name}
+          status="Drawing… this takes about a minute"
+          className="mx-auto w-48"
+        />
       ) : (
-        <span className="w-1 shrink-0" />
+        proposal.art && (
+          <button
+            type="button"
+            aria-label={`Show ${proposal.name}'s card full screen`}
+            className="mx-auto block w-48 cursor-zoom-in"
+            onClick={() => setFullScreen(true)}
+          >
+            <CardFrame
+              frameId={frameId}
+              artUrl={proposal.art}
+              numeral={romanNumeral(cardId)}
+              title={CARD_BY_ID[cardId].name}
+              htmlArt
+            />
+          </button>
+        )
+      )}
+      {fullScreen && proposal.art && (
+        <CardLightbox
+          label={`${CARD_BY_ID[cardId].name}: ${proposal.name}`}
+          edge={cardEdgeColour(frameId)}
+          onClose={() => setFullScreen(false)}
+          front={
+            <CardFrame
+              frameId={frameId}
+              artUrl={proposal.art}
+              numeral={romanNumeral(cardId)}
+              title={CARD_BY_ID[cardId].name}
+              htmlArt
+            />
+          }
+          back={<CardBack frameId={frameId} artUrl={back} htmlArt />}
+        />
+      )}
+      {signedIn ? (
+        <fetcher.Form method="post" className="space-y-2">
+          <input type="hidden" name="proposalId" value={proposal.id} />
+          <input type="hidden" name="key" value={apiKey ?? ""} />
+          <textarea
+            // Remounts when the saved scene changes, so the AI's text shows up.
+            key={proposal.scene}
+            name="scene"
+            rows={4}
+            defaultValue={proposal.scene}
+            maxLength={CASTING_LIMITS.scene}
+            aria-label="Scene"
+            placeholder="The scene on the card: who is shown, doing what, where."
+            className={`${FIELD} text-[0.9375rem] leading-snug`}
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <button name="intent" value="scene" disabled={!!intent} className={small}>
+              Save
+            </button>
+            <button
+              name="intent"
+              value="scene-ai"
+              disabled={!apiKey || !!intent || drawing}
+              className={small}
+            >
+              <Sparkle weight="light" size={13} aria-hidden />
+              {intent === "scene-ai" ? "Writing…" : "Write it"}
+            </button>
+            <button
+              name="intent"
+              value="art"
+              disabled={!apiKey || !!intent || drawing}
+              className={small}
+            >
+              <ImageSquare weight="light" size={13} aria-hidden />
+              {proposal.art ? "Redraw" : "Draw card"}
+            </button>
+          </div>
+          <OpenAIKey apiKey={apiKey} setApiKey={setApiKey} cost="about $0.05 a card" />
+          {error && <p className="text-sm text-rarity-arcane">{error}</p>}
+        </fetcher.Form>
+      ) : (
+        proposal.scene && (
+          <p className="text-[0.9375rem] leading-snug text-muted-foreground">{proposal.scene}</p>
+        )
       )}
     </div>
   );

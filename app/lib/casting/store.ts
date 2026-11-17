@@ -35,6 +35,19 @@ export async function updateCastingDeck(id: string, patch: { title: string; them
   await db.update(labCastingDecks).set(patch).where(eq(labCastingDecks.id, id));
 }
 
+/** Style, anchor and card back fields. */
+export async function patchCastingDeck(
+  id: string,
+  patch: Partial<
+    Pick<
+      typeof labCastingDecks.$inferInsert,
+      "presetId" | "frameId" | "anchorFile" | "backFile" | "backStatus" | "backError"
+    >
+  >
+) {
+  await db.update(labCastingDecks).set(patch).where(eq(labCastingDecks.id, id));
+}
+
 export async function deleteCastingDeck(id: string) {
   await db.delete(labCastingDecks).where(eq(labCastingDecks.id, id));
 }
@@ -78,6 +91,7 @@ export async function getDeckVotes(deckId: string) {
         id: labCastingProposals.id,
         cardId: labCastingProposals.cardId,
         name: labCastingProposals.name,
+        artFile: labCastingProposals.artFile,
       })
       .from(labCastingProposals)
       .where(eq(labCastingProposals.deckId, deckId))
@@ -102,6 +116,10 @@ export async function getCardVotes(deckId: string, cardId: number) {
         name: labCastingProposals.name,
         pitch: labCastingProposals.pitch,
         proposerId: labCastingProposals.proposerId,
+        scene: labCastingProposals.scene,
+        artFile: labCastingProposals.artFile,
+        artStatus: labCastingProposals.artStatus,
+        artError: labCastingProposals.artError,
       })
       .from(labCastingProposals)
       .where(and(eq(labCastingProposals.deckId, deckId), eq(labCastingProposals.cardId, cardId)))
@@ -112,6 +130,26 @@ export async function getCardVotes(deckId: string, cardId: number) {
       .where(and(eq(labCastingRankings.deckId, deckId), eq(labCastingRankings.cardId, cardId))),
   ]);
   return { proposals, rankings };
+}
+
+/** One proposal on a card, or null if it is not there. */
+export async function getProposal(where: { deckId: string; cardId: number; proposalId: string }) {
+  const [proposal] = await db
+    .select()
+    .from(labCastingProposals)
+    .where(
+      and(
+        eq(labCastingProposals.id, where.proposalId),
+        eq(labCastingProposals.deckId, where.deckId),
+        eq(labCastingProposals.cardId, where.cardId)
+      )
+    );
+  return proposal ?? null;
+}
+
+/** Any signed-in member may write a proposal's scene. */
+export async function saveScene(proposalId: string, scene: string) {
+  await db.update(labCastingProposals).set({ scene }).where(eq(labCastingProposals.id, proposalId));
 }
 
 export type ProposalResult = { ok: true } | { ok: false; error: string };
@@ -180,7 +218,7 @@ export async function deleteProposal(input: {
   proposalId: string;
   userId: string;
   isOwner: boolean;
-}): Promise<boolean> {
+}): Promise<{ artFile: string | null } | null> {
   const mine = input.isOwner ? [] : [eq(labCastingProposals.proposerId, input.userId)];
   const removed = await db
     .delete(labCastingProposals)
@@ -192,8 +230,8 @@ export async function deleteProposal(input: {
         ...mine
       )
     )
-    .returning({ id: labCastingProposals.id });
-  return removed.length > 0;
+    .returning({ artFile: labCastingProposals.artFile });
+  return removed[0] ?? null;
 }
 
 /** Saves a voter's stack rank for a card, keeping only ids that are proposals on it. */

@@ -71,6 +71,13 @@
       "when": 1794859974500,
       "tag": "0009_icy_shinko_yamashiro",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794879958115,
+      "tag": "0010_many_blazing_skull",
+      "breakpoints": true
     }
   ]
 }
