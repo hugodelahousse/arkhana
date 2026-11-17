@@ -71,6 +71,20 @@
       "when": 1794859974500,
       "tag": "0009_icy_shinko_yamashiro",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794877307396,
+      "tag": "0010_omniscient_emma_frost",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794877899527,
+      "tag": "0011_steep_namora",
+      "breakpoints": true
     }
   ]
 }

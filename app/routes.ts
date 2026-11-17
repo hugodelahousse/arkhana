@@ -36,5 +36,6 @@ export default [
   route("lab/casting", "routes/lab/casting.tsx"),
   route("lab/casting/:id", "routes/lab/casting.$id.tsx"),
   route("lab/casting/:id/:card", "routes/lab/casting.$id.$card.tsx"),
+  route("lab/casting/:id/art/:file", "routes/lab/casting.$id.art.$file.ts"),
   route("sitemap.xml", "routes/sitemap.ts"),
 ] satisfies RouteConfig;

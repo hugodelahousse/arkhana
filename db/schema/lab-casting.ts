@@ -15,6 +15,15 @@ export const labCastingDecks = pgTable(
     title: text("title").notNull(),
     // The world the cast is drawn from: "our D&D campaign", "the office", "90s cartoons".
     theme: text("theme").notNull().default(""),
+    // Art style for every card drawn in this deck (a preset from app/lib/deck/presets.ts).
+    presetId: text("preset_id").notNull().default("linocut-2c"),
+    frameId: text("frame_id"), // null = the preset's default frame
+    // An uploaded style image. When set it replaces the preset as the deck's style.
+    anchorFile: text("anchor_file"),
+    // The shared card back: uploaded or drawn art. Null = the frame's pattern.
+    backFile: text("back_file"),
+    backStatus: text("back_status").notNull().default("none"), // "none" | "running" | "error"
+    backError: text("back_error"),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   },
   (t) => [index("lab_casting_decks_owner_idx").on(t.ownerId)]
@@ -30,6 +39,11 @@ export const labCastingProposals = pgTable(
     cardId: integer("card_id").notNull(), // 0–21
     name: text("name").notNull(),
     pitch: text("pitch").notNull().default(""), // why this pick fits the card
+    // What the card shows: who, doing what, where. The whole brief for the card art.
+    scene: text("scene").notNull().default(""),
+    artFile: text("art_file"), // current card art, a file in the deck's data dir
+    artStatus: text("art_status").notNull().default("none"), // "none" | "running" | "error"
+    artError: text("art_error"),
     proposerId: text("proposer_id").references(() => user.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   },
