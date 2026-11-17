@@ -75,15 +75,8 @@
     {
       "idx": 10,
       "version": "7",
-      "when": 1794877307396,
-      "tag": "0010_omniscient_emma_frost",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "7",
-      "when": 1794877899527,
-      "tag": "0011_steep_namora",
+      "when": 1794879958115,
+      "tag": "0010_many_blazing_skull",
       "breakpoints": true
     }
   ]
